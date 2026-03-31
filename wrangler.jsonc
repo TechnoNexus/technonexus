@@ -1,7 +1,0 @@
-{
-"name": "technonexus",
-"compatibility_date": "2026-03-31",
-"compatibility_flags": [ "nodejs_compat" ],
-"assets": { "directory": ".next/static", "binding": "ASSETS" },
-"main": ".next/standalone/server.js"
-}

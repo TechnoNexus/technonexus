@@ -1,22 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 1. Required for Cloudflare/Wrangler to find the server
-  output: 'standalone',
-
-  // 2. Required because Cloudflare Workers don't support default Next.js image optimization
+  // 1. Required for Cloudflare: Standard Next.js image optimization is not supported at the Edge
   images: {
     unoptimized: true,
   },
 
-  // 3. The "Safety Valve": Prevents the build from failing due to auto-generated TS errors
+  // 2. The "Safety Valve": Prevents build failure if Next.js auto-generates TypeScript files
   typescript: {
     ignoreBuildErrors: true,
   },
 
-  // 4. Optional: Prevents build failure due to minor linting warnings
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Note: 'output: standalone' is removed as the Pages adapter handles the output format
 };
 
 export default nextConfig;

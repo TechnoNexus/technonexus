@@ -5,6 +5,8 @@ import { remark } from 'remark';
 import html from 'remark-html';
 import Link from 'next/link';
 
+export const runtime = 'edge';
+
 export default async function PostPage({ params }) {
   const { slug } = await params;
   const postsDirectory = path.join(process.cwd(), 'app/blog/posts');
