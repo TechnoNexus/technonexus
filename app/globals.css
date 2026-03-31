@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #0A0A0A;
+    color: #f8fafc;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 255, 255, 0.1);
+  }
+  
+  .neon-border {
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    transition: all 0.3s ease;
+  }
+  
+  .neon-border:hover {
+    border-color: #00FFFF;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+  }
+
+  .violet-glow:hover {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    border-color: #8B5CF6;
+  }
+}
+
+@layer utilities {
+  .gradient-text-cyan {
+    background: linear-gradient(to right, #00FFFF, #8B5CF6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  
+  .bg-grid-white {
+    background-size: 40px 40px;
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  }
+}
