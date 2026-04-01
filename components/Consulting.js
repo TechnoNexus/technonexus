@@ -1,27 +1,29 @@
 export default function Consulting() {
   return (
-    <section id="consulting" className="relative">
-      <h2 className="text-3xl font-bold mb-8 border-l-4 border-sky-500 pl-4">Enterprise Consulting</h2>
+    <section id="consulting" className="relative scroll-mt-24">
+      <h2 className="text-3xl font-black mb-8 border-l-4 border-neon-cyan pl-6 tracking-tighter uppercase">
+        ENTERPRISE <span className="gradient-text-cyan">CONSULTING</span>
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="p-8 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-sky-500/50 transition">
-          <div className="text-sky-400 text-3xl mb-4">🧠</div>
-          <h3 className="font-bold text-lg mb-3">AI Integration Strategy</h3>
-          <p className="text-slate-400 text-sm">Deploying custom LLMs and AI agents to automate your complex business workflows.</p>
+        <div className="group glass-panel p-8 rounded-[2rem] border-white/5 hover:border-neon-cyan/30 transition-all duration-500">
+          <div className="text-neon-cyan text-4xl mb-6 group-hover:scale-110 transition-transform duration-500">🧠</div>
+          <h3 className="font-bold text-xl mb-3 text-white">AI Strategy</h3>
+          <p className="text-slate-400 text-sm leading-relaxed">Deploying custom LLMs and AI agents to automate your complex business workflows.</p>
         </div>
-        <div className="p-8 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-sky-500/50 transition">
-          <div className="text-sky-400 text-3xl mb-4">🔄</div>
-          <h3 className="font-bold text-lg mb-3">Digital Transformation</h3>
-          <p className="text-slate-400 text-sm">Modernizing legacy systems to cloud-native, high-performance architectures.</p>
+        <div className="group glass-panel p-8 rounded-[2rem] border-white/5 hover:border-neon-cyan/30 transition-all duration-500">
+          <div className="text-neon-cyan text-4xl mb-6 group-hover:scale-110 transition-transform duration-500">🔄</div>
+          <h3 className="font-bold text-xl mb-3 text-white">Digital Pivot</h3>
+          <p className="text-slate-400 text-sm leading-relaxed">Modernizing legacy systems to cloud-native, high-performance architectures.</p>
         </div>
-        <div className="p-8 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-sky-500/50 transition">
-          <div className="text-sky-400 text-3xl mb-4">🤖</div>
-          <h3 className="font-bold text-lg mb-3">QA &amp; Automation</h3>
-          <p className="text-slate-400 text-sm">Bulletproof testing infrastructures using Playwright and advanced CI/CD pipelines.</p>
+        <div className="group glass-panel p-8 rounded-[2rem] border-white/5 hover:border-neon-cyan/30 transition-all duration-500">
+          <div className="text-neon-cyan text-4xl mb-6 group-hover:scale-110 transition-transform duration-500">🤖</div>
+          <h3 className="font-bold text-xl mb-3 text-white">QA Automation</h3>
+          <p className="text-slate-400 text-sm leading-relaxed">Bulletproof testing infrastructures using Playwright and advanced CI/CD pipelines.</p>
         </div>
-        <div className="p-8 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-sky-500/50 transition">
-          <div className="text-sky-400 text-3xl mb-4">🌐</div>
-          <h3 className="font-bold text-lg mb-3">Web Dev &amp; Marketing</h3>
-          <p className="text-slate-400 text-sm">Full-stack web application development paired with data-driven growth marketing.</p>
+        <div className="group glass-panel p-8 rounded-[2rem] border-white/5 hover:border-neon-cyan/30 transition-all duration-500">
+          <div className="text-neon-cyan text-4xl mb-6 group-hover:scale-110 transition-transform duration-500">🌐</div>
+          <h3 className="font-bold text-xl mb-3 text-white">Full-Stack Dev</h3>
+          <p className="text-slate-400 text-sm leading-relaxed">Full-stack web application development paired with data-driven growth marketing.</p>
         </div>
       </div>
     </section>

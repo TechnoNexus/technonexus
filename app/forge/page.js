@@ -27,7 +27,7 @@ export default function ForgePage() {
       <div className="container mx-auto px-6 py-20">
         <header className="mb-20 text-center">
           <h1 className="text-6xl md:text-8xl font-black mb-6 tracking-tighter uppercase">
-            THE <span className="gradient-text-cyan">FORGE</span>
+            <span className="gradient-text-cyan">NEXUS</span> FORGE
           </h1>
           <p className="text-slate-400 max-w-2xl mx-auto text-xl italic border-y border-white/5 py-4">
             Open-source automation frameworks, AI agents, and GitHub-hosted engineering toolkits.

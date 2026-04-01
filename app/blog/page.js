@@ -26,10 +26,10 @@ export default function BlogPage() {
     <div className="min-h-screen bg-dark-bg bg-grid-white">
       <div className="container mx-auto px-6 py-16">
         <header className="mb-16 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tighter">
-            <span className="gradient-text-cyan">Nexus</span> Insights
+          <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tighter uppercase">
+            <span className="gradient-text-cyan">NEXUS</span> INSIGHTS
           </h1>
-          <p className="text-slate-400 max-w-2xl mx-auto text-lg">
+          <p className="text-slate-400 max-w-2xl mx-auto text-lg italic border-y border-white/5 py-4">
             Exploring the intersection of AI, high-performance computing, and indie gaming culture.
           </p>
         </header>
