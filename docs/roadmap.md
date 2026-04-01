@@ -1,16 +1,37 @@
-# Platform Roadmap
+# Platform Roadmap: TechnoNexus
 
-## Phase 1 — Foundation
-- Setup GitHub & Cloudflare
-- Create project structure
-- Build Homepage, Navigation, and core sections (Blog, Apps, Games)
+## Phase 1 — Foundation (✅ Completed)
+- [x] Setup GitHub repository
+- [x] Create project structure (Next.js 16 App Router)
+- [x] Build Homepage, Navigation, and core sections (Blog, Apps, Games)
+- [x] Establish "Industrial/Neon" UI (Tailwind CSS, Dark Mode)
 
-## Phase 2 — First Features
-- First 3 blog posts (Markdown/MDX)
-- Games: Dumb Charades, Team Picker
-- Apps: Random generator, Dev utility
+## Phase 2 — Deployment & Core Infrastructure (✅ Completed)
+- [x] Migrate routes to `.js` and configure Next.js for Cloudflare Pages adapter.
+- [x] Deploy to Cloudflare Pages (`main` branch).
+- [x] DNS Configuration: Connect `technonexus.ca` and `dev.technonexus.ca`.
+- [x] Enable Edge Runtime and `nodejs_compat` for dynamic Markdown Blog routing.
+- [x] Implement local versions of Apps (Random Generator) and Games (Dumb Charades).
 
-## Phase 3 — Growth & Optimization
-- Open source section
-- PWA support & Mobile optimization
-- UI/UX polish
+## Phase 3 — The Mobile & Multiplayer Expansion (✅ Completed)
+- [x] **Capacitor Mobile Wrap**: Wrapped the Next.js out/standalone build with Capacitor for native Android/iOS deployment.
+- [x] **Real-Time Multiplayer**: Upgraded "Dumb Charades" to a Room-based networked game using PeerJS.
+    - [x] Implement PeerJS for decentralized room state.
+    - [x] Create "Host/Join" Lobby UI with QR Code sharing.
+    - [x] Add dynamic player lists and host controls.
+- [x] **Mobile UI/UX Polish**:
+    - [x] Add native Haptic Feedback (vibrations) via Capacitor plugins.
+    - [x] Add "Download on App Store / Google Play" badges to `/games`.
+    - [x] Ensure tap targets are thumb-friendly for mobile players.
+
+## Phase 4 — Content & Open Source (✅ Completed)
+- [x] Finalize first 3 blog posts (Nexus Insights).
+- [x] Launch "The Forge" — Open source section for automation frameworks, AI agents, and GitHub repositories.
+- [x] Redirect "The AI Cook" to the standalone AI Chef platform (www.thebjp.ca).
+- [x] Reorganize Homepage Ecosystem order (Arcade → Forge → AI Cook).
+- [x] Apply consistent Neon/Cyan styling across all Dashboard modules and Forge page.
+
+## Phase 5 — Future Scaling (Upcoming)
+- [ ] Integration of GitHub API to pull live Forge repository statistics.
+- [ ] AI-driven search functionality for the Blog and Forge.
+- [ ] User profile system for "Nexus Members" to save favorited code snippets.
