@@ -57,7 +57,9 @@ export default function NexusRoomManager({ showForge = false }) {
         hapticFeedback(ImpactStyle.Heavy);
         conn.on('data', (data) => {
           if (data.type === 'join') {
-            setPlayers([...players, { peerId: conn.peer, name: data.name }]);
+            // SAFE FALLBACK: Ensure players is an array
+            const currentPlayers = players || [];
+            setPlayers([...currentPlayers, { peerId: conn.peer, name: data.name }]);
             conn.send({ type: 'welcome', roomId });
           }
         });
@@ -69,7 +71,7 @@ export default function NexusRoomManager({ showForge = false }) {
     return () => {
       if (peer) peer.destroy();
     };
-  }, []);
+  }, [players, roomId, setPlayers]);
 
   const createRoom = () => {
     const id = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -112,11 +114,11 @@ export default function NexusRoomManager({ showForge = false }) {
               placeholder="ROOM ID"
               value={targetId}
               onChange={(e) => setTargetId(e.target.value.toUpperCase())}
-              className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-4 text-center font-mono text-white"
+              className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-4 text-center font-mono text-white outline-none"
             />
             <button 
               onClick={joinRoom}
-              className="p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold"
+              className="p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all"
             >
               JOIN
             </button>
@@ -158,10 +160,12 @@ export default function NexusRoomManager({ showForge = false }) {
           )}
 
           <div className="flex flex-col gap-2 mb-6">
-            <p className="text-slate-500 text-[10px] uppercase tracking-widest">Players Connected: {players.length + 1}</p>
+            {/* ADDED SAFE FALLBACKS: ?.length || 0 */}
+            <p className="text-slate-500 text-[10px] uppercase tracking-widest">Players Connected: {(players?.length || 0) + 1}</p>
             <div className="flex flex-wrap justify-center gap-2">
                <span className="px-3 py-1 bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30 rounded-full text-[10px] font-bold">HOST</span>
-               {players.map((p, i) => (
+               {/* ADDED SAFE FALLBACK: (players || []) */}
+               {(players || []).map((p, i) => (
                  <span key={i} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] text-slate-400">PLAYER {i+1}</span>
                ))}
             </div>
@@ -169,7 +173,7 @@ export default function NexusRoomManager({ showForge = false }) {
 
           <button 
             onClick={resetRoom}
-            className="text-[10px] font-bold text-slate-600 hover:text-red-500 uppercase tracking-widest"
+            className="text-[10px] font-bold text-slate-600 hover:text-red-500 uppercase tracking-widest transition-colors"
           >
             Leave Room
           </button>
@@ -180,7 +184,8 @@ export default function NexusRoomManager({ showForge = false }) {
       <div className="mt-8 pt-6 border-t border-white/5">
         <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Nexus Leaderboard</h4>
         <div className="space-y-2">
-          {leaderboard.length === 0 ? (
+          {/* ADDED SAFE FALLBACK: !leaderboard?.length */}
+          {!leaderboard?.length ? (
             <p className="text-slate-600 text-[10px] italic">No games recorded in this session.</p>
           ) : (
             leaderboard.map((p, i) => (
