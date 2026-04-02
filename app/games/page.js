@@ -3,6 +3,13 @@ import Link from 'next/link';
 export default function GamesPage() {
   const games = [
     {
+      id: 'ai-forge',
+      name: 'Nexus AI Forge',
+      description: 'The experimental custom game engine. Host a room and describe any mission—the AI will build it instantly.',
+      tag: 'AI GENERATED',
+      status: 'AVAILABLE',
+    },
+    {
       id: 'dumb-charades',
       name: 'Dumb Charades',
       description: 'The classic party game, reimagined with a high-tech neon interface. Generate random movies, TV shows, and books.',
@@ -14,7 +21,7 @@ export default function GamesPage() {
       name: 'Team Picker',
       description: 'Quickly split players into balanced teams. Perfect for local multiplayer sessions or office tournaments.',
       tag: 'UTILITY',
-      status: 'COMING SOON',
+      status: 'AVAILABLE',
     },
     {
       id: 'neon-runner',
@@ -35,6 +42,29 @@ export default function GamesPage() {
           <p className="text-slate-400 max-w-2xl mx-auto text-xl italic border-y border-white/5 py-4">
             Experimental indie games & interactive digital experiences.
           </p>
+          
+          <div className="mt-12 flex flex-wrap justify-center gap-6">
+            <a 
+              href="#" 
+              className="flex items-center gap-4 px-6 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group"
+            >
+              <div className="w-8 h-8 bg-slate-400 rounded-full group-hover:bg-neon-cyan transition-colors" />
+              <div className="text-left">
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Download on the</p>
+                <p className="text-xl font-black text-white leading-none">App Store</p>
+              </div>
+            </a>
+            <a 
+              href="#" 
+              className="flex items-center gap-4 px-6 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group"
+            >
+              <div className="w-8 h-8 bg-slate-400 rounded-full group-hover:bg-electric-violet transition-colors" />
+              <div className="text-left">
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Get it on</p>
+                <p className="text-xl font-black text-white leading-none">Google Play</p>
+              </div>
+            </a>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">

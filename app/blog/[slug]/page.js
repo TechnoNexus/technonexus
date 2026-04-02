@@ -5,10 +5,18 @@ import { remark } from 'remark';
 import html from 'remark-html';
 import Link from 'next/link';
 
-export const runtime = 'edge';
+export async function generateStaticParams() {
+  const postsDirectory = path.join(process.cwd(), 'app/blog/posts');
+  const filenames = fs.readdirSync(postsDirectory);
 
-export default async function PostPage({ params }) {
-  const { slug } = await params;
+  return filenames.map((filename) => ({
+    slug: filename.replace(/\.md$/, ''),
+  }));
+}
+
+export default async function PostPage(props) {
+  const params = await props.params;
+  const slug = params.slug;
   const postsDirectory = path.join(process.cwd(), 'app/blog/posts');
   const fullPath = path.join(postsDirectory, `${slug}.md`);
   

@@ -10,6 +10,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Ecosystem', href: pathname === '/' ? '#ecosystem' : '/#ecosystem' },
+    { name: 'Forge', href: '/forge' },
     { name: 'Apps', href: '/apps' },
     { name: 'Games', href: '/games' },
     { name: 'Blog', href: '/blog' },

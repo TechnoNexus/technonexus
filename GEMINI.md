@@ -14,6 +14,22 @@ You are the Lead Engineer for TechnoNexus. Your goal is to build a high-performa
 - **Deployment:** Optimized for Cloudflare Pages.
 - **State Management:** Use Zustand for games; React Context/State for apps.
 - **Content:** Use MDX for the blog system.
+- **AI Game Engine:** ALWAYS use `gemini-2.5-flash` for AI game generation. This is a hard rule.
+- **Documentation:** Whenever you complete a task, build a new feature, or finish a phase, you must automatically update `docs/roadmap.md` to check off the completed items. You should do this without being asked.
+- **Branding Consistency:** 
+    - All major section headings must use `font-black`, `tracking-tighter`, and be `uppercase`.
+    - Use `<span className="gradient-text-cyan">NEXUS</span>` for the first word in major hub headings (NEXUS ARCADE, NEXUS FORGE, NEXUS COOK, NEXUS INSIGHTS).
+    - All sub-pages (Blog, Forge, Games, Apps) must use the `Geist Sans` font family via `var(--font-geist-sans)`.
+    - Navigation links must be kept in sync with the Dashboard modules.
+- **Spacing & Layout:**
+    - Do NOT add top/bottom padding (`py-`) to major sections within the home page `main` wrapper, as it uses `space-y-24`.
+    - Maintain consistent `mb-8` for section headings.
+    - Use `scroll-mt-24` for all sections with IDs to ensure proper alignment when navigating from the navbar.
+    - Sections must use `glass-panel` and `rounded-[2rem]` or `rounded-[3rem]` for containers.
 
 ## Project Context
+- **Nexus Forge:** Open-source repository for automation frameworks, AI agents, and GitHub-hosted engineering toolkits.
+- **Nexus Cook:** Standalone Vegetarian/Jain AI Chef platform hosted at `www.thebjp.ca`.
+- **Nexus Arcade:** Interactive game hub for local and networked multiplayer experiences.
+- **Nexus AI Forge:** Standalone custom game generator using Gemini 2.5 Flash to build instant multiplayer missions.
 Refer to the `/docs` folder for the full Vision, Roadmap, and Architecture. Always check `docs/repo-structure.md` before creating new files.
