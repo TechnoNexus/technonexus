@@ -42,6 +42,7 @@
 - [x] **AI Custom Game Engine**:
     - [x] Create `app/api/generate-game` Edge API route to process Host prompts via Gemini AI.
     - [x] Integrate `@google/generative-ai` SDK and system prompt engineering for strict JSON schemas.
+    - [x] Hard-rule migration to **Gemini 2.5 Flash** for high-performance game generation.
 - [x] **Dynamic Multiplayer UI**:
     - [x] Create standalone "Nexus AI Forge" game page (`app/games/ai-forge`).
     - [x] Update PeerJS Room state to support dynamic custom game payloads.
