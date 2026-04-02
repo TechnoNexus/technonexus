@@ -15,6 +15,7 @@ You are the Lead Engineer for TechnoNexus. Your goal is to build a high-performa
 - **State Management:** Use Zustand for games; React Context/State for apps.
 - **Content:** Use MDX for the blog system.
 - **AI Game Engine:** ALWAYS use `gemini-2.5-flash` for AI game generation. This is a hard rule.
+- **Dynamic Game Modes:** When the AI generates a custom game, it must dynamically assign the correct UI/Input type based on the prompt. For example, a prompt for "dumb charades" should generate a UI suitable for charades (acting/timers), NOT default to a standard text-input trivia game. The `config_json` must handle these variant game states.
 - **Documentation:** Whenever you complete a task, build a new feature, or finish a phase, you must automatically update `docs/roadmap.md` to check off the completed items. You should do this without being asked.
 - **Branding Consistency:** 
     - All major section headings must use `font-black`, `tracking-tighter`, and be `uppercase`.
