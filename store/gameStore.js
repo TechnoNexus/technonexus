@@ -18,7 +18,9 @@ export const useGameStore = create(
 
       setRoomId: (id) => set({ roomId: id }),
       setHost: (isHost) => set({ isHost }),
-      setPlayers: (players) => set({ players }),
+      setPlayers: (fn) => set((state) => ({ 
+        players: typeof fn === 'function' ? fn(state.players) : fn 
+      })),
       updateScores: (newScores) => set({ scores: newScores }),
       setCustomGame: (game) => set({ customGame: game }),
       

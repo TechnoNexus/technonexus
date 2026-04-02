@@ -57,10 +57,13 @@ export default function NexusRoomManager({ showForge = false }) {
         hapticFeedback(ImpactStyle.Heavy);
         conn.on('data', (data) => {
           if (data.type === 'join') {
-            // SAFE FALLBACK: Ensure players is an array
-            const currentPlayers = players || [];
-            setPlayers([...currentPlayers, { peerId: conn.peer, name: data.name }]);
+            setPlayers((prev) => [...(prev || []), { peerId: conn.peer, name: data.name }]);
             conn.send({ type: 'welcome', roomId });
+          }
+          // GUEST LOGIC: Receive custom game from Host
+          if (data.type === 'new-custom-game') {
+            setCustomGame(data.game);
+            hapticFeedback(ImpactStyle.Medium);
           }
         });
         connections.current.push(conn);
@@ -71,7 +74,7 @@ export default function NexusRoomManager({ showForge = false }) {
     return () => {
       if (peer) peer.destroy();
     };
-  }, [players, roomId, setPlayers]);
+  }, [roomId, setPlayers]); // Removed 'players' to prevent re-initialization on every join
 
   const createRoom = () => {
     const id = Math.random().toString(36).substring(2, 6).toUpperCase();
