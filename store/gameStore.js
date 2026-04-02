@@ -14,14 +14,13 @@ export const useGameStore = create(
       currentWord: '',
       timer: 60,
       scores: { teamA: 0, teamB: 0 },
-      
-      // Global Leaderboard (Persistent)
-      leaderboard: [], // { name, wins, totalGames }
+      customGame: null, // { gameTitle, instructions, timeLimitSeconds, inputType }
 
       setRoomId: (id) => set({ roomId: id }),
       setHost: (isHost) => set({ isHost }),
       setPlayers: (players) => set({ players }),
       updateScores: (newScores) => set({ scores: newScores }),
+      setCustomGame: (game) => set({ customGame: game }),
       
       updateLeaderboard: (winnerName) => {
         const currentLeaderboard = get().leaderboard;

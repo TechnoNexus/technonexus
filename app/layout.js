@@ -15,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "TechnoNexus",
-  description: "One-Stop Developer Platform",
+  title: "TechnoNexus | AI Ecosystem & IT Consulting",
+  description: "High-performance digital ecosystem for enterprise automation and indie gaming.",
+  icons: {
+    icon: '/logo.svg',
+  },
 };
 
 export default function RootLayout({ children }) {

@@ -6,11 +6,39 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 export default function NexusRoomManager() {
-  const { roomId, setRoomId, isHost, setHost, players, setPlayers, resetRoom, leaderboard } = useGameStore();
+  const { roomId, setRoomId, isHost, setHost, players, setPlayers, resetRoom, leaderboard, setCustomGame } = useGameStore();
   const [peer, setPeer] = useState(null);
   const [targetId, setTargetId] = useState('');
   const [status, setStatus] = useState('Disconnected');
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const connections = useRef([]);
+
+  const generateGame = async () => {
+    if (!aiPrompt) return;
+    setIsGenerating(true);
+    hapticFeedback();
+    
+    try {
+      const response = await fetch('/api/generate-game', {
+        method: 'POST',
+        body: JSON.stringify({ prompt: aiPrompt }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      setCustomGame(data);
+      hapticFeedback(ImpactStyle.Heavy);
+      
+      // Notify all connected players via PeerJS
+      connections.current.forEach(conn => {
+        conn.send({ type: 'new-custom-game', game: data });
+      });
+    } catch (e) {
+      console.error('AI Generation Failed:', e);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const hapticFeedback = async (style = ImpactStyle.Medium) => {
     try { await Haptics.impact({ style }); } catch (e) {}
@@ -100,7 +128,28 @@ export default function NexusRoomManager() {
           <h2 className="text-4xl font-black text-white mb-6 tracking-tighter">{roomId}</h2>
           
           {isHost && (
-            <div className="flex flex-col items-center gap-4 mb-6">
+            <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
+              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Nexus AI Game Forge</h4>
+              <textarea 
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Describe your game idea... (e.g. Write a poem with 'paagal')"
+                className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm text-white focus:border-neon-cyan transition-colors outline-none h-24"
+              />
+              <button 
+                onClick={generateGame}
+                disabled={isGenerating || !aiPrompt}
+                className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
+                  isGenerating ? 'opacity-50 cursor-not-allowed' : 'bg-electric-violet/20 text-electric-violet border border-electric-violet/30 hover:bg-electric-violet hover:text-white'
+                }`}
+              >
+                {isGenerating ? 'FORGING REALITY...' : 'FORGE CUSTOM AI GAME'}
+              </button>
+            </div>
+          )}
+
+          {isHost && (
+            <div className="flex flex-col items-center gap-4 mb-6 mt-8">
               <div className="p-4 bg-white rounded-2xl">
                 <QRCodeSVG value={roomId} size={120} />
               </div>

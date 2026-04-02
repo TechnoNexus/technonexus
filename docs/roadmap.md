@@ -35,9 +35,18 @@
 - [x] Complete "Enterprise Consulting" Neon Makeover.
 - [x] Standardize Spacing & Layout: Removed excessive padding from home page sections to align with `space-y-24` parent.
 - [x] Refresh "Our Vision" section with full Nexus branding and glassmorphism.
+- [x] **Brand Assets:** Created and applied the animated SVG "Nexus" logo as the primary favicon and brand identity asset.
 - [x] Apply consistent Neon/Cyan styling across all Dashboard modules and Forge page.
 
-## Phase 5 — Future Scaling (Upcoming)
+## Phase 5 — The AI Game Forge & Future Scaling (🚧 In Progress)
+- [x] **AI Custom Game Engine**:
+    - [x] Create `app/api/generate-game` Edge API route to process Host prompts via LLM (Mocked).
+    - [ ] Prompt engineer the LLM to return strict JSON game schemas (title, rules, timers, inputs).
+- [x] **Dynamic Multiplayer UI**:
+    - [x] Update PeerJS Room state to support dynamic custom game payloads.
+    - [x] Build Host UI for prompt input and game generation.
+    - [ ] Build a universal `CustomGameArena` component that renders text inputs, timers, and instructions based on AI JSON.
+    - [ ] Add "Host Evaluation/Voting" screen for players to see everyone's submissions.
 - [ ] Integration of GitHub API to pull live Forge repository statistics.
 - [ ] AI-driven search functionality for the Blog and Forge.
 - [ ] User profile system for "Nexus Members" to save favorited code snippets.
