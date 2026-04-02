@@ -12,6 +12,7 @@
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
+    "@google/generative-ai": "^0.24.1",
     "gray-matter": "^4.0.3",
     "next": "16.2.1",
     "peerjs": "^1.5.5",

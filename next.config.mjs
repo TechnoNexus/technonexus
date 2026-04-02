@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 1. Static Export: Required for Capacitor to bundle the app from the 'out' directory
-  output: 'export',
+  // 1. Removed 'export' output to support dynamic AI API routes in Phase 5.
+  // Deployment to Cloudflare Pages will now use the @cloudflare/next-on-pages adapter for dynamic edge functions.
 
   // 2. Required for Cloudflare: Standard Next.js image optimization is not supported at the Edge
   images: {

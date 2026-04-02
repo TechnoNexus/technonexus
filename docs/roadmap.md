@@ -40,11 +40,12 @@
 
 ## Phase 5 — The AI Game Forge & Future Scaling (🚧 In Progress)
 - [x] **AI Custom Game Engine**:
-    - [x] Create `app/api/generate-game` Edge API route to process Host prompts via LLM (Mocked).
-    - [ ] Prompt engineer the LLM to return strict JSON game schemas (title, rules, timers, inputs).
+    - [x] Create `app/api/generate-game` Edge API route to process Host prompts via Gemini AI.
+    - [x] Integrate `@google/generative-ai` SDK and system prompt engineering for strict JSON schemas.
 - [x] **Dynamic Multiplayer UI**:
+    - [x] Create standalone "Nexus AI Forge" game page (`app/games/ai-forge`).
     - [x] Update PeerJS Room state to support dynamic custom game payloads.
-    - [x] Build Host UI for prompt input and game generation.
+    - [x] Build Host UI for prompt input and game generation (restricted to AI Forge page).
     - [ ] Build a universal `CustomGameArena` component that renders text inputs, timers, and instructions based on AI JSON.
     - [ ] Add "Host Evaluation/Voting" screen for players to see everyone's submissions.
 - [ ] Integration of GitHub API to pull live Forge repository statistics.

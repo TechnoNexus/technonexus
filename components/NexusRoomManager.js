@@ -5,7 +5,7 @@ import { useGameStore } from '../store/gameStore';
 import { QRCodeSVG } from 'qrcode.react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
-export default function NexusRoomManager() {
+export default function NexusRoomManager({ showForge = false }) {
   const { roomId, setRoomId, isHost, setHost, players, setPlayers, resetRoom, leaderboard, setCustomGame } = useGameStore();
   const [peer, setPeer] = useState(null);
   const [targetId, setTargetId] = useState('');
@@ -127,7 +127,7 @@ export default function NexusRoomManager() {
           <p className="text-slate-500 text-[10px] mb-2 uppercase tracking-widest">Active Room</p>
           <h2 className="text-4xl font-black text-white mb-6 tracking-tighter">{roomId}</h2>
           
-          {isHost && (
+          {isHost && showForge && (
             <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
               <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Nexus AI Game Forge</h4>
               <textarea 

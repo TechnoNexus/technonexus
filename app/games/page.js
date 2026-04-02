@@ -3,6 +3,13 @@ import Link from 'next/link';
 export default function GamesPage() {
   const games = [
     {
+      id: 'ai-forge',
+      name: 'Nexus AI Forge',
+      description: 'The experimental custom game engine. Host a room and describe any mission—the AI will build it instantly.',
+      tag: 'AI GENERATED',
+      status: 'AVAILABLE',
+    },
+    {
       id: 'dumb-charades',
       name: 'Dumb Charades',
       description: 'The classic party game, reimagined with a high-tech neon interface. Generate random movies, TV shows, and books.',
