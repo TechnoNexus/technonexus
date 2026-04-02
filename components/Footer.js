@@ -14,9 +14,9 @@ export default function Footer() {
         </div>
         
         <div className="flex justify-center space-x-8 text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-8">
-          <Link href="/privacy-policy" className="hover:text-neon-cyan transition-colors">Privacy Policy</Link>
-          <Link href="/terms-of-service" className="hover:text-neon-cyan transition-colors">Terms of Service</Link>
-          <Link href="/cookies" className="hover:text-neon-cyan transition-colors">Cookies</Link>
+          <Link href="#" className="hover:text-neon-cyan transition-colors">Privacy Policy</Link>
+          <Link href="#" className="hover:text-neon-cyan transition-colors">Terms of Service</Link>
+          <Link href="#" className="hover:text-neon-cyan transition-colors">Cookies</Link>
         </div>
 
         <p className="text-slate-600 text-[10px] uppercase tracking-widest">

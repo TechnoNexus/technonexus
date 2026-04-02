@@ -6,7 +6,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 export default function NexusRoomManager({ showForge = false }) {
-  const { roomId, setRoomId, isHost, setHost, players, setPlayers, resetRoom, leaderboard, setCustomGame } = useGameStore();
+  const { roomId, setRoomId, isHost, setHost, players, setPlayers, resetRoom, leaderboard, setCustomGame, roomStatus, setRoomStatus } = useGameStore();
   const [peer, setPeer] = useState(null);
   const [targetId, setTargetId] = useState('');
   const [status, setStatus] = useState('Disconnected');
@@ -65,6 +65,10 @@ export default function NexusRoomManager({ showForge = false }) {
             setCustomGame(data.game);
             hapticFeedback(ImpactStyle.Medium);
           }
+          // GUEST LOGIC: Sync room status
+          if (data.type === 'room-status-update') {
+            setRoomStatus(data.status);
+          }
         });
         connections.current.push(conn);
         setStatus('Player Connected');
@@ -75,6 +79,15 @@ export default function NexusRoomManager({ showForge = false }) {
       if (peer) peer.destroy();
     };
   }, [roomId, setPlayers]); // Removed 'players' to prevent re-initialization on every join
+
+  // Host broadcast effect for room status
+  useEffect(() => {
+    if (isHost && connections.current.length > 0) {
+      connections.current.forEach(conn => {
+        conn.send({ type: 'room-status-update', status: roomStatus });
+      });
+    }
+  }, [roomStatus, isHost]);
 
   const createRoom = () => {
     const id = Math.random().toString(36).substring(2, 6).toUpperCase();

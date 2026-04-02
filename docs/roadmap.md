@@ -46,9 +46,8 @@
 - [x] **Dynamic Multiplayer UI**:
     - [x] Create standalone "Nexus AI Forge" game page (`app/games/ai-forge`).
     - [x] Update PeerJS Room state to support dynamic custom game payloads.
-    - [x] Build Host UI for prompt input and game generation (restricted to AI Forge page).
-    - [ ] Build a universal `CustomGameArena` component that renders text inputs, timers, and instructions based on AI JSON.
-    - [ ] Add "Host Evaluation/Voting" screen for players to see everyone's submissions.
-- [ ] Integration of GitHub API to pull live Forge repository statistics.
+    - [x] Build Host UI for prompt input and game generation (restricted to AI Forge page). 
+    - [x] Build a universal `CustomGameArena` component that renders text inputs, timers, and instructions based on AI JSON.
+    - [ ] Add "Host Evaluation/Voting" screen for players to see everyone's submissions.- [ ] Integration of GitHub API to pull live Forge repository statistics.
 - [ ] AI-driven search functionality for the Blog and Forge.
 - [ ] User profile system for "Nexus Members" to save favorited code snippets.

@@ -23,6 +23,7 @@ export const useGameStore = create(
       })),
       updateScores: (newScores) => set({ scores: newScores }),
       setCustomGame: (game) => set({ customGame: game }),
+      setRoomStatus: (status) => set({ roomStatus: status }),
       
       updateLeaderboard: (winnerName) => {
         const currentLeaderboard = get().leaderboard;
