@@ -11,6 +11,7 @@ export default function NexusRoomManager({ showForge = false }) {
   const [targetId, setTargetId] = useState('');
   const [status, setStatus] = useState('Disconnected');
   const [aiPrompt, setAiPrompt] = useState('');
+  const [language, setLanguage] = useState('English');
   const [isGenerating, setIsGenerating] = useState(false);
   const connections = useRef([]);
 
@@ -22,7 +23,7 @@ export default function NexusRoomManager({ showForge = false }) {
     try {
       const response = await fetch('/api/generate-game', {
         method: 'POST',
-        body: JSON.stringify({ prompt: aiPrompt }),
+        body: JSON.stringify({ prompt: aiPrompt, language }),
         headers: { 'Content-Type': 'application/json' }
       });
       const data = await response.json();
@@ -146,8 +147,25 @@ export default function NexusRoomManager({ showForge = false }) {
           <h2 className="text-4xl font-black text-white mb-6 tracking-tighter">{roomId}</h2>
           
           {isHost && showForge && (
-            <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
+            <div className="mt-8 pt-6 border-t border-white/5 space-y-4 text-left">
               <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Nexus AI Game Forge</h4>
+              
+              <div className="flex gap-4 mb-4">
+                <div className="flex-1">
+                  <p className="text-[10px] font-bold text-slate-600 uppercase mb-2 ml-1">Language</p>
+                  <select 
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-neon-cyan transition-colors outline-none appearance-none cursor-pointer"
+                  >
+                    <option value="English" className="bg-gray-900 text-white">English</option>
+                    <option value="Hindi" className="bg-gray-900 text-white">Hindi (हिंदी)</option>
+                    <option value="Hinglish" className="bg-gray-900 text-white">Hinglish (Mix)</option>
+                  </select>
+                </div>
+              </div>
+
+              <p className="text-[10px] font-bold text-slate-600 uppercase mb-2 ml-1">Mission Idea</p>
               <textarea 
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}

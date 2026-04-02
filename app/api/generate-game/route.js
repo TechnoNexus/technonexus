@@ -4,7 +4,7 @@ export const runtime = 'edge';
 
 export async function POST(req) {
   try {
-    const { prompt } = await req.json();
+    const { prompt, language = 'English' } = await req.json();
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
     // 1. Check for API Key
@@ -34,11 +34,14 @@ export async function POST(req) {
       You are the TechnoNexus Game Engine. 
       The host has provided the following custom game idea or instruction: "${prompt}".
       
+      CRITICAL: You must generate all instructions and titles in ${language}.
+      If the language is Hinglish, use a mix of Hindi (written in Roman script) and English.
+      
       You must design a quick, fun party game based on this idea.
       You must respond ONLY with a valid JSON object matching this exact schema:
       {
-        "gameTitle": "string (A catchy title for the game)",
-        "instructions": "string (Clear, punchy rules for the players to read on their phones)",
+        "gameTitle": "string (A catchy title for the game in ${language})",
+        "instructions": "string (Clear, punchy rules for the players to read on their phones in ${language})",
         "timeLimitSeconds": number (between 30 and 120),
         "inputType": "string (either 'text' or 'voice')"
       }

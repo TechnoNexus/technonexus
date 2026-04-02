@@ -38,16 +38,24 @@
 - [x] **Brand Assets:** Created and applied the animated SVG "Nexus" logo as the primary favicon and brand identity asset.
 - [x] Apply consistent Neon/Cyan styling across all Dashboard modules and Forge page.
 
-## Phase 5 — The AI Game Forge & Future Scaling (🚧 In Progress)
+## Phase 5 — The AI Game Forge & Future Scaling (✅ Phase 5.1 Optimization Complete)
 - [x] **AI Custom Game Engine**:
     - [x] Create `app/api/generate-game` Edge API route to process Host prompts via Gemini AI.
     - [x] Integrate `@google/generative-ai` SDK and system prompt engineering for strict JSON schemas.
     - [x] Hard-rule migration to **Gemini 2.5 Flash** for high-performance game generation.
+    - [x] **Multi-language Support**: Added English, Hindi, and Hinglish generation capabilities.
 - [x] **Dynamic Multiplayer UI**:
     - [x] Create standalone "Nexus AI Forge" game page (`app/games/ai-forge`).
     - [x] Update PeerJS Room state to support dynamic custom game payloads.
     - [x] Build Host UI for prompt input and game generation (restricted to AI Forge page). 
     - [x] Build a universal `CustomGameArena` component that renders text inputs, timers, and instructions based on AI JSON.
-    - [ ] Add "Host Evaluation/Voting" screen for players to see everyone's submissions.- [ ] Integration of GitHub API to pull live Forge repository statistics.
+    - [x] **User Persistence**: Integrated **Supabase Auth & DB** to allow users to save custom missions to their "Nexus Vault".
+- [x] **AI Scoring Engine**:
+    - [x] Create `app/api/evaluate-submission` endpoint for real-time player input analysis.
+    - [x] **Hybrid Scoring**: Combined semantic evaluation with strict objective counting.
+    - [x] **Sarcastic AI Judge**: Added funny, slightly sarcastic personality-driven feedback for every submission.
+
+## Phase 6 — Future Scaling (Upcoming)
+- [ ] Integration of GitHub API to pull live Forge repository statistics.
 - [ ] AI-driven search functionality for the Blog and Forge.
-- [ ] User profile system for "Nexus Members" to save favorited code snippets.
+- [ ] User profile system for "Nexus Members" to view and load previously saved missions.

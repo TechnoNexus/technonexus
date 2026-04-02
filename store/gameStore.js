@@ -15,6 +15,8 @@ export const useGameStore = create(
       timer: 60,
       scores: { teamA: 0, teamB: 0 },
       customGame: null, // { gameTitle, instructions, timeLimitSeconds, inputType }
+      savedGames: [], // List of previously created games from Supabase
+      roomStatus: 'idle', // 'idle', 'waiting', 'playing'
 
       setRoomId: (id) => set({ roomId: id }),
       setHost: (isHost) => set({ isHost }),
@@ -23,8 +25,8 @@ export const useGameStore = create(
       })),
       updateScores: (newScores) => set({ scores: newScores }),
       setCustomGame: (game) => set({ customGame: game }),
+      setSavedGames: (games) => set({ savedGames: games }),
       setRoomStatus: (status) => set({ roomStatus: status }),
-      
       updateLeaderboard: (winnerName) => {
         const currentLeaderboard = get().leaderboard;
         const playerIndex = currentLeaderboard.findIndex(p => p.name === winnerName);
