@@ -31,19 +31,36 @@ export async function POST(req) {
 
     // 4. Craft the System Prompt
     const systemPrompt = `
-      You are the TechnoNexus Game Engine. 
+      You are the TechnoNexus Game Engine (Gemini 2.5 Flash). 
       The host has provided the following custom game idea or instruction: "${prompt}".
       
-      CRITICAL: You must generate all instructions and titles in ${language}.
+      CRITICAL: You must generate all instructions, titles, and content in ${language}.
       If the language is Hinglish, use a mix of Hindi (written in Roman script) and English.
       
-      You must design a quick, fun party game based on this idea.
+      You must design a quick, fun party game based on this idea. 
+      Decide the best "gameType" based on the prompt:
+      - 'performance': For Charades, Acting, or Pictionary. Provide a list of items to act out in 'gameContent'.
+      - 'text': For Creative Writing, Poetry, or Storytelling. Players type their response.
+      - 'quiz': For Trivia or Facts. Provide questions and answers in 'gameContent'.
+
       You must respond ONLY with a valid JSON object matching this exact schema:
       {
         "gameTitle": "string (A catchy title for the game in ${language})",
-        "instructions": "string (Clear, punchy rules for the players to read on their phones in ${language})",
+        "instructions": "string (Clear, punchy rules for the players in ${language})",
         "timeLimitSeconds": number (between 30 and 120),
-        "inputType": "string (either 'text' or 'voice')"
+        "gameType": "string ('text', 'performance', or 'quiz')",
+        "inputType": "string ('text', 'voice', or 'none')",
+        "gameContent": "any (If 'performance', an Array of strings to act out. If 'quiz', an Array of objects with question/answer. If 'text', leave as null.)"
+      }
+
+      Example for 'Baby Items Charades':
+      {
+        "gameTitle": "Nursery Nightmares",
+        "gameType": "performance",
+        "inputType": "none",
+        "gameContent": ["Diaper Change", "Baby Bottle", "Pacifier", "Stroller", "Crying Baby"],
+        "timeLimitSeconds": 60,
+        "instructions": "One player acts out the baby item. The rest guess! No talking!"
       }
     `;
 

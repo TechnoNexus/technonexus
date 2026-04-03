@@ -6,14 +6,26 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 export default function NexusRoomManager({ showForge = false }) {
-  const { roomId, setRoomId, isHost, setHost, players, setPlayers, resetRoom, leaderboard, setCustomGame, roomStatus, setRoomStatus } = useGameStore();
+  const { 
+    roomId, setRoomId, isHost, setHost, players, setPlayers, 
+    resetRoom, leaderboard, setCustomGame, roomStatus, setRoomStatus,
+    localEvaluation, setLocalEvaluation, roomScores, setRoomScores,
+    roundVerdict, setRoundVerdict, customGame
+  } = useGameStore();
+
   const [peer, setPeer] = useState(null);
   const [targetId, setTargetId] = useState('');
   const [status, setStatus] = useState('Disconnected');
   const [aiPrompt, setAiPrompt] = useState('');
   const [language, setLanguage] = useState('English');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isEvaluatingRound, setIsEvaluatingRound] = useState(false);
   const connections = useRef([]);
+  const hostConnection = useRef(null); // Ref for guest to talk back to host
+
+  const hapticFeedback = async (style = ImpactStyle.Medium) => {
+    try { await Haptics.impact({ style }); } catch (e) {}
+  };
 
   const generateGame = async () => {
     if (!aiPrompt) return;
@@ -28,6 +40,9 @@ export default function NexusRoomManager({ showForge = false }) {
       });
       const data = await response.json();
       setCustomGame(data);
+      setRoomScores([]); // Reset scores for new game
+      setRoundVerdict(null);
+      setLocalEvaluation(null);
       hapticFeedback(ImpactStyle.Heavy);
       
       // Notify all connected players via PeerJS
@@ -41,8 +56,30 @@ export default function NexusRoomManager({ showForge = false }) {
     }
   };
 
-  const hapticFeedback = async (style = ImpactStyle.Medium) => {
-    try { await Haptics.impact({ style }); } catch (e) {}
+  const evaluateRound = async () => {
+    if (!isHost || roomScores.length === 0) return;
+    setIsEvaluatingRound(true);
+    try {
+      const res = await fetch('/api/evaluate-leaderboard', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          players: roomScores, 
+          missionTitle: customGame?.gameTitle 
+        }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      setRoundVerdict(data);
+      
+      // Broadcast verdict to all
+      connections.current.forEach(conn => {
+        conn.send({ type: 'round-verdict', verdict: data });
+      });
+    } catch (e) {
+      console.error('Round evaluation failed:', e);
+    } finally {
+      setIsEvaluatingRound(false);
+    }
   };
 
   useEffect(() => {
@@ -61,14 +98,10 @@ export default function NexusRoomManager({ showForge = false }) {
             setPlayers((prev) => [...(prev || []), { peerId: conn.peer, name: data.name }]);
             conn.send({ type: 'welcome', roomId });
           }
-          // GUEST LOGIC: Receive custom game from Host
-          if (data.type === 'new-custom-game') {
-            setCustomGame(data.game);
-            hapticFeedback(ImpactStyle.Medium);
-          }
-          // GUEST LOGIC: Sync room status
-          if (data.type === 'room-status-update') {
-            setRoomStatus(data.status);
+          // HOST LOGIC: Receive score from guest
+          if (data.type === 'submit-score') {
+            setRoomScores([...useGameStore.getState().roomScores, { name: data.name, score: data.score, judgeComment: data.judgeComment }]);
+            hapticFeedback(ImpactStyle.Light);
           }
         });
         connections.current.push(conn);
@@ -79,16 +112,7 @@ export default function NexusRoomManager({ showForge = false }) {
     return () => {
       if (peer) peer.destroy();
     };
-  }, [roomId, setPlayers]); // Removed 'players' to prevent re-initialization on every join
-
-  // Host broadcast effect for room status
-  useEffect(() => {
-    if (isHost && connections.current.length > 0) {
-      connections.current.forEach(conn => {
-        conn.send({ type: 'room-status-update', status: roomStatus });
-      });
-    }
-  }, [roomStatus, isHost]);
+  }, [roomId, setPlayers]);
 
   const createRoom = () => {
     const id = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -104,9 +128,58 @@ export default function NexusRoomManager({ showForge = false }) {
       conn.send({ type: 'join', name: 'Player' });
       setRoomId(targetId);
       setHost(false);
+      hostConnection.current = conn; 
       hapticFeedback();
+
+      conn.on('data', (data) => {
+        if (data.type === 'new-custom-game') {
+          setCustomGame(data.game);
+          setRoundVerdict(null);
+          setLocalEvaluation(null);
+          hapticFeedback(ImpactStyle.Medium);
+        }
+        if (data.type === 'room-status-update') {
+          setRoomStatus(data.status);
+        }
+        if (data.type === 'round-verdict') {
+          setRoundVerdict(data.verdict);
+        }
+      });
     });
   };
+
+  // Guest Broadcast Score Effect
+  useEffect(() => {
+    if (!isHost && localEvaluation && hostConnection.current) {
+      hostConnection.current.send({
+        type: 'submit-score',
+        name: 'Player',
+        score: localEvaluation.score,
+        judgeComment: localEvaluation.judgeComment
+      });
+    }
+    if (isHost && localEvaluation && roomScores.findIndex(s => s.name === 'HOST') === -1) {
+       setRoomScores([...roomScores, { name: 'HOST', score: localEvaluation.score, judgeComment: localEvaluation.judgeComment }]);
+    }
+  }, [localEvaluation, isHost]);
+
+  // Host broadcast effect for room status
+  useEffect(() => {
+    if (isHost && connections.current.length > 0) {
+      connections.current.forEach(conn => {
+        conn.send({ type: 'room-status-update', status: roomStatus });
+      });
+    }
+  }, [roomStatus, isHost]);
+
+  // Host broadcast effect for custom game
+  useEffect(() => {
+    if (isHost && connections.current.length > 0 && customGame) {
+      connections.current.forEach(conn => {
+        conn.send({ type: 'new-custom-game', game: customGame });
+      });
+    }
+  }, [customGame, isHost]);
 
   return (
     <div className="glass-panel p-6 rounded-3xl border-white/5 mb-8">
@@ -146,7 +219,7 @@ export default function NexusRoomManager({ showForge = false }) {
           <p className="text-slate-500 text-[10px] mb-2 uppercase tracking-widest">Active Room</p>
           <h2 className="text-4xl font-black text-white mb-6 tracking-tighter">{roomId}</h2>
           
-          {isHost && showForge && (
+          {isHost && showForge && roomStatus === 'idle' && (
             <div className="mt-8 pt-6 border-t border-white/5 space-y-4 text-left">
               <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Nexus AI Game Forge</h4>
               
@@ -169,7 +242,7 @@ export default function NexusRoomManager({ showForge = false }) {
               <textarea 
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
-                placeholder="Describe your game idea... (e.g. Write a poem with 'paagal')"
+                placeholder="Describe your game idea..."
                 className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm text-white focus:border-neon-cyan transition-colors outline-none h-24"
               />
               <button 
@@ -184,21 +257,25 @@ export default function NexusRoomManager({ showForge = false }) {
             </div>
           )}
 
-          {isHost && (
-            <div className="flex flex-col items-center gap-4 mb-6 mt-8">
-              <div className="p-4 bg-white rounded-2xl">
-                <QRCodeSVG value={roomId} size={120} />
-              </div>
-              <p className="text-slate-500 text-xs">Scan to join this Nexus Room</p>
-            </div>
+          {isHost && roomStatus === 'finished' && roomScores.length > 0 && !roundVerdict && (
+             <div className="mt-8 pt-6 border-t border-white/5">
+                <button 
+                  onClick={evaluateRound}
+                  disabled={isEvaluatingRound}
+                  className="w-full py-4 rounded-2xl bg-neon-cyan text-black font-black text-xs uppercase tracking-widest shadow-neon-glow hover:scale-[0.98] transition-all"
+                >
+                  {isEvaluatingRound ? 'AI JUDGE IS THINKING...' : 'GET ROOM VERDICT'}
+                </button>
+                <p className="text-[10px] text-slate-500 mt-4 uppercase tracking-widest italic">
+                   {roomScores.length} submissions received
+                </p>
+             </div>
           )}
 
-          <div className="flex flex-col gap-2 mb-6">
-            {/* ADDED SAFE FALLBACKS: ?.length || 0 */}
-            <p className="text-slate-500 text-[10px] uppercase tracking-widest">Players Connected: {(players?.length || 0) + 1}</p>
+          <div className="flex flex-col gap-2 mb-6 mt-8">
+            <p className="text-slate-500 text-[10px] uppercase tracking-widest">Players: {(players?.length || 0) + 1}</p>
             <div className="flex flex-wrap justify-center gap-2">
                <span className="px-3 py-1 bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30 rounded-full text-[10px] font-bold">HOST</span>
-               {/* ADDED SAFE FALLBACK: (players || []) */}
                {(players || []).map((p, i) => (
                  <span key={i} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] text-slate-400">PLAYER {i+1}</span>
                ))}
@@ -213,24 +290,6 @@ export default function NexusRoomManager({ showForge = false }) {
           </button>
         </div>
       )}
-
-      {/* Persistence Showcase: Leaderboard */}
-      <div className="mt-8 pt-6 border-t border-white/5">
-        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Nexus Leaderboard</h4>
-        <div className="space-y-2">
-          {/* ADDED SAFE FALLBACK: !leaderboard?.length */}
-          {!leaderboard?.length ? (
-            <p className="text-slate-600 text-[10px] italic">No games recorded in this session.</p>
-          ) : (
-            leaderboard.map((p, i) => (
-              <div key={i} className="flex justify-between items-center text-[10px] font-bold">
-                <span className="text-slate-400">{i + 1}. {p.name}</span>
-                <span className="text-neon-cyan">{p.wins} WINS</span>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
     </div>
   );
 }

@@ -16,6 +16,9 @@ export const useGameStore = create(
       scores: { teamA: 0, teamB: 0 },
       customGame: null, // { gameTitle, instructions, timeLimitSeconds, inputType }
       savedGames: [], // List of previously created games from Supabase
+      localEvaluation: null, // Local player's evaluation result
+      roomScores: [], // Host's collection of all player scores
+      roundVerdict: null, // Sarcastic AI summary for the round
       roomStatus: 'idle', // 'idle', 'waiting', 'playing'
 
       setRoomId: (id) => set({ roomId: id }),
@@ -26,6 +29,9 @@ export const useGameStore = create(
       updateScores: (newScores) => set({ scores: newScores }),
       setCustomGame: (game) => set({ customGame: game }),
       setSavedGames: (games) => set({ savedGames: games }),
+      setLocalEvaluation: (evaluation) => set({ localEvaluation: evaluation }),
+      setRoomScores: (scores) => set({ roomScores: scores }),
+      setRoundVerdict: (verdict) => set({ roundVerdict: verdict }),
       setRoomStatus: (status) => set({ roomStatus: status }),
       updateLeaderboard: (winnerName) => {
         const currentLeaderboard = get().leaderboard;
