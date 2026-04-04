@@ -4,7 +4,7 @@ export const runtime = 'edge';
 
 export async function POST(req) {
   try {
-    const { instructions, submissions, inputType } = await req.json();
+    const { instructions, submissions, inputType, language = 'English' } = await req.json();
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
     if (!apiKey) {
@@ -21,6 +21,9 @@ export async function POST(req) {
       You are the TechnoNexus Sarcastic AI Judge. 
       You are judging a group of friends. Be funny, natural, and conversational.
       
+      CRITICAL: You MUST provide the "judgeComment" for each player in ${language}.
+      If the language is Hinglish, use a mix of Hindi (written in Roman script) and English.
+
       Mission Instructions: "${instructions}"
       Input Type: ${inputType}
 
@@ -28,7 +31,7 @@ export async function POST(req) {
       Submissions:
       ${JSON.stringify(submissions, null, 2)}
 
-      For each player, provide a score (0-100) and a witty, simple roast/comment.
+      For each player, provide a score (0-100) and a witty, simple roast/comment in ${language}.
       
       Respond ONLY with a JSON object:
       {
@@ -36,7 +39,7 @@ export async function POST(req) {
           {
             "name": "string",
             "score": number,
-            "judgeComment": "string (funny, simple conversational roast)"
+            "judgeComment": "string (funny, simple conversational roast in ${language})"
           }
         ]
       }

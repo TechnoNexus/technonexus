@@ -68,7 +68,8 @@ export default function NexusRoomManager({ showForge = false }) {
         method: 'POST',
         body: JSON.stringify({ 
           players: scoresToUse, 
-          missionTitle: customGame?.gameTitle 
+          missionTitle: customGame?.gameTitle,
+          language: customGame?.language || 'English'
         }),
         headers: { 'Content-Type': 'application/json' }
       });
@@ -94,7 +95,8 @@ export default function NexusRoomManager({ showForge = false }) {
         body: JSON.stringify({ 
           instructions: customGame?.instructions,
           submissions: submissions, 
-          inputType: customGame?.inputType
+          inputType: customGame?.inputType,
+          language: customGame?.language || 'English'
         }),
         headers: { 'Content-Type': 'application/json' }
       });
