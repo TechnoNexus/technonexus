@@ -159,7 +159,7 @@ export default function NexusRoomManager({ showForge = false }) {
               roomId: idAsHost, 
               gameMode: useGameStore.getState().gameMode,
               players: updatedPlayers,
-              hostName: playerName,
+              hostName: playerName, // Host's own name
               roomStatus: useGameStore.getState().roomStatus,
               customGame: useGameStore.getState().customGame
             });
@@ -167,7 +167,11 @@ export default function NexusRoomManager({ showForge = false }) {
             // 2. Tell everyone else about the new player
             connections.current.forEach(c => {
               if (c.peer !== conn.peer) {
-                c.send({ type: 'player-list-update', players: updatedPlayers, hostName: playerName });
+                c.send({ 
+                  type: 'player-list-update', 
+                  players: updatedPlayers, 
+                  hostName: playerName 
+                });
               }
             });
           }
@@ -232,6 +236,17 @@ export default function NexusRoomManager({ showForge = false }) {
       conn.on('data', (data) => {
         if (data.type === 'welcome') {
           setGameMode(data.gameMode);
+          setPlayers(data.players);
+          setHostName(data.hostName); // Sync actual host name
+          setRoomStatus(data.roomStatus);
+          if (data.customGame) setCustomGame(data.customGame);
+        }
+        if (data.type === 'player-list-update') {
+          setPlayers(data.players);
+          setHostName(data.hostName);
+        }
+        if (data.type === 'room-status-update') {
+          setRoomStatus(data.status);
         }
         if (data.type === 'mode-update') {
           setGameMode(data.mode);
@@ -241,9 +256,6 @@ export default function NexusRoomManager({ showForge = false }) {
           setRoundVerdict(null);
           setLocalEvaluation(null);
           hapticFeedback(ImpactStyle.Medium);
-        }
-        if (data.type === 'room-status-update') {
-          setRoomStatus(data.status);
         }
         if (data.type === 'round-verdict') {
           setRoundVerdict(data.verdict);
@@ -273,9 +285,13 @@ export default function NexusRoomManager({ showForge = false }) {
 
   useEffect(() => {
     if (isHost && connections.current.length > 0) {
-      connections.current.forEach(conn => conn.send({ type: 'mode-update', mode: gameMode }));
+      connections.current.forEach(conn => {
+        conn.send({ type: 'room-status-update', status: roomStatus });
+        if (customGame) conn.send({ type: 'new-custom-game', game: customGame });
+        conn.send({ type: 'mode-update', mode: gameMode });
+      });
     }
-  }, [gameMode, isHost]);
+  }, [roomStatus, customGame, gameMode, isHost]);
 
   useEffect(() => {
     if (isHost && connections.current.length > 0) {
@@ -417,12 +433,22 @@ export default function NexusRoomManager({ showForge = false }) {
           )}
 
           <div className="flex flex-col gap-2 mb-6 mt-8 text-left">
-            <p className="text-slate-500 text-[10px] uppercase tracking-widest">Players: {(players?.length || 0) + 1}</p>
+            <p className="text-slate-500 text-[10px] uppercase tracking-widest">In the Nexus: {(players?.length || 0) + 1}</p>
             <div className="flex flex-wrap gap-2">
-               <span className="px-3 py-1 bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30 rounded-full text-[10px] font-bold">{playerName || 'HOST'}</span>
-               {(players || []).map((p, i) => (
-                 <span key={i} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] text-slate-400">{p.name || `PLAYER ${i+1}`}</span>
+               <div className="flex items-center gap-2 px-3 py-1 bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-neon-cyan rounded-full animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-tight">HOST: {useGameStore.getState().hostName || 'Nexus-1'}</span>
+               </div>
+               {(players || []).filter(p => p.name !== playerName).map((p, i) => (
+                 <span key={i} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] text-slate-400 uppercase font-medium">
+                   {p.name}
+                 </span>
                ))}
+               {!isHost && (
+                 <span className="px-3 py-1 bg-white/10 border border-neon-cyan/20 rounded-full text-[10px] text-neon-cyan font-black uppercase">
+                   YOU
+                 </span>
+               )}
             </div>
           </div>
 

@@ -88,3 +88,6 @@
     - [x] **Multi-language AI Commentary:**
     - [x] Updated all evaluation APIs (`submission`, `batch`, `leaderboard`) to detect and respect the game's chosen language (English, Hindi, Hinglish).
     - [x] Sarcastic Judge now roasts and summarizes rounds in the same language as the mission instructions.
+- [x] **Room Synchronization 2.0:**
+    - [x] Fixed player list synchronization so Guests see the actual Host and other participants.
+    - [x] Implemented global state broadcasting for `roomStatus` and `customGame` to ensure all players start and finish missions simultaneously.
