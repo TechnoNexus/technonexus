@@ -23,9 +23,15 @@ export default function NexusRoomManager({ showForge = false }) {
   const [isEvaluatingRound, setIsEvaluatingRound] = useState(false);
   const [isEvaluatingBatch, setIsEvaluatingBatch] = useState(false);
   const [submissions, setSubmissions] = useState([]); 
+  const [joinUrl, setJoinUrl] = useState('');
   const connections = useRef([]);
   const hostConnection = useRef(null); 
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setJoinUrl(`${window.location.origin}${window.location.pathname}?join=${roomId}`);
+    }
+  }, [roomId]);
   const hapticFeedback = async (style = ImpactStyle.Medium) => {
     try { await Haptics.impact({ style }); } catch (e) {}
   };
