@@ -50,7 +50,8 @@ export async function POST(req) {
         "timeLimitSeconds": number (between 30 and 120),
         "gameType": "string ('text', 'performance', or 'quiz')",
         "inputType": "string ('text', 'voice', or 'none')",
-        "gameContent": "any (If 'performance', an Array of strings to act out. If 'quiz', an Array of objects with question/answer. If 'text', leave as null.)"
+        "gameContent": "any (If 'performance', an Array of strings to act out. If 'quiz', an Array of objects with question/answer. If 'text', leave as null.)",
+        "language": "string (${language})"
       }
 
       Example for 'Baby Items Charades':
