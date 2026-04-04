@@ -11,7 +11,7 @@ export default function NexusRoomManager({ showForge = false }) {
     resetRoom, leaderboard, setCustomGame, roomStatus, setRoomStatus,
     localEvaluation, setLocalEvaluation, roomScores, setRoomScores,
     roundVerdict, setRoundVerdict, customGame, playerName, setPlayerName,
-    gameMode, setGameMode
+    gameMode, setGameMode, hostName, setHostName
   } = useGameStore();
 
   const [peer, setPeer] = useState(null);
