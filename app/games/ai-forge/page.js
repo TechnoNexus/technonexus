@@ -30,6 +30,20 @@ export default function AIForgeGame() {
     try { await Haptics.impact({ style }); } catch (e) {}
   };
 
+  // Reset game state on component mount - fresh session every time
+  useEffect(() => {
+    setRoomStatus('idle');
+    setCustomGame(null);
+    setLocalEvaluation(null);
+    setRoundVerdict(null);
+    setSubmission('');
+    setTimeLeft(null);
+    setCurrentContentIndex(0);
+    setShowContent(false);
+    setSessionPoints(0);
+    setRoomScores([]);
+  }, []);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
@@ -326,16 +340,34 @@ export default function AIForgeGame() {
 
         {roomStatus === 'playing' && customGame && (
           <div className="flex-1 flex flex-col pt-12 animate-in slide-in-from-bottom duration-700">
-            <div className="text-center mb-12">
-              <div className="text-6xl font-black mb-2 tabular-nums">
-                {timeLeft}<span className="text-2xl text-neon-cyan">s</span>
+            <div className="flex justify-between items-start mb-8">
+              <div className="flex-1">
+                <div className="text-center mb-12">
+                  <div className="text-6xl font-black mb-2 tabular-nums">
+                    {timeLeft}<span className="text-2xl text-neon-cyan">s</span>
+                  </div>
+                  <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-1000 ${timeLeft < 10 ? 'bg-red-500' : 'bg-neon-cyan'}`}
+                      style={{ width: `${(timeLeft / customGame.timeLimitSeconds) * 100}%` }}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full transition-all duration-1000 ${timeLeft < 10 ? 'bg-red-500' : 'bg-neon-cyan'}`}
-                  style={{ width: `${(timeLeft / customGame.timeLimitSeconds) * 100}%` }}
-                />
-              </div>
+              <button 
+                onClick={() => {
+                  hapticFeedback(ImpactStyle.Medium);
+                  setRoomStatus('idle');
+                  setLocalEvaluation(null);
+                  setSubmission('');
+                  setRoundVerdict(null);
+                  setSessionPoints(0);
+                  setRoomScores([]);
+                }}
+                className="ml-4 px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/40 text-red-500 font-bold text-xs uppercase tracking-widest hover:bg-red-500/30 transition-all whitespace-nowrap"
+              >
+                × QUIT
+              </button>
             </div>
 
             <div className="glass-panel p-8 rounded-[2.5rem] border-white/10 mb-8 flex-1 flex flex-col">
@@ -447,6 +479,24 @@ export default function AIForgeGame() {
                     "{localEvaluation.judgeComment}"
                   </p>
                 </div>
+              </div>
+            ) : roomScores.length > 0 && roomScores.find(s => s.name === playerName) ? (
+              // Fallback: check roomScores directly if localEvaluation not yet synced
+              <div className="w-full space-y-6 mb-12">
+                {(() => {
+                  const score = roomScores.find(s => s.name === playerName);
+                  return score ? (
+                    <div className="glass-panel p-8 rounded-[2.5rem] border-neon-cyan/30 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4">
+                        <span className="text-4xl font-black text-neon-cyan/20">#{score.score}</span>
+                      </div>
+                      <p className="text-neon-cyan font-black text-5xl mb-4 tracking-tighter">{score.score}</p>
+                      <p className="text-white font-medium italic text-lg leading-relaxed">
+                        "{score.judgeComment}"
+                      </p>
+                    </div>
+                  ) : null;
+                })()}
               </div>
             ) : customGame?.gameType === 'performance' && !roomScores.find(s => s.name === playerName) ? (
               <div className="glass-panel p-8 rounded-[2.5rem] border-white/5 w-full mb-8">

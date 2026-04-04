@@ -26,7 +26,8 @@ export default function NexusRoomManager({ showForge = false }) {
   const [joinUrl, setJoinUrl] = useState('');
   const connections = useRef([]);
   const hostConnection = useRef(null);
-  const lastStartGameTime = useRef(0); 
+  const lastStartGameTime = useRef(0);
+  const keepAliveInterval = useRef(null); // Keep connections alive during evaluation 
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -91,9 +92,39 @@ export default function NexusRoomManager({ showForge = false }) {
   };
 
   const evaluateBatch = async () => {
-    if (!isHost || submissions.length === 0) return;
+    if (!isHost || submissions.length === 0) {
+      console.warn('❌ evaluateBatch aborted:', { isHost, submissionCount: submissions.length });
+      return;
+    }
     setIsEvaluatingBatch(true);
+    console.log('📊 BATCH EVALUATION STARTED');
+    console.log('   Host:', playerName);
+    console.log('   Submissions:', submissions);
+    console.log('   Game:', customGame?.gameTitle);
+    
+    const isSoloHost = connections.current.filter(c => c.open).length === 0;
+    console.log('   Solo host:', isSoloHost);
+    console.log('   Open connections:', connections.current.filter(c => c.open).length);
+    
+    // Start keep-alive ONLY if there are guests to keep alive
+    if (!isSoloHost) {
+      console.log('   ⏱️ Starting keep-alive heartbeat (2s interval)');
+      keepAliveInterval.current = setInterval(() => {
+        const activeConns = connections.current.filter(c => c.open);
+        activeConns.forEach(conn => {
+          try {
+            conn.send({ type: 'keep-alive', timestamp: Date.now() });
+          } catch (e) {
+            console.log('   ⚠️ Keep-alive send failed:', e.message);
+          }
+        });
+      }, 2000);
+    } else {
+      console.log('   ℹ️ Solo host - no keep-alive needed');
+    }
+    
     try {
+      console.log('   🤖 Calling Gemini API...');
       const res = await fetch('/api/evaluate-batch', {
         method: 'POST',
         body: JSON.stringify({ 
@@ -104,15 +135,77 @@ export default function NexusRoomManager({ showForge = false }) {
         }),
         headers: { 'Content-Type': 'application/json' }
       });
+      
+      if (!res.ok) {
+        throw new Error(`API returned ${res.status}: ${res.statusText}`);
+      }
+      
       const data = await res.json();
+      console.log('   ✅ Gemini responded with', data.results?.length, 'results');
+      console.log('   Results:', data.results);
       setRoomScores(data.results);
-      connections.current.forEach(conn => conn.send({ type: 'batch-results', results: data.results }));
+      
+      // Only broadcast to guests if there ARE guests
+      if (!isSoloHost) {
+        const activeConnections = connections.current.filter(c => c.open);
+        console.log('   📡 Broadcasting to', activeConnections.length, 'guests');
+        
+        // Send results immediately to all open connections
+        activeConnections.forEach(conn => {
+          try {
+            conn.send({ 
+              type: 'batch-results', 
+              results: data.results,
+              timestamp: Date.now()
+            });
+            console.log('      ✉️ Sent to:', conn.peer);
+          } catch (e) {
+            console.error('      ❌ Failed to send to', conn.peer, ':', e);
+          }
+        });
+        
+        // Retry if no connections on first attempt
+        if (activeConnections.length === 0) {
+          console.log('   ⏰ No connections found, retrying in 500ms...');
+          await new Promise(r => setTimeout(r, 500));
+          const retryConnections = connections.current.filter(c => c.open);
+          console.log('   Retry: found', retryConnections.length, 'connections');
+          retryConnections.forEach(conn => {
+            try {
+              conn.send({ 
+                type: 'batch-results', 
+                results: data.results,
+                timestamp: Date.now(),
+                isRetry: true
+              });
+              console.log('      ✉️ Sent (RETRY) to:', conn.peer);
+            } catch (e) {
+              console.error('      ❌ Retry failed for', conn.peer, ':', e);
+            }
+          });
+        }
+      } else {
+        console.log('   ℹ️ Solo host - results ready for local display');
+      }
+      
+      // Host always gets their own score
       const myResult = data.results.find(r => r.name === playerName);
-      if (myResult) setLocalEvaluation(myResult);
+      if (myResult) {
+        console.log('   👤 Host score:', myResult);
+        setLocalEvaluation(myResult);
+      }
       evaluateRound(data.results);
+      console.log('📊 BATCH EVALUATION COMPLETE ✅');
     } catch (e) {
-      console.error('Batch evaluation failed:', e);
+      console.error('❌ BATCH EVALUATION FAILED:', e);
+      alert('AI evaluation failed: ' + e.message);
     } finally {
+      // Stop keep-alive if it was running
+      if (keepAliveInterval.current) {
+        console.log('   ⏹️ Stopping keep-alive heartbeat');
+        clearInterval(keepAliveInterval.current);
+        keepAliveInterval.current = null;
+      }
       setIsEvaluatingBatch(false);
     }
   };
@@ -261,9 +354,19 @@ export default function NexusRoomManager({ showForge = false }) {
         }
         if (data.type === 'round-verdict') setRoundVerdict(data.verdict);
         if (data.type === 'batch-results') {
+          console.log('🎯 Guest received batch-results:', { resultsCount: data.results?.length, playerName });
           setRoomScores(data.results);
           const myResult = data.results.find(r => r.name === playerName);
-          if (myResult) setLocalEvaluation(myResult);
+          if (myResult) {
+            console.log('✅ Found my score in results:', myResult);
+            setLocalEvaluation(myResult);
+          } else {
+            console.warn('⚠️ My name not found in results. Available names:', data.results?.map(r => r.name));
+          }
+        }
+        if (data.type === 'keep-alive') {
+          // Silently handle keep-alive pings to prevent disconnection during evaluation
+          console.log('Keep-alive ping received');
         }
       });
 
@@ -417,10 +520,42 @@ export default function NexusRoomManager({ showForge = false }) {
               <button onClick={generateGame} disabled={isGenerating || !aiPrompt} className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isGenerating ? 'opacity-50 cursor-not-allowed' : 'bg-electric-violet/20 text-electric-violet border border-electric-violet/30 hover:bg-electric-violet hover:text-white'}`}>{isGenerating ? 'FORGING REALITY...' : 'FORGE CUSTOM AI GAME'}</button>
             </div>
           )}
-          {isHost && roomStatus === 'finished' && submissions.length > 0 && !roomScores.length && (
+          {isHost && roomStatus === 'finished' && submissions.length > 0 && (
+             <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
+                <div className="bg-neon-violet/5 border border-neon-violet/20 rounded-2xl p-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">🎯 Analysis Ready</p>
+                  <p className="text-[10px] text-slate-500 italic mb-4">{submissions.length} {submissions.length === 1 ? 'submission' : 'submissions'} received from {players.length} {players.length === 1 ? 'player' : 'players'}</p>
+                  
+                  {!roomScores.length ? (
+                    <button 
+                      onClick={() => {
+                        console.log('🚀 Host manually triggered evaluateBatch');
+                        evaluateBatch();
+                      }}
+                      disabled={isEvaluatingBatch}
+                      className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
+                        isEvaluatingBatch 
+                          ? 'opacity-50 cursor-not-allowed bg-slate-600 text-white' 
+                          : 'bg-neon-cyan text-black shadow-neon-glow hover:scale-[0.98]'
+                      }`}
+                    >
+                      {isEvaluatingBatch ? '⏳ AI JUDGE IS THINKING...' : '▶️ START ANALYSIS NOW'}
+                    </button>
+                  ) : (
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center">
+                      <p className="text-[10px] font-black text-green-500 uppercase tracking-widest">✅ Analysis Complete</p>
+                      <p className="text-xs text-green-400 mt-2">Results sent to all players</p>
+                    </div>
+                  )}
+                </div>
+             </div>
+          )}
+          {isHost && roomStatus === 'finished' && submissions.length === 0 && (
              <div className="mt-8 pt-6 border-t border-white/5">
-                <button onClick={evaluateBatch} disabled={isEvaluatingBatch} className="w-full py-4 rounded-2xl bg-neon-cyan text-black font-black text-xs uppercase tracking-widest shadow-neon-glow hover:scale-[0.98] transition-all">{isEvaluatingBatch ? 'AI JUDGE IS THINKING...' : 'SCORE ALL PLAYERS'}</button>
-                <p className="text-[10px] text-slate-500 mt-4 uppercase tracking-widest italic">{submissions.length} submissions received</p>
+                <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-4 text-center">
+                  <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-2">⚠️ No Submissions</p>
+                  <p className="text-[10px] text-red-400 italic">Waiting for players to submit responses...</p>
+                </div>
              </div>
           )}
           <div className="flex flex-col gap-4 mb-8 text-left bg-black/20 p-4 rounded-2xl border border-white/5">

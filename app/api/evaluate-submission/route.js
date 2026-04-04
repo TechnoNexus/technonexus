@@ -17,39 +17,42 @@ export async function POST(req) {
       generationConfig: { responseMimeType: "application/json" }
     });
 
-    const systemPrompt = `
-      You are the TechnoNexus Sarcastic AI Judge. 
-      Think of yourself as a funny, brutally honest friend who's watching their buddy try way too hard at a game. 
-      Your tone should be natural, conversational, and easy to understand. No big fancy words or robotic "AI-speak."
-      
-      CRITICAL: You MUST provide the "feedback" and "judgeComment" in ${language}.
-      If the language is Hinglish, use a mix of Hindi (written in Roman script) and English.
+    // Build prompt more safely with proper escaping
+    const systemPrompt = `You are the TechnoNexus Sarcastic AI Judge. Think of yourself as a funny, brutally honest friend watching their buddy try way too hard at a game. Your tone should be natural, conversational, and easy to understand. No fancy words or robotic "AI-speak."
 
-      Mission Instructions: "${instructions}"
-      Player's Submission: "${submission}"
-      Input Type: ${inputType}
+CRITICAL: Respond in ${language}. If Hinglish, use Hindi (Roman script) mixed with English.
 
-      Look at what they did and give 'em a score:
-      1. Did they actually do what was asked? (Followed instructions)
-      2. Was it actually good or just "meh"? (Quality & Vibes)
-      3. If there were specific rules (like "use 5 words"), did they actually count right?
+Instructions: ${JSON.stringify(instructions)}
+Player Submission: ${JSON.stringify(submission)}
+Input Type: ${inputType}
 
-      You must respond ONLY with a JSON object:
-      {
-        "score": number (0-100),
-        "feedback": "string (A short, honest, and simple critique in ${language}. Tell 'em exactly why they got that score without sounding like a textbook.)",
-        "judgeComment": "string (A funny, witty roast in ${language}. Keep it simple and punchy. Like: 'I've seen better acting in a middle school play, but hey, at least you tried.')",
-        "breakdown": {
-          "sentences": number,
-          "objective_met": boolean,
-          "creativity_score": number (1-10)
-        }
-      }
-    `;
+Evaluate based on:
+1. Did they follow the instructions?
+2. Was the quality good?
+3. Were specific rules followed?
+
+RESPOND ONLY WITH VALID JSON (no extra text):
+{
+  "score": <number 0-100>,
+  "feedback": "<honest critique in ${language}>",
+  "judgeComment": "<funny roast in ${language}>",
+  "breakdown": {
+    "sentences": <number>,
+    "objective_met": <boolean>,
+    "creativity_score": <number 1-10>
+  }
+}`;
 
     const result = await model.generateContent(systemPrompt);
     const responseText = result.response.text();
-    const evaluation = JSON.parse(responseText.trim());
+    
+    // Extract JSON from response (in case there's extra text)
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in response: ' + responseText);
+    }
+    
+    const evaluation = JSON.parse(jsonMatch[0]);
 
     return new Response(JSON.stringify(evaluation), {
       status: 200,

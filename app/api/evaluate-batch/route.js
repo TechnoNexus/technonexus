@@ -17,37 +17,38 @@ export async function POST(req) {
       generationConfig: { responseMimeType: "application/json" }
     });
 
-    const systemPrompt = `
-      You are the TechnoNexus Sarcastic AI Judge. 
-      You are judging a group of friends. Be funny, natural, and conversational.
-      
-      CRITICAL: You MUST provide the "judgeComment" for each player in ${language}.
-      If the language is Hinglish, use a mix of Hindi (written in Roman script) and English.
+    // Build prompt more safely with proper JSON escaping
+    const systemPrompt = `You are the TechnoNexus Sarcastic AI Judge. You are judging a group of friends. Be funny, natural, and conversational. Respond in ${language}. For Hinglish, mix Hindi (Roman script) with English.
 
-      Mission Instructions: "${instructions}"
-      Input Type: ${inputType}
+Instructions: ${JSON.stringify(instructions)}
+Input Type: ${inputType}
 
-      Evaluate each player's submission below.
-      Submissions:
-      ${JSON.stringify(submissions, null, 2)}
+Player Submissions:
+${JSON.stringify(submissions, null, 2)}
 
-      For each player, provide a score (0-100) and a witty, simple roast/comment in ${language}.
-      
-      Respond ONLY with a JSON object:
-      {
-        "results": [
-          {
-            "name": "string",
-            "score": number,
-            "judgeComment": "string (funny, simple conversational roast in ${language})"
-          }
-        ]
-      }
-    `;
+For each player, provide a score (0-100) and a witty comment in ${language}.
+
+RESPOND ONLY WITH VALID JSON (no extra text):
+{
+  "results": [
+    {
+      "name": "<player name>",
+      "score": <number 0-100>,
+      "judgeComment": "<funny, simple roast in ${language}>"
+    }
+  ]
+}`;
 
     const result = await model.generateContent(systemPrompt);
     const responseText = result.response.text();
-    const evaluation = JSON.parse(responseText.trim());
+    
+    // Extract JSON from response (in case there's extra text)
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in response: ' + responseText);
+    }
+    
+    const evaluation = JSON.parse(jsonMatch[0]);
 
     return new Response(JSON.stringify(evaluation), {
       status: 200,
@@ -56,6 +57,6 @@ export async function POST(req) {
 
   } catch (error) {
     console.error('Batch Evaluation Error:', error);
-    return new Response(JSON.stringify({ error: 'Batch evaluation failed' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Batch evaluation failed', details: error.message }), { status: 500 });
   }
 }
