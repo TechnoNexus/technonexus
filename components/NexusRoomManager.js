@@ -223,6 +223,15 @@ export default function NexusRoomManager({ showForge = false }) {
           setPlayers(data.players);
           setHostName(data.hostName);
         }
+        if (data.type === 'start-game') {
+          // Unified game start: sets both status and game atomically
+          setCustomGame(data.customGame);
+          setGameMode(data.gameMode);
+          setRoomStatus(data.status);
+          setRoundVerdict(null);
+          setLocalEvaluation(null);
+          hapticFeedback(ImpactStyle.Heavy);
+        }
         if (data.type === 'room-status-update') setRoomStatus(data.status);
         if (data.type === 'mode-update') setGameMode(data.mode);
         if (data.type === 'new-custom-game') {
@@ -255,7 +264,20 @@ export default function NexusRoomManager({ showForge = false }) {
   };
 
   useEffect(() => {
-    if (isHost && connections.current.length > 0) {
+    if (!isHost || connections.current.length === 0) return;
+    
+    // Special handling for game start: bundle everything in one message
+    if (roomStatus === 'playing' && customGame) {
+      connections.current.forEach(conn => {
+        conn.send({ 
+          type: 'start-game', 
+          status: 'playing',
+          customGame: customGame,
+          gameMode: gameMode
+        });
+      });
+    } else {
+      // Regular state updates (non-playing)
       connections.current.forEach(conn => {
         conn.send({ type: 'room-status-update', status: roomStatus });
         if (customGame) conn.send({ type: 'new-custom-game', game: customGame });

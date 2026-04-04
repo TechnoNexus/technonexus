@@ -19,10 +19,10 @@ export const useGameStore = create(
       localEvaluation: null, // Local player's evaluation result
       roomScores: [], // Host's collection of all player scores
       roundVerdict: null, // Sarcastic AI summary for the round
-      roomStatus: 'idle', // 'idle', 'waiting', 'playing'
       playerName: '', // Local player's nickname
       hostName: '', // Synced name of the room host
       gameMode: 'individual', // 'individual' or 'team'
+      leaderboard: [], // Global leaderboard tracking wins across sessions
 
       setRoomId: (id) => set({ roomId: id }),
       setHost: (isHost) => set({ isHost }),

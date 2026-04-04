@@ -91,3 +91,7 @@
 - [x] **Room Synchronization 2.0:**
     - [x] Fixed player list synchronization so Guests see the actual Host and other participants.
     - [x] Implemented global state broadcasting for `roomStatus` and `customGame` to ensure all players start and finish missions simultaneously.
+
+## Phase 6.2 — Critical Bug Fixes (✅ COMPLETED)
+- [x] **Leaderboard State Initialization Fix**: Added missing `leaderboard: []` to Zustand store initial state (was causing `updateLeaderboard()` to crash)
+- [x] **Game Start Synchronization Fix**: Implemented unified 'start-game' PeerJS message to atomically sync roomStatus and customGame to all guests (prevents guest screen freeze)
