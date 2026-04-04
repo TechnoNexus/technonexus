@@ -22,6 +22,9 @@ export default function AIForgeGame() {
   const [currentContentIndex, setCurrentContentIndex] = useState(0);
   const [showContent, setShowContent] = useState(false);
   const [sessionPoints, setSessionPoints] = useState(0);
+  const [isRenaming, setIsRenaming] = useState(null); // game id being renamed
+  const [renamingText, setRenamingText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(null); // game id being deleted
 
   const hapticFeedback = async (style = ImpactStyle.Medium) => {
     try { await Haptics.impact({ style }); } catch (e) {}
@@ -75,6 +78,43 @@ export default function AIForgeGame() {
   const loadFromVault = (gameConfig) => {
     setCustomGame(gameConfig);
     hapticFeedback(ImpactStyle.Heavy);
+  };
+
+  const deleteFromVault = async (gameId) => {
+    if (!user) return;
+    setIsDeleting(gameId);
+    const { error } = await supabase
+      .from('user_games')
+      .delete()
+      .eq('id', gameId)
+      .eq('user_id', user.id);
+    
+    if (error) {
+      alert('Failed to delete: ' + error.message);
+    } else {
+      hapticFeedback(ImpactStyle.Light);
+      fetchVault(user.id);
+    }
+    setIsDeleting(null);
+  };
+
+  const renameInVault = async (gameId) => {
+    if (!user || !renamingText.trim()) return;
+    setIsRenaming(gameId);
+    const { error } = await supabase
+      .from('user_games')
+      .update({ game_title: renamingText.trim() })
+      .eq('id', gameId)
+      .eq('user_id', user.id);
+    
+    if (error) {
+      alert('Failed to rename: ' + error.message);
+    } else {
+      hapticFeedback(ImpactStyle.Medium);
+      setRenamingText('');
+      setIsRenaming(null);
+      fetchVault(user.id);
+    }
   };
 
   useEffect(() => {
@@ -176,17 +216,56 @@ export default function AIForgeGame() {
                 <h3 className="text-[10px] font-black tracking-widest text-slate-500 uppercase mb-4 text-center">Your Nexus Vault</h3>
                 <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                   {savedGames.map((game) => (
-                    <div 
-                      key={game.id}
-                      className="group flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5 hover:border-neon-cyan/30 transition-all"
-                    >
-                      <span className="text-xs font-bold text-slate-300 truncate mr-4">{game.game_title}</span>
-                      <button 
-                        onClick={() => loadFromVault(game.config_json)}
-                        className="text-[8px] font-black text-neon-cyan uppercase tracking-widest border border-neon-cyan/20 px-3 py-1 rounded-lg hover:bg-neon-cyan hover:text-black transition-all"
-                      >
-                        Load
-                      </button>
+                    <div key={game.id}>
+                      {isRenaming === game.id ? (
+                        <div className="flex gap-2 p-3 rounded-xl bg-white/5 border border-white/10">
+                          <input 
+                            type="text" 
+                            value={renamingText}
+                            onChange={(e) => setRenamingText(e.target.value)}
+                            placeholder="New name..."
+                            className="flex-1 bg-black/40 border border-white/20 rounded-lg px-3 py-2 text-xs text-white focus:border-neon-cyan outline-none"
+                            autoFocus
+                          />
+                          <button 
+                            onClick={() => renameInVault(game.id)}
+                            className="text-[8px] font-black text-neon-cyan uppercase tracking-widest border border-neon-cyan/20 px-3 py-2 rounded-lg hover:bg-neon-cyan hover:text-black transition-all"
+                          >
+                            Save
+                          </button>
+                          <button 
+                            onClick={() => setIsRenaming(null)}
+                            className="text-[8px] font-black text-slate-500 uppercase tracking-widest border border-slate-500/20 px-3 py-2 rounded-lg hover:bg-slate-500/10 transition-all"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="group flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5 hover:border-neon-cyan/30 transition-all">
+                          <span className="text-xs font-bold text-slate-300 truncate mr-4">{game.game_title}</span>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => loadFromVault(game.config_json)}
+                              className="text-[8px] font-black text-neon-cyan uppercase tracking-widest border border-neon-cyan/20 px-3 py-1 rounded-lg hover:bg-neon-cyan hover:text-black transition-all"
+                            >
+                              Load
+                            </button>
+                            <button 
+                              onClick={() => { setIsRenaming(game.id); setRenamingText(game.game_title); }}
+                              className="text-[8px] font-black text-electric-violet uppercase tracking-widest border border-electric-violet/20 px-3 py-1 rounded-lg hover:bg-electric-violet hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                            >
+                              Rename
+                            </button>
+                            <button 
+                              onClick={() => deleteFromVault(game.id)}
+                              disabled={isDeleting === game.id}
+                              className="text-[8px] font-black text-red-500 uppercase tracking-widest border border-red-500/20 px-3 py-1 rounded-lg hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                            >
+                              {isDeleting === game.id ? 'Deleting...' : 'Delete'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -25,7 +25,8 @@ export default function NexusRoomManager({ showForge = false }) {
   const [submissions, setSubmissions] = useState([]); 
   const [joinUrl, setJoinUrl] = useState('');
   const connections = useRef([]);
-  const hostConnection = useRef(null); 
+  const hostConnection = useRef(null);
+  const lastStartGameTime = useRef(0); 
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -161,6 +162,18 @@ export default function NexusRoomManager({ showForge = false }) {
             hapticFeedback(ImpactStyle.Light);
           }
         });
+        
+        conn.on('close', () => {
+          // Remove closed connection from active connections array
+          connections.current = connections.current.filter(c => c !== conn && c.open);
+          setStatus('Player Disconnected');
+        });
+        
+        conn.on('error', (err) => {
+          console.error('Connection error:', err);
+          connections.current = connections.current.filter(c => c !== conn && c.open);
+        });
+        
         connections.current.push(conn);
         setStatus('Player Connected');
       });
@@ -224,6 +237,7 @@ export default function NexusRoomManager({ showForge = false }) {
           setHostName(data.hostName);
         }
         if (data.type === 'start-game') {
+          console.log('🎮 Guest received START-GAME:', { status: data.status, hasCustomGame: !!data.customGame, gameMode: data.gameMode });
           // Unified game start: sets both status and game atomically
           setCustomGame(data.customGame);
           setGameMode(data.gameMode);
@@ -231,10 +245,15 @@ export default function NexusRoomManager({ showForge = false }) {
           setRoundVerdict(null);
           setLocalEvaluation(null);
           hapticFeedback(ImpactStyle.Heavy);
+          console.log('✅ Guest state updated - should now see game screen');
         }
-        if (data.type === 'room-status-update') setRoomStatus(data.status);
+        if (data.type === 'room-status-update') {
+          console.log('Status update:', data.status);
+          setRoomStatus(data.status);
+        }
         if (data.type === 'mode-update') setGameMode(data.mode);
         if (data.type === 'new-custom-game') {
+          console.log('New game received, game title:', data.game?.gameTitle);
           setCustomGame(data.game);
           setRoundVerdict(null);
           setLocalEvaluation(null);
@@ -247,10 +266,17 @@ export default function NexusRoomManager({ showForge = false }) {
           if (myResult) setLocalEvaluation(myResult);
         }
       });
+
+      conn.on('close', () => {
+        hostConnection.current = null;
+        setStatus('Ready');
+        alert('Disconnected from host.');
+      });
     });
 
     conn.on('error', (err) => {
       console.error("Connection error:", err);
+      hostConnection.current = null;
       setStatus('Ready');
       alert("Host not found.");
     });
@@ -264,24 +290,50 @@ export default function NexusRoomManager({ showForge = false }) {
   };
 
   useEffect(() => {
-    if (!isHost || connections.current.length === 0) return;
+    if (!isHost || connections.current.length === 0) {
+      console.log('Broadcast blocked:', { isHost, connectionsLength: connections.current.length });
+      return;
+    }
     
-    // Special handling for game start: bundle everything in one message
-    if (roomStatus === 'playing' && customGame) {
-      connections.current.forEach(conn => {
-        conn.send({ 
-          type: 'start-game', 
-          status: 'playing',
-          customGame: customGame,
-          gameMode: gameMode
+    // Always send start-game when transitioning to playing state
+    if (roomStatus === 'playing') {
+      const now = Date.now();
+      // Send on first transition AND resend every 2 seconds to ensure delivery
+      if (now - lastStartGameTime.current > 2000) {
+        console.log('Broadcasting START GAME to', connections.current.length, 'players');
+        lastStartGameTime.current = now;
+        
+        const activeConnections = connections.current.filter(c => c.open);
+        console.log('Active connections:', activeConnections.length);
+        
+        activeConnections.forEach(conn => {
+          try {
+            conn.send({ 
+              type: 'start-game', 
+              status: 'playing',
+              customGame: customGame,
+              gameMode: gameMode,
+              timestamp: now,
+              retry: false
+            });
+          } catch (e) {
+            console.error('Failed to send start-game:', e);
+          }
         });
-      });
+      }
     } else {
-      // Regular state updates (non-playing)
+      lastStartGameTime.current = 0; // Reset when not playing
+      // Regular state updates for non playing states
       connections.current.forEach(conn => {
-        conn.send({ type: 'room-status-update', status: roomStatus });
-        if (customGame) conn.send({ type: 'new-custom-game', game: customGame });
-        conn.send({ type: 'mode-update', mode: gameMode });
+        if (conn.open) {
+          try {
+            conn.send({ type: 'room-status-update', status: roomStatus });
+            if (customGame) conn.send({ type: 'new-custom-game', game: customGame });
+            conn.send({ type: 'mode-update', mode: gameMode });
+          } catch (e) {
+            console.error('Failed to send state update:', e);
+          }
+        }
       });
     }
   }, [roomStatus, customGame, gameMode, isHost]);

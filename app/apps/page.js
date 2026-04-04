@@ -5,16 +5,20 @@ export default function AppsPage() {
     {
       id: 'random-generator',
       name: 'Random Generator',
-      description: 'A versatile tool for generating random numbers, strings, and unique IDs with customizable constraints.',
+      description: 'Generate random numbers, strings, and UUIDs with customizable constraints.',
       tag: 'UTILITY',
-      status: 'COMING SOON',
+      status: 'AVAILABLE',
+      href: '/apps/random-generator',
+      disabled: false
     },
     {
       id: 'dev-utility',
       name: 'Dev Utility',
-      description: 'A collection of developer tools including JSON formatters, Base64 encoders, and more.',
+      description: 'JSON formatter, Base64 encoder/decoder, and other essential developer tools.',
       tag: 'DEVELOPER',
-      status: 'COMING SOON',
+      status: 'AVAILABLE',
+      href: '/apps/dev-utility',
+      disabled: false
     },
     {
       id: 'ai-orchestrator',
@@ -22,6 +26,8 @@ export default function AppsPage() {
       description: 'An experimental interface for managing multiple AI model outputs in a single workspace.',
       tag: 'AI',
       status: 'IN RESEARCH',
+      href: '#',
+      disabled: true
     }
   ];
 
@@ -41,13 +47,19 @@ export default function AppsPage() {
           {apps.map((app) => (
             <div 
               key={app.id}
-              className="group glass-panel rounded-3xl p-8 border-white/5 flex flex-col h-full opacity-60 grayscale"
+              className={`group glass-panel rounded-3xl p-8 border-white/5 flex flex-col h-full transition-all ${
+                app.disabled ? 'opacity-60 grayscale' : 'hover:border-neon-cyan/30'
+              }`}
             >
               <div className="flex justify-between items-start mb-6">
                  <span className="text-[10px] font-bold tracking-[0.2em] px-3 py-1 bg-white/5 text-slate-400 rounded-full border border-white/10 uppercase">
                    {app.tag}
                  </span>
-                 <span className="text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-white/5 text-slate-500 uppercase">
+                 <span className={`text-[10px] font-bold tracking-widest px-3 py-1 rounded-full border uppercase ${
+                   app.disabled 
+                     ? 'bg-white/5 text-slate-500 border-white/10'
+                     : 'bg-neon-cyan/20 text-neon-cyan border-neon-cyan/30'
+                 }`}>
                    {app.status}
                  </span>
               </div>
@@ -60,12 +72,21 @@ export default function AppsPage() {
                 {app.description}
               </p>
 
-              <button 
-                disabled
-                className="w-full py-4 bg-white/5 text-slate-600 border border-white/10 rounded-2xl font-black cursor-not-allowed"
-              >
-                ACCESS DENIED
-              </button>
+              {app.disabled ? (
+                <button 
+                  disabled
+                  className="w-full py-4 bg-white/5 text-slate-600 border border-white/10 rounded-2xl font-black cursor-not-allowed"
+                >
+                  COMING SOON
+                </button>
+              ) : (
+                <Link 
+                  href={app.href}
+                  className="w-full py-4 bg-neon-cyan text-black rounded-2xl font-black text-center hover:scale-[0.98] transition-all shadow-neon-glow uppercase text-sm tracking-widest"
+                >
+                  Access Tool →
+                </Link>
+              )}
             </div>
           ))}
         </div>

@@ -4,32 +4,28 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
-const hapticFeedback = async (style = ImpactStyle.Medium) => {
-  try {
-    await Haptics.impact({ style });
-  } catch (e) {
-    console.log('Haptic feedback:', style);
-  }
-};
-
 export default function TeamPicker() {
   const [playerName, setPlayerName] = useState('');
   const [players, setPlayers] = useState([]);
   const [teamCount, setTeamCount] = useState(2);
   const [teams, setTeams] = useState([]);
 
+  const hapticFeedback = async (style = ImpactStyle.Medium) => {
+    try { await Haptics.impact({ style }); } catch (e) {}
+  };
+
   const addPlayer = (e) => {
     e?.preventDefault();
     if (!playerName.trim()) return;
     
     hapticFeedback(ImpactStyle.Light);
-    setPlayers([...players, playerName.trim()]);
+    setPlayers([...players, { id: Date.now(), name: playerName.trim() }]);
     setPlayerName('');
   };
 
-  const removePlayer = (index) => {
+  const removePlayer = (id) => {
     hapticFeedback(ImpactStyle.Light);
-    setPlayers(players.filter((_, i) => i !== index));
+    setPlayers(players.filter(p => p.id !== id));
   };
 
   const generateTeams = () => {
@@ -47,7 +43,7 @@ export default function TeamPicker() {
   };
 
   const resetTeams = () => {
-    hapticFeedback();
+    hapticFeedback(ImpactStyle.Medium);
     setTeams([]);
   };
 
@@ -58,102 +54,142 @@ export default function TeamPicker() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col">
+    <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col pb-20">
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         <header className="flex justify-between items-center mb-8">
-          <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm">← EXIT</Link>
-          <h1 className="text-xl font-black tracking-tighter gradient-text-cyan">TEAM PICKER</h1>
+          <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm uppercase tracking-widest font-black">← Exit Arcade</Link>
+          <div className="px-4 py-1 rounded-full border border-electric-violet bg-electric-violet/10">
+            <span className="text-[10px] block font-black text-electric-violet uppercase tracking-widest text-center">Team Picker</span>
+          </div>
         </header>
 
-        <div className="glass-panel rounded-[2rem] p-6 border-white/10 mb-6">
-          <form onSubmit={addPlayer} className="flex gap-2 mb-6">
-            <input 
-              type="text" 
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              placeholder="Enter player name..."
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-neon-cyan transition-colors text-white"
-            />
-            <button 
-              type="submit"
-              className="bg-neon-cyan text-black font-black px-4 py-3 rounded-xl hover:scale-95 transition-all shadow-neon-glow"
-            >
-              ADD
-            </button>
-          </form>
-
-          <div className="flex flex-wrap gap-2 mb-6 min-h-[40px]">
-            {players.map((player, i) => (
-              <span 
-                key={i} 
-                onClick={() => removePlayer(i)}
-                className="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-xs font-bold text-slate-300 flex items-center gap-2 cursor-pointer hover:border-red-500/50 hover:text-red-400 transition-all"
-              >
-                {player} <span className="text-[10px] opacity-50">×</span>
-              </span>
-            ))}
-            {players.length === 0 && (
-              <p className="text-slate-600 text-xs italic">No players added yet.</p>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between pt-6 border-t border-white/5">
-            <div className="flex items-center gap-4">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Teams:</span>
-              <div className="flex border border-white/10 rounded-lg overflow-hidden">
-                {[2, 3, 4].map(num => (
-                  <button
-                    key={num}
-                    onClick={() => { hapticFeedback(ImpactStyle.Light); setTeamCount(num); }}
-                    className={`px-4 py-1 text-xs font-bold transition-all ${teamCount === num ? 'bg-neon-violet text-white' : 'bg-transparent text-slate-500 hover:bg-white/5'}`}
-                  >
-                    {num}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <button 
-              onClick={clearAll}
-              className="text-[10px] font-bold text-slate-600 hover:text-red-500 transition-colors uppercase tracking-widest"
-            >
-              Clear All
-            </button>
-          </div>
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">
+            <span className="gradient-text-cyan">NEXUS</span> TEAM PICKER
+          </h1>
+          <p className="text-slate-500 text-xs uppercase tracking-[0.2em]">Shuffle players into instant teams</p>
         </div>
 
         {teams.length === 0 ? (
-          <button 
-            disabled={players.length < teamCount}
-            onClick={generateTeams}
-            className={`w-full py-6 rounded-3xl font-black text-2xl transition-all shadow-neon-glow ${
-              players.length >= teamCount 
-              ? 'bg-neon-cyan text-black hover:scale-95' 
-              : 'bg-white/5 text-slate-600 border border-white/10 cursor-not-allowed'
-            }`}
-          >
-            GENERATE TEAMS
-          </button>
+          <>
+            {/* Input Form */}
+            <div className="glass-panel p-6 rounded-[2rem] border-white/5 mb-8">
+              <form onSubmit={addPlayer} className="flex gap-2 mb-6">
+                <input 
+                  type="text" 
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  placeholder="Player name..."
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-neon-cyan transition-colors text-white text-sm"
+                />
+                <button 
+                  type="submit"
+                  className="bg-neon-cyan/20 border border-neon-cyan/30 text-neon-cyan px-4 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-neon-cyan hover:text-black transition-all"
+                >
+                  Add
+                </button>
+              </form>
+
+              {/* Players Display */}
+              {players.length > 0 && (
+                <div className="mb-6 pb-6 border-b border-white/10">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase mb-3 ml-1">Players ({players.length})</p>
+                  <div className="space-y-2">
+                    {players.map((player) => (
+                      <div key={player.id} className="flex justify-between items-center p-3 bg-white/5 border border-white/10 rounded-lg hover:border-red-500/30 group transition-all">
+                        <span className="text-sm font-bold text-slate-300">{player.name}</span>
+                        <button
+                          onClick={() => removePlayer(player.id)}
+                          className="text-red-500/0 group-hover:text-red-500 text-xs font-black transition-colors"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Team Count Selection */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-600 uppercase mb-2">Number of Teams</p>
+                  <div className="flex gap-2">
+                    {[2, 3, 4].map(num => (
+                      <button
+                        key={num}
+                        onClick={() => { hapticFeedback(ImpactStyle.Light); setTeamCount(num); }}
+                        className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+                          teamCount === num 
+                            ? 'bg-electric-violet text-white border border-electric-violet' 
+                            : 'bg-white/5 border border-white/10 text-slate-500 hover:border-white/20'
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {players.length > 0 && (
+                  <button 
+                    onClick={clearAll}
+                    className="text-[10px] font-bold text-red-500/60 hover:text-red-500 uppercase tracking-widest transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Generate Button */}
+            <button 
+              disabled={players.length < teamCount}
+              onClick={generateTeams}
+              className={`w-full py-6 rounded-2xl font-black text-lg uppercase tracking-widest transition-all ${
+                players.length >= teamCount 
+                  ? 'bg-electric-violet text-white hover:scale-[0.98] shadow-lg' 
+                  : 'bg-white/5 text-slate-600 border border-white/10 cursor-not-allowed'
+              }`}
+            >
+              {players.length < teamCount ? `Need ${teamCount - (players.length % teamCount)} more` : 'Generate Teams'}
+            </button>
+          </>
         ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
+          <>
+            {/* Teams Display */}
+            <div className="space-y-4 mb-8 flex-1">
               {teams.map((team, i) => (
-                <div key={i} className="glass-panel p-4 rounded-2xl border-white/5 border-l-4" style={{ borderColor: i % 2 === 0 ? '#00FFFF' : '#8B5CF6' }}>
-                  <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3">Team {i + 1}</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {team.map((player, j) => (
-                      <span key={j} className="text-lg font-bold text-white">{player}{j < team.length - 1 ? ',' : ''}</span>
+                <div key={i} className="glass-panel p-6 rounded-[2rem] border-white/5 animate-in fade-in slide-in-from-bottom duration-500">
+                  <div className="inline-block px-3 py-1 bg-electric-violet/20 border border-electric-violet/30 rounded-lg text-[10px] font-black text-electric-violet uppercase tracking-widest mb-4">
+                    Team {i + 1} ({team.length} {team.length === 1 ? 'member' : 'members'})
+                  </div>
+                  <div className="space-y-2">
+                    {team.map((player) => (
+                      <div key={player.id} className="px-4 py-3 bg-white/5 border border-neon-cyan/20 rounded-lg">
+                        <span className="text-sm font-bold text-white">{player.name}</span>
+                      </div>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
-            <button 
-              onClick={resetTeams}
-              className="w-full py-4 rounded-2xl font-black bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10 transition-all"
-            >
-              RESHUFFLE
-            </button>
-          </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 gap-3">
+              <button 
+                onClick={resetTeams}
+                className="py-4 rounded-2xl font-black bg-white/5 border border-white/10 text-white uppercase text-xs tracking-widest hover:bg-white/10 transition-all"
+              >
+                Reshuffle
+              </button>
+              <button 
+                onClick={clearAll}
+                className="py-4 rounded-2xl font-black bg-red-500/10 border border-red-500/20 text-red-500 uppercase text-xs tracking-widest hover:bg-red-500/20 transition-all"
+              >
+                Start Over
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
