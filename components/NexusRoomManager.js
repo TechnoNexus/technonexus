@@ -68,7 +68,8 @@ export default function NexusRoomManager({ showForge = false }) {
         method: 'POST',
         body: JSON.stringify({ 
           players: scoresToUse, 
-          missionTitle: customGame?.gameTitle 
+          missionTitle: customGame?.gameTitle,
+          language: customGame?.language || 'English'
         }),
         headers: { 'Content-Type': 'application/json' }
       });
@@ -94,7 +95,8 @@ export default function NexusRoomManager({ showForge = false }) {
         body: JSON.stringify({ 
           instructions: customGame?.instructions,
           submissions: submissions, 
-          inputType: customGame?.inputType
+          inputType: customGame?.inputType,
+          language: customGame?.language || 'English'
         }),
         headers: { 'Content-Type': 'application/json' }
       });
@@ -116,15 +118,25 @@ export default function NexusRoomManager({ showForge = false }) {
     }
   };
 
-  useEffect(() => {
-    if (!playerName) return;
+  const initPeer = (idAsHost) => {
+    if (peer) return;
 
     import('peerjs').then(({ Peer }) => {
-      const newPeer = new Peer();
+      // Using a prefix to avoid collisions on the public PeerJS server
+      const peerId = idAsHost ? `Nexus-${idAsHost}` : undefined;
+      const newPeer = new Peer(peerId);
       
       newPeer.on('open', (id) => {
+        console.log("Peer opened with ID:", id);
         setPeer(newPeer);
         setStatus('Ready');
+        
+        // If we are a guest and there's a join ID in the URL, try to join automatically
+        const urlParams = new URLSearchParams(window.location.search);
+        const joinId = urlParams.get('join');
+        if (!idAsHost && (joinId || targetId)) {
+          handleJoin(joinId || targetId, newPeer);
+        }
       });
 
       newPeer.on('connection', (conn) => {
@@ -132,7 +144,7 @@ export default function NexusRoomManager({ showForge = false }) {
         conn.on('data', (data) => {
           if (data.type === 'join') {
             setPlayers((prev) => [...(prev || []), { peerId: conn.peer, name: data.name }]);
-            conn.send({ type: 'welcome', roomId, gameMode: useGameStore.getState().gameMode });
+            conn.send({ type: 'welcome', roomId: idAsHost, gameMode: useGameStore.getState().gameMode });
           }
           if (data.type === 'submit-raw-submission') {
             setSubmissions(prev => [...prev, { name: data.name, submission: data.submission }]);
@@ -142,82 +154,54 @@ export default function NexusRoomManager({ showForge = false }) {
         connections.current.push(conn);
         setStatus('Player Connected');
       });
+
+      newPeer.on('error', (err) => {
+        console.error("PeerJS Error:", err);
+        if (err.type === 'unavailable-id') {
+          alert("Room ID already taken. Host again to generate a new one.");
+          resetRoom();
+        } else {
+          setStatus('Error');
+        }
+      });
     });
-
-    return () => {
-      if (peer) peer.destroy();
-    };
-  }, [playerName]);
-
-  // Listen for local submissions
-  useEffect(() => {
-    const handleLocalSubmit = (e) => {
-      const { submission } = e.detail;
-      if (isHost) {
-        setSubmissions(prev => [...prev, { name: playerName, submission }]);
-      } else if (hostConnection.current) {
-        hostConnection.current.send({ 
-          type: 'submit-raw-submission', 
-          name: playerName, 
-          submission 
-        });
-      }
-    };
-
-    window.addEventListener('nexus-submit-to-host', handleLocalSubmit);
-    return () => window.removeEventListener('nexus-submit-to-host', handleLocalSubmit);
-  }, [isHost, playerName]);
+  };
 
   const createRoom = () => {
     if (!playerName) return alert("Enter a nickname first!");
     const id = Math.random().toString(36).substring(2, 6).toUpperCase();
     setRoomId(id);
     setHost(true);
+    initPeer(id);
     hapticFeedback();
   };
 
-  const [joinUrl, setJoinUrl] = useState('');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setJoinUrl(`${window.location.origin}${window.location.pathname}?join=${roomId}`);
-    }
-  }, [roomId]);
-
-  // Handle joining from URL param
-  useEffect(() => {
-    if (typeof window !== 'undefined' && peer && playerName) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const joinId = urlParams.get('join');
-      if (joinId && !roomId) {
-        setTargetId(joinId);
-        // We can't call joinRoom directly here because targetId state might not have updated
-        // but we can pass joinId to a modified join function
-        handleJoin(joinId);
-      }
-    }
-  }, [peer, playerName]);
-
-  const handleJoin = (idToJoin) => {
+  const handleJoin = (idToJoin, activePeer) => {
+    const p = activePeer || peer;
     const id = idToJoin || targetId;
-    if (!id || !peer || !playerName) return;
+    if (!id || !p || !playerName) return;
     
-    console.log("Attempting to join:", id);
-    const conn = peer.connect(id);
+    // Convert short ID to the actual prefixed Peer ID
+    const targetPeerId = id.startsWith('Nexus-') ? id : `Nexus-${id}`;
     
-    // Set a timeout for connection
+    console.log("Attempting to connect to host:", targetPeerId);
+    setStatus('Connecting...');
+    const conn = p.connect(targetPeerId);
+    
     const timeout = setTimeout(() => {
-      if (status !== 'Player Connected') {
-        alert("Connection timed out. Check Room ID.");
+      if (!hostConnection.current) {
+        setStatus('Ready');
+        alert("Connection timed out. Is the Host active?");
       }
-    }, 5000);
+    }, 10000);
 
     conn.on('open', () => {
       clearTimeout(timeout);
       conn.send({ type: 'join', name: playerName });
-      setRoomId(id);
+      setRoomId(id.replace('Nexus-', ''));
       setHost(false);
       hostConnection.current = conn; 
+      setStatus('Player Connected');
       hapticFeedback();
 
       conn.on('data', (data) => {
@@ -249,11 +233,18 @@ export default function NexusRoomManager({ showForge = false }) {
 
     conn.on('error', (err) => {
       console.error("Connection error:", err);
-      alert("Failed to connect to room.");
+      setStatus('Ready');
+      alert("Host not found. Check the Room ID.");
     });
   };
 
-  const joinRoom = () => handleJoin();
+  const joinRoom = () => {
+    if (!playerName) return alert("Enter nickname first!");
+    if (!targetId && !peer) return alert("Enter Room ID!");
+    
+    if (!peer) initPeer(); 
+    else handleJoin();
+  };
 
   useEffect(() => {
     if (isHost && connections.current.length > 0) {

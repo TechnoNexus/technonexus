@@ -80,3 +80,11 @@
 - [x] **Live Scoreboard:** Track the exact number of players in the PeerJS session and render a live, dynamic scoreboard after every single round.
 - [x] **Game Modes (Team vs. Individual):** Add a toggle in the Host UI allowing the Host to assign players into Teams or set the game as a Free-For-All (Individual) before starting the mission.
 - [x] **Batch AI Evaluation (Rate Limit Protection):** To prevent hitting Gemini's RPM limits, individual players must not call the evaluation API. The Host must collect all player submissions via PeerJS at the end of a round and make a single batched API call to `evaluate-submission` to score all players simultaneously.
+- [x] **Multiplayer Joining Reliability:** 
+    - [x] Implemented 'Nexus-' prefixing for PeerJS IDs to eliminate ID collisions on public servers.
+    - [x] Enhanced QR Code to encode full Join URLs for instant mobile access.
+    - [x] Added automatic room joining via URL parameters (`?join=ID`).
+    - [x] Integrated connection timeouts and robust error handling for the Join flow.
+    - [x] **Multi-language AI Commentary:**
+    - [x] Updated all evaluation APIs (`submission`, `batch`, `leaderboard`) to detect and respect the game's chosen language (English, Hindi, Hinglish).
+    - [x] Sarcastic Judge now roasts and summarizes rounds in the same language as the mission instructions.

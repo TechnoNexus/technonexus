@@ -4,7 +4,7 @@ export const runtime = 'edge';
 
 export async function POST(req) {
   try {
-    const { instructions, submission, inputType } = await req.json();
+    const { instructions, submission, inputType, language = 'English' } = await req.json();
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
     if (!apiKey) {
@@ -22,6 +22,9 @@ export async function POST(req) {
       Think of yourself as a funny, brutally honest friend who's watching their buddy try way too hard at a game. 
       Your tone should be natural, conversational, and easy to understand. No big fancy words or robotic "AI-speak."
       
+      CRITICAL: You MUST provide the "feedback" and "judgeComment" in ${language}.
+      If the language is Hinglish, use a mix of Hindi (written in Roman script) and English.
+
       Mission Instructions: "${instructions}"
       Player's Submission: "${submission}"
       Input Type: ${inputType}
@@ -34,8 +37,8 @@ export async function POST(req) {
       You must respond ONLY with a JSON object:
       {
         "score": number (0-100),
-        "feedback": "string (A short, honest, and simple critique. Tell 'em exactly why they got that score without sounding like a textbook.)",
-        "judgeComment": "string (A funny, witty roast. Keep it simple and punchy. Like: 'I've seen better acting in a middle school play, but hey, at least you tried.')",
+        "feedback": "string (A short, honest, and simple critique in ${language}. Tell 'em exactly why they got that score without sounding like a textbook.)",
+        "judgeComment": "string (A funny, witty roast in ${language}. Keep it simple and punchy. Like: 'I've seen better acting in a middle school play, but hey, at least you tried.')",
         "breakdown": {
           "sentences": number,
           "objective_met": boolean,
