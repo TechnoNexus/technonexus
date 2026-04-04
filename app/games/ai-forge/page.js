@@ -12,16 +12,16 @@ export default function AIForgeGame() {
   const { 
     customGame, setCustomGame, roomStatus, setRoomStatus, isHost, 
     savedGames, setSavedGames, setLocalEvaluation, roundVerdict,
-    setRoundVerdict, roomScores, localEvaluation
+    setRoundVerdict, roomScores, setRoomScores, localEvaluation, playerName
   } = useGameStore();
 
   const [timeLeft, setTimeLeft] = useState(null);
   const [submission, setSubmission] = useState('');
   const [user, setUser] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isEvaluating, setIsEvaluating] = useState(false);
   const [currentContentIndex, setCurrentContentIndex] = useState(0);
   const [showContent, setShowContent] = useState(false);
+  const [sessionPoints, setSessionPoints] = useState(0);
 
   const hapticFeedback = async (style = ImpactStyle.Medium) => {
     try { await Haptics.impact({ style }); } catch (e) {}
@@ -77,7 +77,6 @@ export default function AIForgeGame() {
     hapticFeedback(ImpactStyle.Heavy);
   };
 
-  // Handle Timer
   useEffect(() => {
     let interval;
     if (roomStatus === 'playing' && timeLeft !== null && timeLeft > 0) {
@@ -94,42 +93,30 @@ export default function AIForgeGame() {
   const finishGame = () => {
     hapticFeedback(ImpactStyle.Heavy);
     setRoomStatus('finished');
-    if (customGame?.gameType !== 'performance') {
-      evaluateSubmission();
-    }
+    submitToHost();
   };
 
-  const evaluateSubmission = async (manualSubmission) => {
-    const textToEvaluate = manualSubmission || submission;
-    if (!textToEvaluate && customGame?.gameType !== 'performance') return;
-    
-    setIsEvaluating(true);
-    try {
-      const res = await fetch('/api/evaluate-submission', {
-        method: 'POST',
-        body: JSON.stringify({
-          instructions: customGame.instructions,
-          submission: textToEvaluate || "The performance was completed.",
-          inputType: customGame.inputType
-        }),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const data = await res.json();
-      setLocalEvaluation(data);
-    } catch (e) {
-      console.error('Evaluation failed:', e);
-    } finally {
-      setIsEvaluating(false);
+  const submitToHost = (manualPerf) => {
+    let finalSubmission = submission;
+    if (customGame?.gameType === 'performance') {
+      finalSubmission = `${manualPerf || "Round ended"}. Completed ${sessionPoints} items.`;
     }
+
+    // In batch mode, we don't call the API here.
+    // We send the 'submit-raw-submission' event to the host via PeerJS.
+    // NexusRoomManager handles this communication.
+    window.dispatchEvent(new CustomEvent('nexus-submit-to-host', { 
+      detail: { submission: finalSubmission } 
+    }));
   };
 
-  // Sync initial timer when game starts
   useEffect(() => {
     if (roomStatus === 'playing' && customGame) {
       setTimeLeft(customGame.timeLimitSeconds || 60);
       setSubmission('');
       setCurrentContentIndex(0);
       setShowContent(false);
+      setSessionPoints(0);
     }
   }, [roomStatus, customGame]);
 
@@ -141,10 +128,21 @@ export default function AIForgeGame() {
   };
 
   const nextItem = () => {
+    setSessionPoints(prev => prev + 1);
     if (customGame?.gameContent && currentContentIndex < customGame.gameContent.length - 1) {
       setCurrentContentIndex(prev => prev + 1);
       setShowContent(false);
       hapticFeedback();
+    } else {
+      finishGame();
+    }
+  };
+
+  const skipItem = () => {
+    if (customGame?.gameContent && currentContentIndex < customGame.gameContent.length - 1) {
+      setCurrentContentIndex(prev => prev + 1);
+      setShowContent(false);
+      hapticFeedback(ImpactStyle.Light);
     } else {
       finishGame();
     }
@@ -173,7 +171,6 @@ export default function AIForgeGame() {
 
             <NexusRoomManager showForge={true} />
 
-            {/* Nexus Vault Section */}
             {user && savedGames.length > 0 && (
               <div className="glass-panel p-6 rounded-[2rem] border-white/5 mb-8">
                 <h3 className="text-[10px] font-black tracking-widest text-slate-500 uppercase mb-4 text-center">Your Nexus Vault</h3>
@@ -281,12 +278,20 @@ export default function AIForgeGame() {
                      </div>
                    )}
                    
-                   <button 
-                     onClick={nextItem}
-                     className="w-full py-6 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest hover:bg-white/10 transition-all"
-                   >
-                     {currentContentIndex < customGame.gameContent.length - 1 ? 'Next Word →' : 'Finish Round'}
-                   </button>
+                   <div className="grid grid-cols-2 gap-4 w-full">
+                     <button 
+                       onClick={nextItem}
+                       className="py-6 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                     >
+                       {currentContentIndex < customGame.gameContent.length - 1 ? 'Next →' : 'Finish'}
+                     </button>
+                     <button 
+                       onClick={skipItem}
+                       className="py-6 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 font-black uppercase tracking-widest hover:bg-red-500/20 transition-all"
+                     >
+                       Skip
+                     </button>
+                   </div>
                 </div>
               ) : (
                 <>
@@ -315,7 +320,7 @@ export default function AIForgeGame() {
             
             {roundVerdict && (
                <div className="w-full mb-12 space-y-4 animate-in fade-in slide-in-from-top-4 duration-1000">
-                  <div className="glass-panel p-8 rounded-[2.5rem] border-neon-violet/30 bg-neon-violet/5">
+                  <div className="glass-panel p-8 rounded-[2.5rem] border-neon-violet/30 bg-neon-violet/5 text-center">
                      <p className="text-[10px] font-black text-neon-violet uppercase tracking-[0.3em] mb-4">Round Summary</p>
                      <p className="text-white italic text-lg leading-relaxed mb-6">"{roundVerdict.roundSummary}"</p>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
@@ -332,11 +337,27 @@ export default function AIForgeGame() {
                </div>
             )}
 
-            {isEvaluating ? (
-              <div className="text-neon-cyan text-xs font-black animate-pulse tracking-[0.3em] mb-12">
-                AI JUDGE IS ANALYZING YOUR ATTEMPT...
+            {/* LIVE SCOREBOARD */}
+            {roomScores.length > 0 && (
+              <div className="w-full mb-12 animate-in fade-in duration-700">
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Live Scoreboard</h3>
+                <div className="space-y-3">
+                  {[...roomScores].sort((a, b) => b.score - a.score).map((s, i) => (
+                    <div key={i} className={`p-4 rounded-2xl border flex justify-between items-center ${s.name === playerName ? 'bg-neon-cyan/10 border-neon-cyan/30' : 'bg-white/5 border-white/10'}`}>
+                      <div className="text-left">
+                        <p className="text-xs font-black text-white uppercase tracking-wider">{s.name}</p>
+                        <p className="text-[10px] text-slate-400 italic">"{s.judgeComment}"</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-2xl font-black text-neon-cyan">{s.score}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ) : localEvaluation ? (
+            )}
+
+            {localEvaluation ? (
               <div className="w-full space-y-6 mb-12">
                 <div className="glass-panel p-8 rounded-[2.5rem] border-neon-cyan/30 relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-4">
@@ -348,18 +369,18 @@ export default function AIForgeGame() {
                   </p>
                 </div>
               </div>
-            ) : customGame?.gameType === 'performance' ? (
+            ) : customGame?.gameType === 'performance' && !roomScores.find(s => s.name === playerName) ? (
               <div className="glass-panel p-8 rounded-[2.5rem] border-white/5 w-full mb-8">
                 <p className="text-slate-500 text-sm italic mb-6">Round complete. How was the performance?</p>
                 <div className="grid grid-cols-2 gap-4">
                    <button 
-                     onClick={() => evaluateSubmission("It was perfect and creative.")}
+                     onClick={() => submitToHost("It was perfect and creative.")}
                      className="py-4 rounded-xl bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan font-bold"
                    >
                      CRUSHED IT
                    </button>
                    <button 
-                     onClick={() => evaluateSubmission("It was a total failure.")}
+                     onClick={() => submitToHost("It was a total failure.")}
                      className="py-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 font-bold"
                    >
                      LAGGED OUT
@@ -368,7 +389,7 @@ export default function AIForgeGame() {
               </div>
             ) : (
               <div className="glass-panel p-6 rounded-2xl border-white/5 w-full mb-8">
-                <p className="text-white italic">Awaiting AI analysis...</p>
+                <p className="text-white italic">Awaiting AI analysis from Host...</p>
               </div>
             )}
 
@@ -380,6 +401,8 @@ export default function AIForgeGame() {
                 setLocalEvaluation(null);
                 setSubmission('');
                 setRoundVerdict(null);
+                setSessionPoints(0);
+                setRoomScores([]);
               }}
               className="px-12 py-4 rounded-full bg-white/5 border border-white/10 font-bold hover:bg-white/10 transition-all uppercase text-xs tracking-widest mt-8"
             >

@@ -20,9 +20,13 @@ export const useGameStore = create(
       roomScores: [], // Host's collection of all player scores
       roundVerdict: null, // Sarcastic AI summary for the round
       roomStatus: 'idle', // 'idle', 'waiting', 'playing'
+      playerName: '', // Local player's nickname
+      gameMode: 'individual', // 'individual' or 'team'
 
       setRoomId: (id) => set({ roomId: id }),
       setHost: (isHost) => set({ isHost }),
+      setPlayerName: (name) => set({ playerName: name }),
+      setGameMode: (mode) => set({ gameMode: mode }),
       setPlayers: (fn) => set((state) => ({ 
         players: typeof fn === 'function' ? fn(state.players) : fn 
       })),

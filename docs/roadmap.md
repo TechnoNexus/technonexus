@@ -56,15 +56,27 @@
     - [x] **Sarcastic AI Judge**: Added funny, slightly sarcastic personality-driven feedback for every submission.
 
 ## Phase 6 — Future Scaling (✅ In Progress)
+- [x] **Phase 6.1: Game Engine & Judge Optimization**:
+    - [x] Humanized the AI Judge personality (conversational, funny, and natural).
+    - [x] Enhanced Performance UI with 'Next' and 'Skip' logic.
+    - [x] Implemented session-based scoring for performance games (Next = +1, Skip = 0).
+    - [x] Integrated real-time score tallying into the AI Judge evaluation prompt.
 - [x] **Nexus Forge Optimization**:
     - [x] Integrated GitHub API to pull live statistics (stars, forks) for repositories.
     - [x] Standardized project card UI with neon-cyan stats display.
-- [x] **AI-Driven Search**:
-    - [x] Created `app/api/nexus-search` Edge route using Gemini 2.5 Flash for semantic search across Blog and Forge.
-    - [x] Built `NexusSearch` modal component with a "Senior Lead Engineer" personality.
-    - [x] Integrated search trigger into the primary Navigation Bar.
+- [x] **AI-Driven Site Search**: 
+    - [x] Implemented "Senior Lead Engineer" semantic search modal in Navbar.
+    - [x] Cross-indexes Blog and Forge repositories via Gemini 2.5.
 - [x] **Multiplayer Synchronization Fix**:
     - [x] Fixed host-to-guest state synchronization for AI Forge missions loaded from the Nexus Vault.
     - [x] Integrated Room-wide "Sarcastic Verdict" for host-aggregated scoring summaries.
 - [ ] **Nexus Member Profiles**: Standalone dashboard for users to view global stats and managed saved Vault content.
 - [ ] **GitHub Forge Sync**: Integration of live commit history/activity for Forge projects.
+
+## Phase 6.1 — Game Engine & Multiplayer Optimizations
+- [x] **Natural AI Judge:** Refactor the `evaluate-submission` prompt. Keep the sarcastic/funny personality, but drastically simplify the vocabulary so it sounds natural, conversational, and easy for everyone to understand.
+- [x] **Charades 'Skip' Feature:** In rapid-fire/charades game modes, add a "Skip" button for the current player. Skipping moves to the next word without awarding points.
+- [x] **Player Nicknames:** Update registration and PeerJS lobby joining logic to require a Name/Nickname. The game should display the Nickname (or first name if missing) instead of generic IDs.
+- [x] **Live Scoreboard:** Track the exact number of players in the PeerJS session and render a live, dynamic scoreboard after every single round.
+- [x] **Game Modes (Team vs. Individual):** Add a toggle in the Host UI allowing the Host to assign players into Teams or set the game as a Free-For-All (Individual) before starting the mission.
+- [x] **Batch AI Evaluation (Rate Limit Protection):** To prevent hitting Gemini's RPM limits, individual players must not call the evaluation API. The Host must collect all player submissions via PeerJS at the end of a round and make a single batched API call to `evaluate-submission` to score all players simultaneously.
