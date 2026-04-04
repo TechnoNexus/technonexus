@@ -85,3 +85,6 @@
     - [x] Enhanced QR Code to encode full Join URLs for instant mobile access.
     - [x] Added automatic room joining via URL parameters (`?join=ID`).
     - [x] Integrated connection timeouts and robust error handling for the Join flow.
+    - [x] **Multi-language AI Commentary:**
+    - [x] Updated all evaluation APIs (`submission`, `batch`, `leaderboard`) to detect and respect the game's chosen language (English, Hindi, Hinglish).
+    - [x] Sarcastic Judge now roasts and summarizes rounds in the same language as the mission instructions.
