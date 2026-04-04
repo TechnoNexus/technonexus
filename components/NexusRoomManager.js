@@ -149,8 +149,27 @@ export default function NexusRoomManager({ showForge = false }) {
         hapticFeedback(ImpactStyle.Heavy);
         conn.on('data', (data) => {
           if (data.type === 'join') {
-            setPlayers((prev) => [...(prev || []), { peerId: conn.peer, name: data.name }]);
-            conn.send({ type: 'welcome', roomId: idAsHost, gameMode: useGameStore.getState().gameMode });
+            const newPlayer = { peerId: conn.peer, name: data.name };
+            const updatedPlayers = [...(useGameStore.getState().players || []), newPlayer];
+            setPlayers(updatedPlayers);
+            
+            // 1. Welcome the new player with FULL room state
+            conn.send({ 
+              type: 'welcome', 
+              roomId: idAsHost, 
+              gameMode: useGameStore.getState().gameMode,
+              players: updatedPlayers,
+              hostName: playerName,
+              roomStatus: useGameStore.getState().roomStatus,
+              customGame: useGameStore.getState().customGame
+            });
+
+            // 2. Tell everyone else about the new player
+            connections.current.forEach(c => {
+              if (c.peer !== conn.peer) {
+                c.send({ type: 'player-list-update', players: updatedPlayers, hostName: playerName });
+              }
+            });
           }
           if (data.type === 'submit-raw-submission') {
             setSubmissions(prev => [...prev, { name: data.name, submission: data.submission }]);
