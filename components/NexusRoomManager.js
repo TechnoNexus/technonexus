@@ -176,12 +176,46 @@ export default function NexusRoomManager({ showForge = false }) {
     hapticFeedback();
   };
 
-  const joinRoom = () => {
-    if (!targetId || !peer || !playerName) return alert("Enter nickname and room ID!");
-    const conn = peer.connect(targetId);
+  const [joinUrl, setJoinUrl] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setJoinUrl(`${window.location.origin}${window.location.pathname}?join=${roomId}`);
+    }
+  }, [roomId]);
+
+  // Handle joining from URL param
+  useEffect(() => {
+    if (typeof window !== 'undefined' && peer && playerName) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const joinId = urlParams.get('join');
+      if (joinId && !roomId) {
+        setTargetId(joinId);
+        // We can't call joinRoom directly here because targetId state might not have updated
+        // but we can pass joinId to a modified join function
+        handleJoin(joinId);
+      }
+    }
+  }, [peer, playerName]);
+
+  const handleJoin = (idToJoin) => {
+    const id = idToJoin || targetId;
+    if (!id || !peer || !playerName) return;
+    
+    console.log("Attempting to join:", id);
+    const conn = peer.connect(id);
+    
+    // Set a timeout for connection
+    const timeout = setTimeout(() => {
+      if (status !== 'Player Connected') {
+        alert("Connection timed out. Check Room ID.");
+      }
+    }, 5000);
+
     conn.on('open', () => {
+      clearTimeout(timeout);
       conn.send({ type: 'join', name: playerName });
-      setRoomId(targetId);
+      setRoomId(id);
       setHost(false);
       hostConnection.current = conn; 
       hapticFeedback();
@@ -212,7 +246,14 @@ export default function NexusRoomManager({ showForge = false }) {
         }
       });
     });
+
+    conn.on('error', (err) => {
+      console.error("Connection error:", err);
+      alert("Failed to connect to room.");
+    });
   };
+
+  const joinRoom = () => handleJoin();
 
   useEffect(() => {
     if (isHost && connections.current.length > 0) {
@@ -278,10 +319,11 @@ export default function NexusRoomManager({ showForge = false }) {
           <h2 className="text-4xl font-black text-white mb-6 tracking-tighter">{roomId}</h2>
           
           {isHost && (
-            <div className="flex justify-center mb-8">
-              <div className="p-4 bg-white rounded-3xl">
-                <QRCodeSVG value={roomId} size={128} />
+            <div className="flex justify-center mb-8 flex-col items-center">
+              <div className="p-4 bg-white rounded-3xl mb-2">
+                <QRCodeSVG value={joinUrl} size={128} />
               </div>
+              <p className="text-[8px] text-slate-500 font-mono uppercase tracking-widest">Scan to Join</p>
             </div>
           )}
 
