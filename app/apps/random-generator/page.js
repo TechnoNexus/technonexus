@@ -18,10 +18,10 @@ export default function RandomGenerator() {
 
   const generateNumber = () => {
     hapticFeedback(ImpactStyle.Heavy);
-    const min = Math.ceil(parseInt(minValue));
-    const max = Math.floor(parseInt(maxValue));
+    const min = Math.ceil(parseInt(minValue, 10) || 0);
+    const max = Math.floor(parseInt(maxValue, 10) || 100);
     const num = Math.floor(Math.random() * (max - min + 1)) + min;
-    const generated = { id: Date.now(), value: num.toString(), type: 'number' };
+    const generated = { id: crypto.randomUUID(), value: num.toString(), type: 'number' };
     setResult(num.toString());
     setResults([generated, ...results.slice(0, 9)]);
   };
