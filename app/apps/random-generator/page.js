@@ -30,10 +30,10 @@ export default function RandomGenerator() {
     hapticFeedback(ImpactStyle.Heavy);
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let str = '';
-    for (let i = 0; i < parseInt(stringLength); i++) {
+    for (let i = 0; i < (parseInt(stringLength, 10) || 16); i++) {
       str += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    const generated = { id: Date.now(), value: str, type: 'string' };
+    const generated = { id: crypto.randomUUID(), value: str, type: 'string' };
     setResult(str);
     setResults([generated, ...results.slice(0, 9)]);
   };
