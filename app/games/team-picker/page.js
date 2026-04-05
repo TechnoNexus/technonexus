@@ -19,7 +19,7 @@ export default function TeamPicker() {
     if (!playerName.trim()) return;
     
     hapticFeedback(ImpactStyle.Light);
-    setPlayers([...players, { id: Date.now(), name: playerName.trim() }]);
+    setPlayers([...players, { id: crypto.randomUUID(), name: playerName.trim() }]);
     setPlayerName('');
   };
 
