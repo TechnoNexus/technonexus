@@ -18,6 +18,7 @@ export default function NexusRoomManager({ showForge = false }) {
   const [targetId, setTargetId] = useState('');
   const [status, setStatus] = useState('Disconnected');
   const [aiPrompt, setAiPrompt] = useState('');
+  const [triggerBroadcast, setTriggerBroadcast] = useState(0); // Force effect re-trigger
   const [language, setLanguage] = useState('English');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEvaluatingRound, setIsEvaluatingRound] = useState(false);
@@ -217,7 +218,6 @@ export default function NexusRoomManager({ showForge = false }) {
       const newPeer = new Peer(peerId);
       
       newPeer.on('open', (id) => {
-        console.log("Peer opened with ID:", id);
         setPeer(newPeer);
         setStatus('Ready');
         const urlParams = new URLSearchParams(window.location.search);
@@ -249,6 +249,12 @@ export default function NexusRoomManager({ showForge = false }) {
                 c.send({ type: 'player-list-update', players: updatedPlayers, hostName: useGameStore.getState().playerName });
               }
             });
+            
+            // Add to pool AFTER successful join - connection is proven to be ready
+            if (!connections.current.find(c => c.peer === conn.peer)) {
+              connections.current.push(conn);
+              setStatus('Player Connected');
+            }
           }
           if (data.type === 'submit-raw-submission') {
             setSubmissions(prev => [...prev, { name: data.name, submission: data.submission }]);
@@ -257,18 +263,13 @@ export default function NexusRoomManager({ showForge = false }) {
         });
         
         conn.on('close', () => {
-          // Remove closed connection from active connections array
-          connections.current = connections.current.filter(c => c !== conn && c.open);
+          connections.current = connections.current.filter(c => c !== conn);
           setStatus('Player Disconnected');
         });
         
         conn.on('error', (err) => {
-          console.error('Connection error:', err);
-          connections.current = connections.current.filter(c => c !== conn && c.open);
+          connections.current = connections.current.filter(c => c !== conn);
         });
-        
-        connections.current.push(conn);
-        setStatus('Player Connected');
       });
 
       newPeer.on('error', (err) => {
@@ -330,15 +331,13 @@ export default function NexusRoomManager({ showForge = false }) {
           setHostName(data.hostName);
         }
         if (data.type === 'start-game') {
-          console.log('🎮 Guest received START-GAME:', { status: data.status, hasCustomGame: !!data.customGame, gameMode: data.gameMode });
-          // Unified game start: sets both status and game atomically
           setCustomGame(data.customGame);
           setGameMode(data.gameMode);
           setRoomStatus(data.status);
           setRoundVerdict(null);
           setLocalEvaluation(null);
           hapticFeedback(ImpactStyle.Heavy);
-          console.log('✅ Guest state updated - should now see game screen');
+
         }
         if (data.type === 'room-status-update') {
           console.log('Status update:', data.status);
@@ -392,25 +391,18 @@ export default function NexusRoomManager({ showForge = false }) {
     else handleJoin();
   };
 
+  // Main broadcast effect - triggers on state changes
   useEffect(() => {
-    if (!isHost) return; // Only host broadcasts
-    
-    // Always send start-game when transitioning to playing state
+    if (!isHost) return;
+
     if (roomStatus === 'playing') {
       const now = Date.now();
-      // Send on first transition AND resend every 2 seconds to ensure delivery
       if (now - lastStartGameTime.current > 2000) {
         const activeConnections = connections.current.filter(c => c.open);
-        console.log('🎮 BROADCAST START-GAME:', { 
-          connectionsTotal: connections.current.length,
-          activeConnections: activeConnections.length, 
-          hasCustomGame: !!customGame,
-          gameTitle: customGame?.gameTitle 
-        });
         lastStartGameTime.current = now;
         
         if (activeConnections.length === 0) {
-          console.log('⚠️  No active connections yet - will retry in 2s');
+          // No connections yet - wait for retry
         } else {
           activeConnections.forEach(conn => {
             try {
@@ -419,19 +411,16 @@ export default function NexusRoomManager({ showForge = false }) {
                 status: 'playing',
                 customGame: customGame,
                 gameMode: gameMode,
-                timestamp: now,
-                retry: false
+                timestamp: now
               });
-              console.log('✉️  Sent start-game to peer:', conn.peer);
             } catch (e) {
-              console.error('❌ Failed to send start-game:', e);
+              console.error('Failed to send start-game:', e);
             }
           });
         }
       }
     } else {
-      lastStartGameTime.current = 0; // Reset when not playing
-      // Regular state updates for non playing states
+      lastStartGameTime.current = 0;
       connections.current.forEach(conn => {
         if (conn.open) {
           try {
@@ -445,6 +434,62 @@ export default function NexusRoomManager({ showForge = false }) {
       });
     }
   }, [roomStatus, customGame, gameMode, isHost]);
+
+  // MONITOR roomStatus changes - trigger broadcast when becomes 'playing'
+  useEffect(() => {
+    if (isHost && roomStatus === 'playing') {
+      setTriggerBroadcast(prev => prev + 1);
+    }
+  }, [roomStatus, isHost]);
+
+  // USE the trigger to force explicit broadcast
+  useEffect(() => {
+    if (!isHost || roomStatus !== 'playing') return;
+    if (triggerBroadcast === 0) return;
+    
+    const activeConnections = connections.current.filter(c => c.open);
+
+    if (activeConnections.length > 0) {
+      activeConnections.forEach(conn => {
+        try {
+          conn.send({ 
+            type: 'start-game', 
+            status: 'playing',
+            customGame: customGame,
+            gameMode: gameMode,
+            timestamp: Date.now()
+          });
+        } catch (e) {
+          console.error('Failed to send start-game:', e);
+        }
+      });
+    }
+  }, [isHost, triggerBroadcast, customGame, gameMode]);
+
+  // IMMEDIATE broadcast when roomStatus becomes 'playing'
+  useEffect(() => {
+    if (!isHost) return;
+    
+    if (roomStatus === 'playing') {
+      const activeConnections = connections.current.filter(c => c.open);
+
+      if (activeConnections.length > 0) {
+        activeConnections.forEach(conn => {
+          try {
+            conn.send({ 
+              type: 'start-game', 
+              status: 'playing',
+              customGame: customGame,
+              gameMode: gameMode,
+              timestamp: Date.now()
+            });
+          } catch (e) {
+            console.error('Failed to send start-game:', e);
+          }
+        });
+      }
+    }
+  }, [isHost, roomStatus]);
 
   useEffect(() => {
     const handleLocalSubmit = (e) => {

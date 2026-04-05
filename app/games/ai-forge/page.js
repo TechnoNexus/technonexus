@@ -12,7 +12,7 @@ export default function AIForgeGame() {
   const { 
     customGame, setCustomGame, roomStatus, setRoomStatus, isHost, 
     savedGames, setSavedGames, setLocalEvaluation, roundVerdict,
-    setRoundVerdict, roomScores, setRoomScores, localEvaluation, playerName
+    setRoundVerdict, roomScores, setRoomScores, localEvaluation, playerName, gameMode
   } = useGameStore();
 
   const [timeLeft, setTimeLeft] = useState(null);
@@ -43,6 +43,11 @@ export default function AIForgeGame() {
     setSessionPoints(0);
     setRoomScores([]);
   }, []);
+
+  // Log state changes for debugging
+  useEffect(() => {
+    // State tracking enabled for development - remove when stable
+  }, [roomStatus, customGame, isHost, playerName]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -222,8 +227,6 @@ export default function AIForgeGame() {
               </h1>
               <p className="text-slate-500 text-xs uppercase tracking-[0.2em]">Generate custom missions via Gemini 2.5</p>
             </div>
-
-            <NexusRoomManager showForge={true} />
 
             {user && savedGames.length > 0 && (
               <div className="glass-panel p-6 rounded-[2rem] border-white/5 mb-8">
@@ -522,8 +525,6 @@ export default function AIForgeGame() {
               </div>
             )}
 
-            <NexusRoomManager showForge={true} />
-
             <button 
               onClick={() => {
                 setRoomStatus('idle');
@@ -539,6 +540,9 @@ export default function AIForgeGame() {
             </button>
           </div>
         )}
+
+        {/* ALWAYS RENDER - prevents unmount/remount on roomStatus changes */}
+        <NexusRoomManager showForge={true} />
       </div>
     </div>
   );
