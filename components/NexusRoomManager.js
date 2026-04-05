@@ -393,36 +393,41 @@ export default function NexusRoomManager({ showForge = false }) {
   };
 
   useEffect(() => {
-    if (!isHost || connections.current.length === 0) {
-      console.log('Broadcast blocked:', { isHost, connectionsLength: connections.current.length });
-      return;
-    }
+    if (!isHost) return; // Only host broadcasts
     
     // Always send start-game when transitioning to playing state
     if (roomStatus === 'playing') {
       const now = Date.now();
       // Send on first transition AND resend every 2 seconds to ensure delivery
       if (now - lastStartGameTime.current > 2000) {
-        console.log('Broadcasting START GAME to', connections.current.length, 'players');
+        const activeConnections = connections.current.filter(c => c.open);
+        console.log('🎮 BROADCAST START-GAME:', { 
+          connectionsTotal: connections.current.length,
+          activeConnections: activeConnections.length, 
+          hasCustomGame: !!customGame,
+          gameTitle: customGame?.gameTitle 
+        });
         lastStartGameTime.current = now;
         
-        const activeConnections = connections.current.filter(c => c.open);
-        console.log('Active connections:', activeConnections.length);
-        
-        activeConnections.forEach(conn => {
-          try {
-            conn.send({ 
-              type: 'start-game', 
-              status: 'playing',
-              customGame: customGame,
-              gameMode: gameMode,
-              timestamp: now,
-              retry: false
-            });
-          } catch (e) {
-            console.error('Failed to send start-game:', e);
-          }
-        });
+        if (activeConnections.length === 0) {
+          console.log('⚠️  No active connections yet - will retry in 2s');
+        } else {
+          activeConnections.forEach(conn => {
+            try {
+              conn.send({ 
+                type: 'start-game', 
+                status: 'playing',
+                customGame: customGame,
+                gameMode: gameMode,
+                timestamp: now,
+                retry: false
+              });
+              console.log('✉️  Sent start-game to peer:', conn.peer);
+            } catch (e) {
+              console.error('❌ Failed to send start-game:', e);
+            }
+          });
+        }
       }
     } else {
       lastStartGameTime.current = 0; // Reset when not playing

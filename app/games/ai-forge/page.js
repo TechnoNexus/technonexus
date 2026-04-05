@@ -266,14 +266,14 @@ export default function AIForgeGame() {
                             </button>
                             <button 
                               onClick={() => { setIsRenaming(game.id); setRenamingText(game.game_title); }}
-                              className="text-[8px] font-black text-electric-violet uppercase tracking-widest border border-electric-violet/20 px-3 py-1 rounded-lg hover:bg-electric-violet hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                              className="text-[8px] font-black text-electric-violet/70 uppercase tracking-widest border border-electric-violet/20 px-3 py-1 rounded-lg hover:text-electric-violet hover:bg-electric-violet/10 transition-all"
                             >
                               Rename
                             </button>
                             <button 
                               onClick={() => deleteFromVault(game.id)}
                               disabled={isDeleting === game.id}
-                              className="text-[8px] font-black text-red-400 uppercase tracking-widest border border-red-400/40 px-3 py-1 rounded-lg bg-red-500/5 hover:bg-red-500/20 hover:text-red-300 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-30"
+                              className="text-[8px] font-black text-red-400/70 uppercase tracking-widest border border-red-400/40 px-3 py-1 rounded-lg bg-red-500/5 hover:bg-red-500/20 hover:text-red-300 hover:text-red-400 transition-all disabled:opacity-30"
                             >
                               {isDeleting === game.id ? 'Deleting...' : '🗑 Delete'}
                             </button>
