@@ -16,16 +16,28 @@ export const useGameStore = create(
       scores: { teamA: 0, teamB: 0 },
       customGame: null, // { gameTitle, instructions, timeLimitSeconds, inputType }
       savedGames: [], // List of previously created games from Supabase
-      roomStatus: 'idle', // 'idle', 'waiting', 'playing'
+      localEvaluation: null, // Local player's evaluation result
+      roomScores: [], // Host's collection of all player scores
+      roundVerdict: null, // Sarcastic AI summary for the round
+      playerName: '', // Local player's nickname
+      hostName: '', // Synced name of the room host
+      gameMode: 'individual', // 'individual' or 'team'
+      leaderboard: [], // Global leaderboard tracking wins across sessions
 
       setRoomId: (id) => set({ roomId: id }),
       setHost: (isHost) => set({ isHost }),
+      setPlayerName: (name) => set({ playerName: name }),
+      setHostName: (name) => set({ hostName: name }),
+      setGameMode: (mode) => set({ gameMode: mode }),
       setPlayers: (fn) => set((state) => ({ 
         players: typeof fn === 'function' ? fn(state.players) : fn 
       })),
       updateScores: (newScores) => set({ scores: newScores }),
       setCustomGame: (game) => set({ customGame: game }),
       setSavedGames: (games) => set({ savedGames: games }),
+      setLocalEvaluation: (evaluation) => set({ localEvaluation: evaluation }),
+      setRoomScores: (scores) => set({ roomScores: scores }),
+      setRoundVerdict: (verdict) => set({ roundVerdict: verdict }),
       setRoomStatus: (status) => set({ roomStatus: status }),
       updateLeaderboard: (winnerName) => {
         const currentLeaderboard = get().leaderboard;

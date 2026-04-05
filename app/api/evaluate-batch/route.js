@@ -4,7 +4,7 @@ export const runtime = 'edge';
 
 export async function POST(req) {
   try {
-    const { instructions, submission, inputType, language = 'English' } = await req.json();
+    const { instructions, submissions, inputType, language = 'English' } = await req.json();
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
     if (!apiKey) {
@@ -17,30 +17,26 @@ export async function POST(req) {
       generationConfig: { responseMimeType: "application/json" }
     });
 
-    // Build prompt more safely with proper escaping
-    const systemPrompt = `You are the TechnoNexus Sarcastic AI Judge. Think of yourself as a funny, brutally honest friend watching their buddy try way too hard at a game. Your tone should be natural, conversational, and easy to understand. No fancy words or robotic "AI-speak."
-
-CRITICAL: Respond in ${language}. If Hinglish, use Hindi (Roman script) mixed with English.
+    // Build prompt more safely with proper JSON escaping
+    const systemPrompt = `You are the TechnoNexus Sarcastic AI Judge. You are judging a group of friends. Be funny, natural, and conversational. Respond in ${language}. For Hinglish, mix Hindi (Roman script) with English.
 
 Instructions: ${JSON.stringify(instructions)}
-Player Submission: ${JSON.stringify(submission)}
 Input Type: ${inputType}
 
-Evaluate based on:
-1. Did they follow the instructions?
-2. Was the quality good?
-3. Were specific rules followed?
+Player Submissions:
+${JSON.stringify(submissions, null, 2)}
+
+For each player, provide a score (0-100) and a witty comment in ${language}.
 
 RESPOND ONLY WITH VALID JSON (no extra text):
 {
-  "score": <number 0-100>,
-  "feedback": "<honest critique in ${language}>",
-  "judgeComment": "<funny roast in ${language}>",
-  "breakdown": {
-    "sentences": <number>,
-    "objective_met": <boolean>,
-    "creativity_score": <number 1-10>
-  }
+  "results": [
+    {
+      "name": "<player name>",
+      "score": <number 0-100>,
+      "judgeComment": "<funny, simple roast in ${language}>"
+    }
+  ]
 }`;
 
     const result = await model.generateContent(systemPrompt);
@@ -60,7 +56,7 @@ RESPOND ONLY WITH VALID JSON (no extra text):
     });
 
   } catch (error) {
-    console.error('AI Evaluation Error:', error);
-    return new Response(JSON.stringify({ error: 'Evaluation failed', details: error.message }), { status: 500 });
+    console.error('Batch Evaluation Error:', error);
+    return new Response(JSON.stringify({ error: 'Batch evaluation failed', details: error.message }), { status: 500 });
   }
 }

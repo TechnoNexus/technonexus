@@ -40,6 +40,16 @@ export default function DumbCharades() {
   const [score, setScore] = useState({ teamA: 0, teamB: 0 });
   const [turn, setTurn] = useState('teamA');
 
+  // Reset game state on component mount - fresh session every time
+  useEffect(() => {
+    setTimer(60);
+    setIsActive(false);
+    setCurrentWord('');
+    setShowWord(false);
+    setScore({ teamA: 0, teamB: 0 });
+    setTurn('teamA');
+  }, []);
+
   useEffect(() => {
     let interval = null;
     if (isActive && timer > 0) {
@@ -97,7 +107,18 @@ export default function DumbCharades() {
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         <header className="flex justify-between items-center mb-8">
           <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm">← EXIT</Link>
-          <div className="flex gap-4">
+          <div className="flex gap-2">
+            <button 
+              onClick={resetGame}
+              disabled={!isActive && !currentWord}
+              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest border transition-all ${
+                (!isActive && !currentWord) 
+                  ? 'opacity-50 cursor-not-allowed border-slate-700 text-slate-600' 
+                  : 'border-red-500/40 text-red-500 hover:bg-red-500/20 bg-red-500/10'
+              }`}
+            >
+              × QUIT GAME
+            </button>
             <div className={`px-4 py-1 rounded-full border ${turn === 'teamA' ? 'border-neon-cyan bg-neon-cyan/10' : 'border-white/5 opacity-50'}`}>
               <span className="text-[10px] block font-bold text-slate-400">TEAM A</span>
               <span className="text-xl font-black">{score.teamA}</span>

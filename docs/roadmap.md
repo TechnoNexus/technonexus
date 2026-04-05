@@ -55,7 +55,53 @@
     - [x] **Hybrid Scoring**: Combined semantic evaluation with strict objective counting.
     - [x] **Sarcastic AI Judge**: Added funny, slightly sarcastic personality-driven feedback for every submission.
 
-## Phase 6 — Future Scaling (Upcoming)
-- [ ] Integration of GitHub API to pull live Forge repository statistics.
-- [ ] AI-driven search functionality for the Blog and Forge.
-- [ ] User profile system for "Nexus Members" to view and load previously saved missions.
+## Phase 6 — Future Scaling (✅ In Progress)
+- [x] **Phase 6.1: Game Engine & Judge Optimization**:
+    - [x] Humanized the AI Judge personality (conversational, funny, and natural).
+    - [x] Enhanced Performance UI with 'Next' and 'Skip' logic.
+    - [x] Implemented session-based scoring for performance games (Next = +1, Skip = 0).
+    - [x] Integrated real-time score tallying into the AI Judge evaluation prompt.
+- [x] **Nexus Forge Optimization**:
+    - [x] Integrated GitHub API to pull live statistics (stars, forks) for repositories.
+    - [x] Standardized project card UI with neon-cyan stats display.
+- [x] **AI-Driven Site Search**: 
+    - [x] Implemented "Senior Lead Engineer" semantic search modal in Navbar.
+    - [x] Cross-indexes Blog and Forge repositories via Gemini 2.5.
+- [x] **Multiplayer Synchronization Fix**:
+    - [x] Fixed host-to-guest state synchronization for AI Forge missions loaded from the Nexus Vault.
+    - [x] Integrated Room-wide "Sarcastic Verdict" for host-aggregated scoring summaries.
+- [ ] **Nexus Member Profiles**: Standalone dashboard for users to view global stats and managed saved Vault content.
+- [ ] **GitHub Forge Sync**: Integration of live commit history/activity for Forge projects.
+
+## Phase 6.1 — Game Engine & Multiplayer Optimizations
+- [x] **Natural AI Judge:** Refactor the `evaluate-submission` prompt. Keep the sarcastic/funny personality, but drastically simplify the vocabulary so it sounds natural, conversational, and easy for everyone to understand.
+- [x] **Charades 'Skip' Feature:** In rapid-fire/charades game modes, add a "Skip" button for the current player. Skipping moves to the next word without awarding points.
+- [x] **Player Nicknames:** Update registration and PeerJS lobby joining logic to require a Name/Nickname. The game should display the Nickname (or first name if missing) instead of generic IDs.
+- [x] **Live Scoreboard:** Track the exact number of players in the PeerJS session and render a live, dynamic scoreboard after every single round.
+- [x] **Game Modes (Team vs. Individual):** Add a toggle in the Host UI allowing the Host to assign players into Teams or set the game as a Free-For-All (Individual) before starting the mission.
+- [x] **Batch AI Evaluation (Rate Limit Protection):** To prevent hitting Gemini's RPM limits, individual players must not call the evaluation API. The Host must collect all player submissions via PeerJS at the end of a round and make a single batched API call to `evaluate-submission` to score all players simultaneously.
+- [x] **Multiplayer Joining Reliability:** 
+    - [x] Implemented 'Nexus-' prefixing for PeerJS IDs to eliminate ID collisions on public servers.
+    - [x] Enhanced QR Code to encode full Join URLs for instant mobile access.
+    - [x] Added automatic room joining via URL parameters (`?join=ID`).
+    - [x] Integrated connection timeouts and robust error handling for the Join flow.
+    - [x] **Multi-language AI Commentary:**
+    - [x] Updated all evaluation APIs (`submission`, `batch`, `leaderboard`) to detect and respect the game's chosen language (English, Hindi, Hinglish).
+    - [x] Sarcastic Judge now roasts and summarizes rounds in the same language as the mission instructions.
+- [x] **Room Synchronization 2.0:**
+    - [x] Fixed player list synchronization so Guests see the actual Host and other participants.
+    - [x] Implemented global state broadcasting for `roomStatus` and `customGame` to ensure all players start and finish missions simultaneously.
+
+## Phase 6.2 — Critical Bug Fixes (✅ COMPLETED)
+- [x] **Leaderboard State Initialization Fix**: Added missing `leaderboard: []` to Zustand store initial state (was causing `updateLeaderboard()` to crash)
+- [x] **Game Start Synchronization Fix**: Implemented unified 'start-game' PeerJS message to atomically sync roomStatus and customGame to all guests (prevents guest screen freeze)
+
+## Phase 6.3 — Feature Completions & Security (✅ COMPLETED)
+- [x] **Vault Management System**: Added delete and rename buttons to AI Forge vault UI with Supabase backend operations
+- [x] **PeerJS Memory Leak Fix**: Added connection cleanup handlers (`on('close')`, `on('error')`) to prevent connection array bloat
+- [x] **Supabase RLS Security Configuration**: Created SECURITY.md with SQL policies for row-level security on `user_games` table
+- [x] **Team Picker Modernization**: Updated Team Picker game UI to match Nexus aesthetic with Electric Violet branding
+- [x] **Apps Section Implementation**:
+    - [x] **Random Generator** (`/apps/random-generator`): Generate random numbers, strings, and UUIDs with full UI
+    - [x] **Dev Utility** (`/apps/dev-utility`): JSON formatter/minifier and Base64 encoder/decoder tools
+    - [x] **Updated Apps Landing** (`/apps`): Linked to functional tools with status indicators
