@@ -273,9 +273,9 @@ export default function AIForgeGame() {
                             <button 
                               onClick={() => deleteFromVault(game.id)}
                               disabled={isDeleting === game.id}
-                              className="text-[8px] font-black text-red-500 uppercase tracking-widest border border-red-500/20 px-3 py-1 rounded-lg hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                              className="text-[8px] font-black text-red-400 uppercase tracking-widest border border-red-400/40 px-3 py-1 rounded-lg bg-red-500/5 hover:bg-red-500/20 hover:text-red-300 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-30"
                             >
-                              {isDeleting === game.id ? 'Deleting...' : 'Delete'}
+                              {isDeleting === game.id ? 'Deleting...' : '🗑 Delete'}
                             </button>
                           </div>
                         </div>
