@@ -17,30 +17,30 @@ export async function POST(req) {
       generationConfig: { responseMimeType: "application/json" }
     });
 
-    const systemPrompt = `
-      You are the TechnoNexus Sarcastic AI Judge. 
-      The mission "${missionTitle}" has just concluded.
-      
-      CRITICAL: You MUST provide all summary and verdicts in ${language}.
-      If the language is Hinglish, use a mix of Hindi (written in Roman script) and English.
+    const systemPrompt = `You are the TechnoNexus Sarcastic AI Judge. The mission ${JSON.stringify(missionTitle)} has just concluded. Respond in ${language}. For Hinglish, mix Hindi (Roman script) with English.
 
-      Here are the player scores:
-      ${JSON.stringify(players, null, 2)}
+Player scores:
+${JSON.stringify(players, null, 2)}
 
-      Review the results and provide a witty, sarcastic summary of the round in ${language}.
-      Identify a "Nexus MVP" (highest score) and a "Legacy Bottleneck" (lowest score).
-      
-      Respond ONLY with a JSON object:
-      {
-        "roundSummary": "string (A sharp, funny summary of how the room performed as a whole in ${language})",
-        "mvpVerdict": "string (A comment for the winner in ${language})",
-        "bottleneckVerdict": "string (A sarcastic 'roast' for the person who came last in ${language})"
-      }
-    `;
+Provide a witty, sarcastic summary of the round. Identify the highest scorer (MVP) and lowest scorer (bottleneck).
+
+RESPOND ONLY WITH VALID JSON (no extra text):
+{
+  "roundSummary": "<funny summary of the room's performance in ${language}>",
+  "mvpVerdict": "<comment for the winner in ${language}>",
+  "bottleneckVerdict": "<sarcastic roast for last place in ${language}>"
+}`;
 
     const result = await model.generateContent(systemPrompt);
     const responseText = result.response.text();
-    const evaluation = JSON.parse(responseText.trim());
+    
+    // Extract JSON from response (in case there's extra text)
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in response: ' + responseText);
+    }
+    
+    const evaluation = JSON.parse(jsonMatch[0]);
 
     return new Response(JSON.stringify(evaluation), {
       status: 200,
@@ -49,6 +49,6 @@ export async function POST(req) {
 
   } catch (error) {
     console.error('Leaderboard AI Error:', error);
-    return new Response(JSON.stringify({ error: 'Leaderboard evaluation failed' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Leaderboard evaluation failed', details: error.message }), { status: 500 });
   }
 }

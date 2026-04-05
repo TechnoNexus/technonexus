@@ -88,3 +88,20 @@
     - [x] **Multi-language AI Commentary:**
     - [x] Updated all evaluation APIs (`submission`, `batch`, `leaderboard`) to detect and respect the game's chosen language (English, Hindi, Hinglish).
     - [x] Sarcastic Judge now roasts and summarizes rounds in the same language as the mission instructions.
+- [x] **Room Synchronization 2.0:**
+    - [x] Fixed player list synchronization so Guests see the actual Host and other participants.
+    - [x] Implemented global state broadcasting for `roomStatus` and `customGame` to ensure all players start and finish missions simultaneously.
+
+## Phase 6.2 — Critical Bug Fixes (✅ COMPLETED)
+- [x] **Leaderboard State Initialization Fix**: Added missing `leaderboard: []` to Zustand store initial state (was causing `updateLeaderboard()` to crash)
+- [x] **Game Start Synchronization Fix**: Implemented unified 'start-game' PeerJS message to atomically sync roomStatus and customGame to all guests (prevents guest screen freeze)
+
+## Phase 6.3 — Feature Completions & Security (✅ COMPLETED)
+- [x] **Vault Management System**: Added delete and rename buttons to AI Forge vault UI with Supabase backend operations
+- [x] **PeerJS Memory Leak Fix**: Added connection cleanup handlers (`on('close')`, `on('error')`) to prevent connection array bloat
+- [x] **Supabase RLS Security Configuration**: Created SECURITY.md with SQL policies for row-level security on `user_games` table
+- [x] **Team Picker Modernization**: Updated Team Picker game UI to match Nexus aesthetic with Electric Violet branding
+- [x] **Apps Section Implementation**:
+    - [x] **Random Generator** (`/apps/random-generator`): Generate random numbers, strings, and UUIDs with full UI
+    - [x] **Dev Utility** (`/apps/dev-utility`): JSON formatter/minifier and Base64 encoder/decoder tools
+    - [x] **Updated Apps Landing** (`/apps`): Linked to functional tools with status indicators

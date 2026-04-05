@@ -22,10 +22,27 @@ export default function AIForgeGame() {
   const [currentContentIndex, setCurrentContentIndex] = useState(0);
   const [showContent, setShowContent] = useState(false);
   const [sessionPoints, setSessionPoints] = useState(0);
+  const [isRenaming, setIsRenaming] = useState(null); // game id being renamed
+  const [renamingText, setRenamingText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(null); // game id being deleted
 
   const hapticFeedback = async (style = ImpactStyle.Medium) => {
     try { await Haptics.impact({ style }); } catch (e) {}
   };
+
+  // Reset game state on component mount - fresh session every time
+  useEffect(() => {
+    setRoomStatus('idle');
+    setCustomGame(null);
+    setLocalEvaluation(null);
+    setRoundVerdict(null);
+    setSubmission('');
+    setTimeLeft(null);
+    setCurrentContentIndex(0);
+    setShowContent(false);
+    setSessionPoints(0);
+    setRoomScores([]);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -75,6 +92,43 @@ export default function AIForgeGame() {
   const loadFromVault = (gameConfig) => {
     setCustomGame(gameConfig);
     hapticFeedback(ImpactStyle.Heavy);
+  };
+
+  const deleteFromVault = async (gameId) => {
+    if (!user) return;
+    setIsDeleting(gameId);
+    const { error } = await supabase
+      .from('user_games')
+      .delete()
+      .eq('id', gameId)
+      .eq('user_id', user.id);
+    
+    if (error) {
+      alert('Failed to delete: ' + error.message);
+    } else {
+      hapticFeedback(ImpactStyle.Light);
+      fetchVault(user.id);
+    }
+    setIsDeleting(null);
+  };
+
+  const renameInVault = async (gameId) => {
+    if (!user || !renamingText.trim()) return;
+    setIsRenaming(gameId);
+    const { error } = await supabase
+      .from('user_games')
+      .update({ game_title: renamingText.trim() })
+      .eq('id', gameId)
+      .eq('user_id', user.id);
+    
+    if (error) {
+      alert('Failed to rename: ' + error.message);
+    } else {
+      hapticFeedback(ImpactStyle.Medium);
+      setRenamingText('');
+      setIsRenaming(null);
+      fetchVault(user.id);
+    }
   };
 
   useEffect(() => {
@@ -176,17 +230,56 @@ export default function AIForgeGame() {
                 <h3 className="text-[10px] font-black tracking-widest text-slate-500 uppercase mb-4 text-center">Your Nexus Vault</h3>
                 <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                   {savedGames.map((game) => (
-                    <div 
-                      key={game.id}
-                      className="group flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5 hover:border-neon-cyan/30 transition-all"
-                    >
-                      <span className="text-xs font-bold text-slate-300 truncate mr-4">{game.game_title}</span>
-                      <button 
-                        onClick={() => loadFromVault(game.config_json)}
-                        className="text-[8px] font-black text-neon-cyan uppercase tracking-widest border border-neon-cyan/20 px-3 py-1 rounded-lg hover:bg-neon-cyan hover:text-black transition-all"
-                      >
-                        Load
-                      </button>
+                    <div key={game.id}>
+                      {isRenaming === game.id ? (
+                        <div className="flex gap-2 p-3 rounded-xl bg-white/5 border border-white/10">
+                          <input 
+                            type="text" 
+                            value={renamingText}
+                            onChange={(e) => setRenamingText(e.target.value)}
+                            placeholder="New name..."
+                            className="flex-1 bg-black/40 border border-white/20 rounded-lg px-3 py-2 text-xs text-white focus:border-neon-cyan outline-none"
+                            autoFocus
+                          />
+                          <button 
+                            onClick={() => renameInVault(game.id)}
+                            className="text-[8px] font-black text-neon-cyan uppercase tracking-widest border border-neon-cyan/20 px-3 py-2 rounded-lg hover:bg-neon-cyan hover:text-black transition-all"
+                          >
+                            Save
+                          </button>
+                          <button 
+                            onClick={() => setIsRenaming(null)}
+                            className="text-[8px] font-black text-slate-500 uppercase tracking-widest border border-slate-500/20 px-3 py-2 rounded-lg hover:bg-slate-500/10 transition-all"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="group flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5 hover:border-neon-cyan/30 transition-all">
+                          <span className="text-xs font-bold text-slate-300 truncate mr-4">{game.game_title}</span>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => loadFromVault(game.config_json)}
+                              className="text-[8px] font-black text-neon-cyan uppercase tracking-widest border border-neon-cyan/20 px-3 py-1 rounded-lg hover:bg-neon-cyan hover:text-black transition-all"
+                            >
+                              Load
+                            </button>
+                            <button 
+                              onClick={() => { setIsRenaming(game.id); setRenamingText(game.game_title); }}
+                              className="text-[8px] font-black text-electric-violet uppercase tracking-widest border border-electric-violet/20 px-3 py-1 rounded-lg hover:bg-electric-violet hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                            >
+                              Rename
+                            </button>
+                            <button 
+                              onClick={() => deleteFromVault(game.id)}
+                              disabled={isDeleting === game.id}
+                              className="text-[8px] font-black text-red-400 uppercase tracking-widest border border-red-400/40 px-3 py-1 rounded-lg bg-red-500/5 hover:bg-red-500/20 hover:text-red-300 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-30"
+                            >
+                              {isDeleting === game.id ? 'Deleting...' : '🗑 Delete'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -247,16 +340,34 @@ export default function AIForgeGame() {
 
         {roomStatus === 'playing' && customGame && (
           <div className="flex-1 flex flex-col pt-12 animate-in slide-in-from-bottom duration-700">
-            <div className="text-center mb-12">
-              <div className="text-6xl font-black mb-2 tabular-nums">
-                {timeLeft}<span className="text-2xl text-neon-cyan">s</span>
+            <div className="flex justify-between items-start mb-8">
+              <div className="flex-1">
+                <div className="text-center mb-12">
+                  <div className="text-6xl font-black mb-2 tabular-nums">
+                    {timeLeft}<span className="text-2xl text-neon-cyan">s</span>
+                  </div>
+                  <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-1000 ${timeLeft < 10 ? 'bg-red-500' : 'bg-neon-cyan'}`}
+                      style={{ width: `${(timeLeft / customGame.timeLimitSeconds) * 100}%` }}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full transition-all duration-1000 ${timeLeft < 10 ? 'bg-red-500' : 'bg-neon-cyan'}`}
-                  style={{ width: `${(timeLeft / customGame.timeLimitSeconds) * 100}%` }}
-                />
-              </div>
+              <button 
+                onClick={() => {
+                  hapticFeedback(ImpactStyle.Medium);
+                  setRoomStatus('idle');
+                  setLocalEvaluation(null);
+                  setSubmission('');
+                  setRoundVerdict(null);
+                  setSessionPoints(0);
+                  setRoomScores([]);
+                }}
+                className="ml-4 px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/40 text-red-500 font-bold text-xs uppercase tracking-widest hover:bg-red-500/30 transition-all whitespace-nowrap"
+              >
+                × QUIT
+              </button>
             </div>
 
             <div className="glass-panel p-8 rounded-[2.5rem] border-white/10 mb-8 flex-1 flex flex-col">
@@ -368,6 +479,24 @@ export default function AIForgeGame() {
                     "{localEvaluation.judgeComment}"
                   </p>
                 </div>
+              </div>
+            ) : roomScores.length > 0 && roomScores.find(s => s.name === playerName) ? (
+              // Fallback: check roomScores directly if localEvaluation not yet synced
+              <div className="w-full space-y-6 mb-12">
+                {(() => {
+                  const score = roomScores.find(s => s.name === playerName);
+                  return score ? (
+                    <div className="glass-panel p-8 rounded-[2.5rem] border-neon-cyan/30 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4">
+                        <span className="text-4xl font-black text-neon-cyan/20">#{score.score}</span>
+                      </div>
+                      <p className="text-neon-cyan font-black text-5xl mb-4 tracking-tighter">{score.score}</p>
+                      <p className="text-white font-medium italic text-lg leading-relaxed">
+                        "{score.judgeComment}"
+                      </p>
+                    </div>
+                  ) : null;
+                })()}
               </div>
             ) : customGame?.gameType === 'performance' && !roomScores.find(s => s.name === playerName) ? (
               <div className="glass-panel p-8 rounded-[2.5rem] border-white/5 w-full mb-8">
