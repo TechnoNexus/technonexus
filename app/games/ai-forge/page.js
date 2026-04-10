@@ -7,6 +7,8 @@ import NexusAuth from '../../../components/NexusAuth';
 import { useGameStore } from '../../../store/gameStore';
 import { supabase } from '../../../lib/supabase';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { saveVaultOffline, getVaultOffline } from '../../../lib/capacitor-storage';
+import { startQRScanner } from '../../../lib/native-hardware';
 
 export default function AIForgeGame() {
   const { 
@@ -74,6 +76,23 @@ export default function AIForgeGame() {
     
     if (!error && data) {
       setSavedGames(data);
+      // Sync to local storage for offline use
+      saveVaultOffline(data);
+    } else {
+      // If error (offline?), try loading from local cache
+      const localData = await getVaultOffline();
+      if (localData && localData.length > 0) {
+        setSavedGames(localData);
+      }
+    }
+  };
+
+  const startScanner = async () => {
+    try {
+      hapticFeedback(ImpactStyle.Medium);
+      await startQRScanner();
+    } catch (e) {
+      alert('Camera access failed. Please check permissions.');
     }
   };
 
@@ -208,10 +227,10 @@ export default function AIForgeGame() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col pb-20">
+    <div className="min-h-screen bg-[#0A0A0A] bg-grid-white text-white py-8 px-4 flex flex-col pb-32 md:pb-20">
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         <header className="flex justify-between items-center mb-8">
-          <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm uppercase tracking-widest font-black">← Exit Arcade</Link>
+          <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm uppercase tracking-widest font-black p-2 min-w-[44px] min-h-[44px] flex items-center">← Exit Arcade</Link>
           <div className="px-4 py-1 rounded-full border border-neon-cyan bg-neon-cyan/10">
             <span className="text-[10px] block font-black text-neon-cyan uppercase tracking-widest text-center">AI FORGE</span>
           </div>

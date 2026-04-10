@@ -1,6 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/navbar";
+import BottomTabNav from "../components/navbar/BottomTabNav";
+import NativeGatekeeper from "../components/NativeGatekeeper";
 import Footer from "../components/Footer";
 import CapacitorAppCheck from "../components/CapacitorAppCheck";
 
@@ -22,13 +24,21 @@ export const metadata = {
   },
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen bg-[#0A0A0A]">
+        <NativeGatekeeper />
         <CapacitorAppCheck />
         <Navbar />
-        <main className="flex-grow">{children}</main>
+        <main className="flex-grow pb-20 md:pb-0">{children}</main>
+        <BottomTabNav />
         <Footer />
       </body>
     </html>

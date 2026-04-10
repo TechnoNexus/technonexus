@@ -1,14 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { Capacitor } from '@capacitor/core';
 import NexusSearch from '../NexusSearch';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isNative, setIsNative] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+  }, []);
+
+  if (isNative) return null;
 
   const navLinks = [
     { name: 'Ecosystem', href: pathname === '/' ? '#ecosystem' : '/#ecosystem' },
@@ -19,7 +27,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10 sticky top-0 z-50 bg-dark-bg/80 backdrop-blur-xl">
+    <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10 sticky top-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-xl pt-[env(safe-area-inset-top,1.25rem)]">
       <div className="flex items-center gap-8">
         <div className="text-2xl font-bold tracking-tighter">
           <Link href="/" className="gradient-text-cyan hover:opacity-80 transition-opacity">

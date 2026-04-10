@@ -103,21 +103,21 @@ export default function DumbCharades() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col">
+    <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col pb-32 md:pb-8">
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         <header className="flex justify-between items-center mb-8">
-          <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm">← EXIT</Link>
+          <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm p-2 min-w-[44px] min-h-[44px] flex items-center">← EXIT</Link>
           <div className="flex gap-2">
             <button 
               onClick={resetGame}
               disabled={!isActive && !currentWord}
-              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest border transition-all ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest border transition-all min-h-[44px] ${
                 (!isActive && !currentWord) 
                   ? 'opacity-50 cursor-not-allowed border-slate-700 text-slate-600' 
                   : 'border-red-500/40 text-red-500 hover:bg-red-500/20 bg-red-500/10'
               }`}
             >
-              × QUIT GAME
+              × QUIT
             </button>
             <div className={`px-4 py-1 rounded-full border ${turn === 'teamA' ? 'border-neon-cyan bg-neon-cyan/10' : 'border-white/5 opacity-50'}`}>
               <span className="text-[10px] block font-bold text-slate-400">TEAM A</span>
