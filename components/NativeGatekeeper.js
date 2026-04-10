@@ -13,10 +13,6 @@ export default function NativeGatekeeper() {
     
     if (isNative) {
       document.body.classList.add('is-native-app');
-      
-      if (pathname === '/') {
-        router.replace('/games');
-      }
     }
   }, [pathname, router]);
 

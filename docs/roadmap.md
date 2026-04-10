@@ -113,6 +113,7 @@
     - [x] Add a mobile-only Bottom Tab Navigation bar for easier one-handed use.
     - [x] Ensure all touch targets (like the Charades 'Skip' button) are thumb-friendly (min 44x44px).
     - [x] **Native Gatekeeper and Arcade Mobile Lock**: Implemented a global redirect that locks native mobile users into the `/games` (Arcade) section and hides standard web navigation.
+    - [x] **Native Gatekeeper Routing Adjustment**: Removed the forced redirect from root (/) to support Bottom Navigation access to the primary Dashboard.
 - [x] **Phase 7.2: Native Capacitor Features**: 
     - [x] Integrate offline storage (Preferences) for the Nexus Vault so users can view saved games offline. 
     - [x] Prepare native Camera hooks for future QR scanning.

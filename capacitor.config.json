@@ -4,6 +4,7 @@
   "webDir": "out",
   "bundledWebRuntime": false,
   "server": {
+    "url": "https://technonexus.ca",
     "androidScheme": "https",
     "iosScheme": "https"
   },
