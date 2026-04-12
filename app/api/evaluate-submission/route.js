@@ -2,6 +2,16 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const runtime = 'edge';
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS });
+}
+
 export async function POST(req) {
   try {
     const { instructions, submission, inputType, language = 'English' } = await req.json();
@@ -56,11 +66,11 @@ RESPOND ONLY WITH VALID JSON (no extra text):
 
     return new Response(JSON.stringify(evaluation), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...CORS }
     });
 
   } catch (error) {
     console.error('AI Evaluation Error:', error);
-    return new Response(JSON.stringify({ error: 'Evaluation failed', details: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Evaluation failed', details: error.message }), { status: 500, headers: CORS });
   }
 }

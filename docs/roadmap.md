@@ -106,7 +106,21 @@
     - [x] **Dev Utility** (`/apps/dev-utility`): JSON formatter/minifier and Base64 encoder/decoder tools
     - [x] **Updated Apps Landing** (`/apps`): Linked to functional tools with status indicators
 
-## Phase 7 — Native Mobile Excellence (🚀 In Progress)
+## Phase 8 — True Native Mobile Experience (✅ Completed)
+
+- [x] **Bundled Asset Build Pipeline**: Removed `server.url` from `capacitor.config.json`; app now serves UI from bundled `out/` assets instead of loading `technonexus.ca` remotely.
+- [x] **Mobile Build Scripts**: Added `build:mobile`, `cap:sync`, `cap:android`, `cap:ios` npm scripts with `cross-env` for cross-platform compatibility.
+- [x] **Centralized URL Helpers** (`lib/api.js`): `getApiUrl()` routes API calls to `technonexus.ca` on native (relative on web); `getWebUrl()` generates shareable HTTPS URLs regardless of platform.
+- [x] **CORS Headers**: Added `OPTIONS` preflight handler and `Access-Control-Allow-Origin: *` to all 6 API routes so native WebView requests are accepted by Cloudflare.
+- [x] **QR Code Join URL Fix**: Multiplayer room QR codes now encode `https://technonexus.ca/...?join=ID` on native instead of the unusable `capacitor://localhost` origin.
+- [x] **Android Back Button**: `CapacitorAppCheck.js` now registers a `backButton` listener via `@capacitor/app` — navigates back or exits app cleanly.
+- [x] **Native CSS Overrides** (`.is-native-app`): Footer hidden, tap highlight removed, overscroll disabled, `main` padding accounts for bottom tab bar + safe area.
+- [x] **BottomTabNav Polish**: Haptic feedback (Light) on every tab tap; active state now shows a neon-cyan indicator line at top edge + icon pill background, replacing the plain color change.
+- [x] **NativeGatekeeper Cleanup**: Removed unnecessary `pathname`/`router` dependencies; runs once on mount with eager footer hide to prevent flash.
+
+---
+
+## Phase 7 — Native Mobile Excellence (✅ Completed)
 
 - [x] **Phase 7.1: Mobile UI/UX Polish**: 
     - [x] Implement Safe Area padding for iOS notches in `layout.js`.

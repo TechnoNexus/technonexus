@@ -3,11 +3,6 @@
   "appName": "technoNexus",
   "webDir": "out",
   "bundledWebRuntime": false,
-  "server": {
-    "url": "https://technonexus.ca",
-    "androidScheme": "https",
-    "iosScheme": "https"
-  },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,

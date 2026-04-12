@@ -10,6 +10,13 @@ export default function GamesPage() {
       status: 'AVAILABLE',
     },
     {
+      id: 'nexus-blitz',
+      name: 'Nexus Blitz',
+      description: 'Rapid-fire AI trivia. Pick any topic, get 8 questions, and race the clock. Score high to claim the leaderboard.',
+      tag: 'TRIVIA',
+      status: 'AVAILABLE',
+    },
+    {
       id: 'dumb-charades',
       name: 'Dumb Charades',
       description: 'The classic party game, reimagined with a high-tech neon interface. Generate random movies, TV shows, and books.',
@@ -43,7 +50,16 @@ export default function GamesPage() {
             Experimental indie games & interactive digital experiences.
           </p>
           
-          <div className="mt-12 flex flex-wrap justify-center gap-6">
+          <div className="mt-8 flex justify-center">
+            <Link
+              href="/leaderboard"
+              className="flex items-center gap-2 px-5 py-2 bg-yellow-400/10 border border-yellow-400/30 rounded-2xl text-yellow-400 text-xs font-black uppercase tracking-widest hover:bg-yellow-400/20 transition-all"
+            >
+              🏆 Hall of Fame
+            </Link>
+          </div>
+
+          <div className="mt-8 flex flex-wrap justify-center gap-6">
             <a 
               href="#" 
               className="flex items-center gap-4 px-6 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group"
