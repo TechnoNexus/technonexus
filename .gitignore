@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# --- Android Native App Ignores ---
+apps/native-android/build/
+apps/native-android/app/build/
+apps/native-android/.idea/
+apps/native-android/.gradle/
+apps/native-android/local.properties

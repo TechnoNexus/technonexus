@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Haptics, ImpactStyle } from '../../lib/haptics';
 
 const haptic = async () => {
   try { await Haptics.impact({ style: ImpactStyle.Light }); } catch (e) {}

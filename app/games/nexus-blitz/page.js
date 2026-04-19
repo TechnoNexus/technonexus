@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Haptics, ImpactStyle } from '../../../lib/haptics';
 import { useGameStore } from '../../../store/gameStore';
 import { getApiUrl } from '../../../lib/api';
 

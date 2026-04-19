@@ -5,20 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:mobile": "cross-env NEXT_PUBLIC_BUILD_TARGET=mobile next build",
-    "cap:sync": "npm run build:mobile && npx cap sync",
-    "cap:android": "npm run build:mobile && npx cap sync android && npx cap open android",
-    "cap:ios": "npm run build:mobile && npx cap sync ios && npx cap open ios",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@capacitor/app": "^8.1.0",
-    "@capacitor/camera": "^8.0.2",
-    "@capacitor/haptics": "^8.0.2",
-    "@capacitor/preferences": "^8.0.1",
-    "@capacitor/splash-screen": "^8.0.1",
-    "@capacitor/status-bar": "^8.0.2",
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.101.1",
     "gray-matter": "^4.0.3",
@@ -32,15 +22,10 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@capacitor/android": "^8.3.0",
-    "@capacitor/cli": "^8.3.0",
-    "@capacitor/core": "^8.3.0",
-    "@capacitor/ios": "^8.3.0",
     "@cloudflare/next-on-pages": "^1.13.16",
     "@types/node": "25.5.0",
     "@types/react": "19.2.14",
     "autoprefixer": "^10.4.19",
-    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "postcss": "^8.4.38",

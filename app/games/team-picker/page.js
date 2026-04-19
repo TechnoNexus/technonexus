@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Haptics, ImpactStyle } from '../../../lib/haptics';
 
 export default function TeamPicker() {
   const [playerName, setPlayerName] = useState('');

@@ -6,7 +6,7 @@ import NexusRoomManager from '../../../components/NexusRoomManager';
 import NexusAuth from '../../../components/NexusAuth';
 import { useGameStore } from '../../../store/gameStore';
 import { supabase } from '../../../lib/supabase';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Haptics, ImpactStyle } from '../../../lib/haptics';
 import { saveVaultOffline, getVaultOffline } from '../../../lib/capacitor-storage';
 import { startQRScanner } from '../../../lib/native-hardware';
 

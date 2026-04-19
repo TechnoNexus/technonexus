@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { QRCodeSVG } from 'qrcode.react';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Haptics, ImpactStyle } from '../lib/haptics';
 import { getApiUrl, getWebUrl } from '../lib/api';
 
 export default function NexusRoomManager({ showForge = false }) {
