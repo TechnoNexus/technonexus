@@ -125,7 +125,9 @@ export default function NexusRoomManager({ showForge = false }) {
           instructions: customGame?.instructions,
           submissions: submissions, 
           inputType: customGame?.inputType,
-          language: customGame?.language || 'English'
+          language: customGame?.language || 'English',
+          gameType: customGame?.gameType,
+          letter: customGame?.letter || customGame?.currentLetter
         }),
         headers: { 'Content-Type': 'application/json' }
       });
@@ -138,6 +140,11 @@ export default function NexusRoomManager({ showForge = false }) {
       console.log('   ✅ Gemini responded with', data.results?.length, 'results');
       console.log('   Results:', data.results);
       setRoomScores(data.results);
+      
+      // Update session cumulative leaderboard
+      if (data.results?.length > 0) {
+        useGameStore.getState().updateSessionLeaderboard(data.results);
+      }
 
       // Update persistent leaderboard with the top scorer
       if (data.results?.length > 0) {
@@ -260,6 +267,14 @@ export default function NexusRoomManager({ showForge = false }) {
           if (data.type === 'submit-raw-submission') {
             setSubmissions(prev => [...prev, { name: data.name, submission: data.submission }]);
             hapticFeedback(ImpactStyle.Light);
+          }
+          if (data.type === 'game-action') {
+            // Generic bridge to pass any game action (like NPATM "STOP") to all clients
+            setCustomGame({
+              ...useGameStore.getState().customGame,
+              ...data.actionData
+            });
+            hapticFeedback(ImpactStyle.Heavy);
           }
         });
         
@@ -500,8 +515,31 @@ export default function NexusRoomManager({ showForge = false }) {
         hostConnection.current.send({ type: 'submit-raw-submission', name: playerName, submission });
       }
     };
+
+    const handleNPATMSubmit = (e) => {
+      const { playerId, data } = e.detail;
+      if (hostConnection.current) {
+        hostConnection.current.send({ 
+          type: 'npatm-submit', 
+          playerId, 
+          data,
+          name: playerName 
+        });
+      }
+    };
+
+    const handleClearSubmissions = () => {
+      setSubmissions([]);
+    };
+
     window.addEventListener('nexus-submit-to-host', handleLocalSubmit);
-    return () => window.removeEventListener('nexus-submit-to-host', handleLocalSubmit);
+    window.addEventListener('npatm-submit-to-host', handleNPATMSubmit);
+    window.addEventListener('nexus-clear-submissions', handleClearSubmissions);
+    return () => {
+      window.removeEventListener('nexus-submit-to-host', handleLocalSubmit);
+      window.removeEventListener('npatm-submit-to-host', handleNPATMSubmit);
+      window.removeEventListener('nexus-clear-submissions', handleClearSubmissions);
+    };
   }, [isHost, playerName]);
 
   return (

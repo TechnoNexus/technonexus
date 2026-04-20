@@ -10,6 +10,13 @@ export default function GamesPage() {
       status: 'AVAILABLE',
     },
     {
+      id: 'npatm',
+      name: 'Nexus NPATM',
+      description: 'The legendary "Name Place Animal Thing Movie" game. Race against friends to fill all categories and shout STOP!',
+      tag: 'CLASSIC',
+      status: 'AVAILABLE',
+    },
+    {
       id: 'nexus-blitz',
       name: 'Nexus Blitz',
       description: 'Rapid-fire AI trivia. Pick any topic, get 8 questions, and race the clock. Score high to claim the leaderboard.',
