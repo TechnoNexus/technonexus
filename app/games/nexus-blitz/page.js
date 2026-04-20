@@ -50,14 +50,18 @@ export default function NexusBlitz() {
     }
 
     const tick = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 4 && t > 0) hapticFeedback(ImpactStyle.Light);
-        return t - 1;
-      });
+      setTimeLeft((t) => t - 1);
     }, 1000);
 
     return () => clearInterval(tick);
   }, [phase, timeLeft, revealed]);
+
+  // FIX: Isolated side effect for haptics
+  useEffect(() => {
+    if (phase === 'playing' && !revealed && timeLeft <= 4 && timeLeft > 0) {
+      hapticFeedback(ImpactStyle.Light);
+    }
+  }, [timeLeft, phase, revealed]);
 
   const generateQuiz = async () => {
     if (!topic.trim()) return;

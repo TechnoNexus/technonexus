@@ -1,5 +1,6 @@
 package com.technonexus.app.ui.forge
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.technonexus.app.data.model.CustomGame
@@ -51,15 +52,14 @@ class ForgeViewModel : ViewModel() {
                 config_json = game
             )
             try {
-                println("NEXUS_DEBUG: Attempting to save game '${game.gameTitle}' to Vault for user ${user.id}")
+                Log.d("ForgeViewModel", "NEXUS_DEBUG: Attempting to save game '${game.gameTitle}' to Vault for user ${user.id}")
                 SupabaseManager.client.postgrest.from("user_games").insert(userGame)
-                println("NEXUS_DEBUG: Save successful")
+                Log.d("ForgeViewModel", "NEXUS_DEBUG: Save successful")
             } catch (e: Exception) {
-                println("NEXUS_DEBUG: Save FAILED: ${e.message}")
-                e.printStackTrace()
+                Log.e("ForgeViewModel", "NEXUS_DEBUG: Save FAILED: ${e.message}", e)
             }
         } else {
-            println("NEXUS_DEBUG: Save skipped - no user logged in")
+            Log.w("ForgeViewModel", "NEXUS_DEBUG: Save skipped - no user logged in")
         }
     }
 }

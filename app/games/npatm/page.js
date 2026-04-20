@@ -162,9 +162,10 @@ export default function NPATMPage() {
     setRoomStatus('playing');
   };
 
-  if (!hasMounted) return null;
+  // FIX: Move all hooks above conditional returns
+  const sessionLeaderboard = useGameStore((state) => state.sessionLeaderboard);
 
-  const sessionLeaderboard = useGameStore.getState().sessionLeaderboard;
+  if (!hasMounted) return null;
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white p-6 pb-32">

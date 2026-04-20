@@ -125,5 +125,5 @@ fun LoginScreen(viewModel: AuthViewModel) {
 }
 
 // Extension to help with opacity
-private val Color.Companion.White: Color get() = Color(0xFFFFFFFF)
-private fun Color.opacity(alpha: Float): Color = this.copy(alpha = alpha)
+// Removed redundant Color extensions as per code review.
+// Compose standard Color.White and .copy(alpha = ...) are sufficient.
