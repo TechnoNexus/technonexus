@@ -276,6 +276,16 @@ export default function NexusRoomManager({ showForge = false }) {
             });
             hapticFeedback(ImpactStyle.Heavy);
           }
+          if (data.type === 'npatm-submit') {
+            // FIX: Correctly handle action and name for NPATM synchronization
+            if (data.action === 'STOP') {
+              setCustomGame({
+                ...useGameStore.getState().customGame,
+                stopPressedBy: data.name
+              });
+              hapticFeedback(ImpactStyle.Heavy);
+            }
+          }
         });
         
         conn.on('close', () => {

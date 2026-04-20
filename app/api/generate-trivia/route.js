@@ -57,7 +57,14 @@ export async function POST(req) {
     `;
 
     const result = await model.generateContent(systemPrompt);
-    const data = JSON.parse(result.response.text().trim());
+    let responseText = result.response.text().trim();
+    
+    // Safety check for markdown fences
+    if (responseText.startsWith('```')) {
+      responseText = responseText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+    }
+    
+    const data = JSON.parse(responseText);
 
     return new Response(JSON.stringify(data), {
       status: 200,
