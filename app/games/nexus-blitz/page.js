@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Haptics, ImpactStyle } from '../../../lib/haptics';
 import { useGameStore } from '../../../store/gameStore';
 import { getApiUrl } from '../../../lib/api';
+import NexusRoomManager from '../../../components/NexusRoomManager';
 
 const QUESTION_TIME = 15;
 const OPTION_KEYS = ['A', 'B', 'C', 'D'];
@@ -26,7 +27,16 @@ const hapticFeedback = async (style = ImpactStyle.Medium) => {
 };
 
 export default function NexusBlitz() {
-  const { updateLeaderboard, playerName } = useGameStore();
+  const {
+    updateLeaderboard,
+    updateSessionLeaderboard,
+    playerName,
+    roomId,
+    isHost,
+    customGame,
+    setCustomGame,
+    setRoomStatus
+  } = useGameStore();
 
   const [phase, setPhase] = useState('setup'); // setup | loading | playing | result
   const [topic, setTopic] = useState('');
@@ -39,6 +49,47 @@ export default function NexusBlitz() {
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
   const [scores, setScores] = useState([]);             // [{ correct, time, points }]
   const [name, setName] = useState(playerName || '');
+  const submittedResult = useRef(false);
+
+  const syncBlitzGame = (patch, nextStatus) => {
+    const activeGame = useGameStore.getState().customGame;
+    const current = activeGame?.gameType === 'blitz' ? activeGame : { gameType: 'blitz' };
+    const next = { ...current, ...patch, gameType: 'blitz' };
+
+    if (roomId) {
+      window.dispatchEvent(new CustomEvent('nexus-game-action', {
+        detail: { actionData: next, roomStatus: nextStatus }
+      }));
+    } else {
+      setCustomGame(next);
+      if (nextStatus) setRoomStatus(nextStatus);
+    }
+  };
+
+  const withRoom = (content) => (
+    <>
+      {content}
+      <div className="bg-dark-bg px-4 pb-24">
+        <div className="max-w-md mx-auto">
+          <NexusRoomManager />
+        </div>
+      </div>
+    </>
+  );
+
+  useEffect(() => {
+    if (customGame?.gameType !== 'blitz' || !customGame.quiz) return;
+    setQuiz(customGame.quiz);
+    if (phase === 'setup' || phase === 'loading') {
+      setCurrentIndex(0);
+      setScores([]);
+      setSelected(null);
+      setRevealed(false);
+      setTimeLeft(QUESTION_TIME);
+      submittedResult.current = false;
+      setPhase('playing');
+    }
+  }, [customGame]);
 
   // Timer per question
   useEffect(() => {
@@ -83,6 +134,16 @@ export default function NexusBlitz() {
       setRevealed(false);
       setTimeLeft(QUESTION_TIME);
       setPhase('playing');
+      submittedResult.current = false;
+      syncBlitzGame({
+        quiz: data,
+        quizTitle: data.quizTitle,
+        topic: topic.trim(),
+        language,
+        questionCount,
+        roundId: Date.now(),
+        blitzResults: []
+      }, 'playing');
       hapticFeedback(ImpactStyle.Heavy);
     } catch (e) {
       alert('Failed to generate quiz. Please try again.');
@@ -133,6 +194,19 @@ export default function NexusBlitz() {
     const totalPoints = scores.reduce((sum, s) => sum + s.points, 0);
     const displayName = name.trim() || 'Anonymous';
     if (totalPoints > 0) updateLeaderboard(displayName);
+    if (totalPoints > 0) updateSessionLeaderboard([{ name: displayName, score: totalPoints }]);
+
+    if (roomId && !submittedResult.current) {
+      submittedResult.current = true;
+      syncBlitzGame({
+        blitzResult: {
+          name: displayName,
+          score: totalPoints,
+          correct: scores.filter((s) => s.correct).length,
+          accuracy: quiz ? Math.round((scores.filter((s) => s.correct).length / quiz.questions.length) * 100) : 0
+        }
+      }, 'finished');
+    }
   }, [phase]);
 
   const totalPoints = scores.reduce((sum, s) => sum + s.points, 0);
@@ -140,7 +214,7 @@ export default function NexusBlitz() {
   const accuracy = quiz ? Math.round((correctCount / quiz.questions.length) * 100) : 0;
 
   if (phase === 'setup') {
-    return (
+    return withRoom(
       <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col pb-20">
         <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
           <header className="flex justify-between items-center mb-8">
@@ -219,14 +293,14 @@ export default function NexusBlitz() {
 
           <button
             onClick={generateQuiz}
-            disabled={!topic.trim()}
+            disabled={!topic.trim() || (roomId && !isHost)}
             className={`w-full py-6 rounded-2xl font-black text-lg uppercase tracking-widest transition-all ${
-              topic.trim()
+              topic.trim() && (!roomId || isHost)
                 ? 'bg-yellow-400 text-black hover:scale-[0.98] shadow-lg'
                 : 'bg-white/5 text-slate-600 border border-white/10 cursor-not-allowed'
             }`}
           >
-            Generate Quiz
+            {roomId && !isHost ? 'Waiting for Host' : 'Generate Quiz'}
           </button>
         </div>
       </div>
@@ -234,7 +308,7 @@ export default function NexusBlitz() {
   }
 
   if (phase === 'loading') {
-    return (
+    return withRoom(
       <div className="min-h-screen bg-dark-bg flex flex-col items-center justify-center text-white px-4">
         <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mb-6"></div>
         <p className="text-slate-400 uppercase tracking-widest text-xs">Generating quiz on "{topic}"...</p>
@@ -247,7 +321,7 @@ export default function NexusBlitz() {
     const progress = ((currentIndex) / quiz.questions.length) * 100;
     const timerPct = (timeLeft / QUESTION_TIME) * 100;
 
-    return (
+    return withRoom(
       <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col pb-20">
         <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
           {/* Header */}
@@ -333,7 +407,7 @@ export default function NexusBlitz() {
     const grade = accuracy >= 90 ? 'S' : accuracy >= 70 ? 'A' : accuracy >= 50 ? 'B' : accuracy >= 30 ? 'C' : 'D';
     const gradeColor = accuracy >= 90 ? 'text-yellow-400' : accuracy >= 70 ? 'text-green-400' : accuracy >= 50 ? 'text-neon-cyan' : accuracy >= 30 ? 'text-orange-400' : 'text-red-400';
 
-    return (
+    return withRoom(
       <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col pb-20">
         <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
           <div className="text-center mb-10">
@@ -397,6 +471,23 @@ export default function NexusBlitz() {
           >
             View Leaderboard →
           </Link>
+
+          {customGame?.gameType === 'blitz' && customGame?.blitzResults?.length > 0 && (
+            <div className="glass-panel p-6 rounded-[2rem] border-yellow-400/20 mt-6">
+              <p className="text-[10px] font-black text-yellow-400 uppercase tracking-widest mb-4">Room Results</p>
+              <div className="space-y-3">
+                {customGame.blitzResults.map((result, index) => (
+                  <div key={result.name} className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3 border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] font-black text-slate-500">#{index + 1}</span>
+                      <span className="text-sm font-black uppercase">{result.name}</span>
+                    </div>
+                    <span className="text-yellow-400 font-black">{result.score}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

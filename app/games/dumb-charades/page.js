@@ -30,8 +30,28 @@ const hapticFeedback = async (style = ImpactStyle.Medium) => {
   }
 };
 
+const INITIAL_CHARADES_STATE = {
+  gameType: 'charades',
+  category: 'Movies',
+  currentWord: '',
+  timer: 60,
+  isActive: false,
+  showWord: false,
+  score: { teamA: 0, teamB: 0 },
+  turn: 'teamA',
+  roundId: null
+};
+
 export default function DumbCharades() {
-  const { roomId, isHost, updateLeaderboard } = useGameStore();
+  const {
+    roomId,
+    isHost,
+    customGame,
+    setCustomGame,
+    setRoomStatus,
+    updateLeaderboard,
+    updateSessionLeaderboard
+  } = useGameStore();
   const [category, setCategory] = useState('Movies');
   const [currentWord, setCurrentWord] = useState('');
   const [timer, setTimer] = useState(60);
@@ -40,21 +60,61 @@ export default function DumbCharades() {
   const [score, setScore] = useState({ teamA: 0, teamB: 0 });
   const [turn, setTurn] = useState('teamA');
 
+  const applyCharadesState = (state) => {
+    setCategory(state.category || 'Movies');
+    setCurrentWord(state.currentWord || '');
+    setTimer(state.timer ?? 60);
+    setIsActive(!!state.isActive);
+    setShowWord(!!state.showWord);
+    setScore(state.score || { teamA: 0, teamB: 0 });
+    setTurn(state.turn || 'teamA');
+  };
+
+  const syncCharadesState = (patch, nextStatus) => {
+    const activeGame = useGameStore.getState().customGame;
+    const current = activeGame?.gameType === 'charades'
+      ? activeGame
+      : INITIAL_CHARADES_STATE;
+    const next = {
+      ...current,
+      ...patch,
+      gameType: 'charades'
+    };
+
+    applyCharadesState(next);
+
+    if (roomId) {
+      window.dispatchEvent(new CustomEvent('nexus-game-action', {
+        detail: { actionData: next, roomStatus: nextStatus }
+      }));
+    } else {
+      setCustomGame(next);
+      if (nextStatus) setRoomStatus(nextStatus);
+    }
+  };
+
   // Reset game state on component mount - fresh session every time
   useEffect(() => {
-    setTimer(60);
-    setIsActive(false);
-    setCurrentWord('');
-    setShowWord(false);
-    setScore({ teamA: 0, teamB: 0 });
-    setTurn('teamA');
+    if (!customGame || customGame.gameType !== 'charades') {
+      applyCharadesState(INITIAL_CHARADES_STATE);
+    }
   }, []);
 
   useEffect(() => {
+    if (customGame?.gameType === 'charades') {
+      applyCharadesState(customGame);
+    }
+  }, [customGame]);
+
+  useEffect(() => {
     let interval = null;
-    if (isActive && timer > 0) {
+    if (isActive && timer > 0 && (!roomId || isHost)) {
       interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
+        setTimer((prev) => {
+          const nextTimer = Math.max(prev - 1, 0);
+          syncCharadesState({ timer: nextTimer, isActive: nextTimer > 0 }, nextTimer > 0 ? 'playing' : undefined);
+          return nextTimer;
+        });
         if (timer <= 5 && timer > 0) hapticFeedback(ImpactStyle.Light);
       }, 1000);
     } else if (timer === 0) {
@@ -69,37 +129,56 @@ export default function DumbCharades() {
     hapticFeedback();
     const list = DATABASE[category];
     const randomIndex = Math.floor(Math.random() * list.length);
-    setCurrentWord(list[randomIndex]);
-    setShowWord(false);
-    setTimer(60);
-    setIsActive(false);
+    syncCharadesState({
+      category,
+      currentWord: list[randomIndex],
+      showWord: false,
+      timer: 60,
+      isActive: false,
+      score,
+      turn,
+      roundId: Date.now()
+    }, 'playing');
   };
 
   const handlePoint = (team) => {
     hapticFeedback(ImpactStyle.Heavy);
-    setScore(prev => ({ ...prev, [team]: prev[team] + 1 }));
-    setTurn(team === 'teamA' ? 'teamB' : 'teamA');
+    const nextScore = { ...score, [team]: score[team] + 1 };
+    const nextTurn = team === 'teamA' ? 'teamB' : 'teamA';
+    const teamName = team === 'teamA' ? 'Team Alpha' : 'Team Beta';
     
-    // Update Persistent Leaderboard
-    if (isHost) {
-      updateLeaderboard(team === 'teamA' ? 'Team Alpha' : 'Team Beta');
+    if (!roomId || isHost) {
+      updateLeaderboard(teamName);
+      updateSessionLeaderboard([{ name: teamName, score: 1 }]);
     }
     
-    generateWord();
+    const list = DATABASE[category];
+    const randomIndex = Math.floor(Math.random() * list.length);
+    syncCharadesState({
+      category,
+      currentWord: list[randomIndex],
+      showWord: false,
+      timer: 60,
+      isActive: false,
+      score: nextScore,
+      turn: nextTurn,
+      roundId: Date.now()
+    }, 'playing');
   };
 
   const startTimer = () => {
     hapticFeedback();
-    setIsActive(true);
+    syncCharadesState({ isActive: true }, 'playing');
   };
   
   const resetGame = () => {
     hapticFeedback();
-    setIsActive(false);
-    setTimer(60);
-    setCurrentWord('');
-    setShowWord(false);
-    setScore({ teamA: 0, teamB: 0 });
+    syncCharadesState(INITIAL_CHARADES_STATE, 'idle');
+  };
+
+  const revealWord = () => {
+    hapticFeedback(ImpactStyle.Heavy);
+    syncCharadesState({ showWord: true }, 'playing');
   };
 
   return (
@@ -148,7 +227,11 @@ export default function DumbCharades() {
               <button
                 key={cat}
                 disabled={roomId && !isHost}
-                onClick={() => { hapticFeedback(ImpactStyle.Light); setCategory(cat); }}
+                onClick={() => {
+                  hapticFeedback(ImpactStyle.Light);
+                  setCategory(cat);
+                  syncCharadesState({ category: cat }, currentWord ? 'playing' : undefined);
+                }}
                 className={`px-4 py-2 rounded-full text-[10px] font-bold transition-all border whitespace-nowrap ${
                   category === cat 
                   ? 'bg-neon-cyan text-black border-neon-cyan shadow-neon-glow' 
@@ -160,12 +243,24 @@ export default function DumbCharades() {
             ))}
           </div>
 
-          {/* Logic to hide word from peers */}
           {roomId && !isHost ? (
-            <div className="flex-1 flex flex-col justify-center items-center">
-              <div className="w-16 h-16 border-4 border-neon-cyan border-t-transparent rounded-full animate-spin mb-6"></div>
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Connected as Guest</p>
-              <p className="text-white mt-2 italic">Waiting for Host to reveal word...</p>
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+              <p className="text-slate-500 uppercase tracking-widest text-[10px] mb-4">Synced from Host</p>
+              {currentWord ? (
+                <>
+                  <div className="w-full h-40 bg-white/5 border-2 border-dashed border-neon-cyan/20 rounded-2xl flex items-center justify-center mb-6">
+                    <span className="text-neon-cyan font-black text-lg tracking-widest">SECRET TITLE HIDDEN</span>
+                  </div>
+                  <p className="text-white font-bold">{isActive ? 'Timer running. Guess out loud!' : 'Waiting for host to start timer...'}</p>
+                  <p className="text-slate-500 text-xs mt-2 uppercase tracking-widest">Current turn: {turn === 'teamA' ? 'Team Alpha' : 'Team Beta'}</p>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 border-4 border-neon-cyan border-t-transparent rounded-full animate-spin mb-6"></div>
+                  <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Connected as Guest</p>
+                  <p className="text-white mt-2 italic">Waiting for host to generate a title...</p>
+                </>
+              )}
             </div>
           ) : (
             <>
@@ -191,7 +286,7 @@ export default function DumbCharades() {
                       <div className="flex flex-col items-center">
                         <div 
                           className="w-full h-40 bg-white/5 border-2 border-dashed border-white/20 rounded-2xl flex items-center justify-center cursor-pointer active:bg-white/10 transition-colors" 
-                          onClick={() => { hapticFeedback(ImpactStyle.Heavy); setShowWord(true); }}
+                          onClick={revealWord}
                         >
                           <span className="text-neon-cyan font-black text-xl tracking-widest">TAP TO REVEAL</span>
                         </div>

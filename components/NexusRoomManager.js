@@ -219,6 +219,66 @@ export default function NexusRoomManager({ showForge = false }) {
     }
   };
 
+  const broadcastNPATMStop = (name) => {
+    const updatedGame = {
+      ...useGameStore.getState().customGame,
+      stopPressedBy: name
+    };
+
+    setCustomGame(updatedGame);
+    connections.current.filter(c => c.open).forEach(conn => {
+      try {
+        conn.send({
+          type: 'npatm-stop',
+          customGame: updatedGame,
+          stoppedBy: name,
+          timestamp: Date.now()
+        });
+      } catch (e) {}
+    });
+    hapticFeedback(ImpactStyle.Heavy);
+  };
+
+  const applyRoomAction = (actionData = {}, nextStatus) => {
+    const currentGame = useGameStore.getState().customGame || {};
+    let mergedActionData = actionData;
+
+    if (actionData.blitzResult) {
+      const currentResults = currentGame.blitzResults || [];
+      const otherResults = currentResults.filter(result => result.name !== actionData.blitzResult.name);
+      mergedActionData = {
+        ...actionData,
+        blitzResults: [...otherResults, actionData.blitzResult].sort((a, b) => b.score - a.score)
+      };
+      delete mergedActionData.blitzResult;
+    }
+
+    const updatedGame = {
+      ...currentGame,
+      ...mergedActionData
+    };
+
+    setCustomGame(updatedGame);
+    if (nextStatus) setRoomStatus(nextStatus);
+    return updatedGame;
+  };
+
+  const broadcastRoomAction = (actionData = {}, nextStatus, excludePeer) => {
+    const updatedGame = applyRoomAction(actionData, nextStatus);
+
+    connections.current.filter(c => c.open && c.peer !== excludePeer).forEach(conn => {
+      try {
+        conn.send({
+          type: 'game-action',
+          actionData,
+          customGame: updatedGame,
+          roomStatus: nextStatus,
+          timestamp: Date.now()
+        });
+      } catch (e) {}
+    });
+  };
+
   const initPeer = (idAsHost) => {
     if (peer) return;
     import('peerjs').then(({ Peer }) => {
@@ -269,21 +329,14 @@ export default function NexusRoomManager({ showForge = false }) {
             hapticFeedback(ImpactStyle.Light);
           }
           if (data.type === 'game-action') {
-            // Generic bridge to pass any game action (like NPATM "STOP") to all clients
-            setCustomGame({
-              ...useGameStore.getState().customGame,
-              ...data.actionData
-            });
+            // Generic bridge to pass game-specific actions to all clients.
+            broadcastRoomAction(data.actionData, data.roomStatus, conn.peer);
             hapticFeedback(ImpactStyle.Heavy);
           }
           if (data.type === 'npatm-submit') {
             // FIX: Correctly handle action and name for NPATM synchronization
             if (data.action === 'STOP') {
-              setCustomGame({
-                ...useGameStore.getState().customGame,
-                stopPressedBy: data.name
-              });
-              hapticFeedback(ImpactStyle.Heavy);
+              broadcastNPATMStop(data.name);
             }
           }
         });
@@ -392,6 +445,18 @@ export default function NexusRoomManager({ showForge = false }) {
         if (data.type === 'keep-alive') {
           // Silently handle keep-alive pings to prevent disconnection during evaluation
           console.log('Keep-alive ping received');
+        }
+        if (data.type === 'npatm-stop') {
+          setCustomGame(data.customGame);
+          hapticFeedback(ImpactStyle.Heavy);
+        }
+        if (data.type === 'game-action') {
+          setCustomGame(data.customGame || {
+            ...useGameStore.getState().customGame,
+            ...data.actionData
+          });
+          if (data.roomStatus) setRoomStatus(data.roomStatus);
+          hapticFeedback(ImpactStyle.Light);
         }
       });
 
@@ -527,13 +592,19 @@ export default function NexusRoomManager({ showForge = false }) {
     };
 
     const handleNPATMSubmit = (e) => {
-      const { playerId, data } = e.detail;
+      const { action, name, playerId, data } = e.detail;
+      if (isHost && action === 'STOP') {
+        broadcastNPATMStop(name || playerName);
+        return;
+      }
+
       if (hostConnection.current) {
         hostConnection.current.send({ 
           type: 'npatm-submit', 
+          action,
+          name,
           playerId, 
-          data,
-          name: playerName 
+          data
         });
       }
     };
@@ -542,13 +613,29 @@ export default function NexusRoomManager({ showForge = false }) {
       setSubmissions([]);
     };
 
+    const handleGameAction = (e) => {
+      const { actionData, roomStatus: nextStatus } = e.detail;
+      if (isHost) {
+        broadcastRoomAction(actionData, nextStatus);
+      } else if (hostConnection.current) {
+        hostConnection.current.send({
+          type: 'game-action',
+          actionData,
+          roomStatus: nextStatus,
+          timestamp: Date.now()
+        });
+      }
+    };
+
     window.addEventListener('nexus-submit-to-host', handleLocalSubmit);
     window.addEventListener('npatm-submit-to-host', handleNPATMSubmit);
     window.addEventListener('nexus-clear-submissions', handleClearSubmissions);
+    window.addEventListener('nexus-game-action', handleGameAction);
     return () => {
       window.removeEventListener('nexus-submit-to-host', handleLocalSubmit);
       window.removeEventListener('npatm-submit-to-host', handleNPATMSubmit);
       window.removeEventListener('nexus-clear-submissions', handleClearSubmissions);
+      window.removeEventListener('nexus-game-action', handleGameAction);
     };
   }, [isHost, playerName]);
 

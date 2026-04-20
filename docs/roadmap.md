@@ -109,6 +109,13 @@
 ## Phase 6.4 — Modular Game Development (Strategy Active)
 - [x] **Context Optimization**: Shifted to a "Clean Room" development pattern where new games are built in standalone sessions using the Nexus Blueprint.
 - [x] **Nexus NPATM**: Launched the classic Name-Place-Animal-Thing-Movie game with "Stop!" mechanic and AI Duplicate Detection.
+- [x] **Codex Codebase Brief**: Added `docs/codex-codebase-brief.md` as a consolidated Codex handoff note summarizing architecture, current source truth, multiplayer rules, AI rules, mobile-doc conflicts, and stale documentation warnings.
+- [x] **NPATM Guest Stop Sync Fix**: Fixed guest-triggered STOP flow so the first player to complete all five words ends the round for host and guests, and fresh rounds clear stale joiner inputs.
+- [x] **NPATM Layout Polish**: Fixed the clipped `NEXUS NPATM` heading and changed the mini leaderboard from a fixed floating HUD to an in-flow element so it no longer sticks to the screen while scrolling.
+- [x] **Global Leaderboard Bridge**: Added Supabase-backed leaderboard read/write helpers with local Zustand fallback when the `leaderboard` table or `record_win` RPC is unavailable.
+- [x] **Generic Room Action Bridge**: Extended `NexusRoomManager` with a safe `nexus-game-action` event path for host-authoritative game payload sync across reusable games.
+- [x] **Dumb Charades Multiplayer Sync**: Moved Charades word, timer, score, turn, and category into synced room state so guests see live host-driven gameplay without seeing the secret word.
+- [x] **Nexus Blitz Multiplayer Mode**: Added room-aware shared quiz generation, guest quiz sync, per-player room result reporting, and shared room results display.
 - [ ] **Integration Protocol**: Standardize `useGameStore` hooks to allow drag-and-drop game integration.
 - [ ] **Next Game: [Pending User Request]**: Ready to integrate the first modularly developed game.
 
