@@ -47,6 +47,16 @@ const CATALOG = [
   }
 ];
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS });
+}
+
 export async function POST(req) {
   try {
     const { query } = await req.json();
@@ -94,11 +104,11 @@ export async function POST(req) {
 
     return new Response(JSON.stringify(searchData), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...CORS }
     });
 
   } catch (error) {
     console.error('Search Error:', error);
-    return new Response(JSON.stringify({ error: 'Search failed' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Search failed' }), { status: 500, headers: CORS });
   }
 }

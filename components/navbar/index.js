@@ -1,22 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Capacitor } from '@capacitor/core';
 import NexusSearch from '../NexusSearch';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isNative, setIsNative] = useState(false);
   const pathname = usePathname();
-
-  useEffect(() => {
-    setIsNative(Capacitor.isNativePlatform());
-  }, []);
-
-  if (isNative) return null;
 
   const navLinks = [
     { name: 'Ecosystem', href: pathname === '/' ? '#ecosystem' : '/#ecosystem' },

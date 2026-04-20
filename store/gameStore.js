@@ -23,6 +23,7 @@ export const useGameStore = create(
       hostName: '', // Synced name of the room host
       gameMode: 'individual', // 'individual' or 'team'
       leaderboard: [], // Global leaderboard tracking wins across sessions
+      sessionLeaderboard: [], // Cumulative scores for the current room session
 
       setRoomId: (id) => set({ roomId: id }),
       setHost: (isHost) => set({ isHost }),
@@ -55,6 +56,21 @@ export const useGameStore = create(
           });
         }
       },
+      updateSessionLeaderboard: (results) => {
+        set((state) => {
+          const current = [...state.sessionLeaderboard];
+          results.forEach(res => {
+            const idx = current.findIndex(p => p.name === res.name);
+            if (idx > -1) {
+              current[idx].score += (res.score || 0);
+            } else {
+              current.push({ name: res.name, score: (res.score || 0) });
+            }
+          });
+          return { sessionLeaderboard: current.sort((a, b) => b.score - a.score) };
+        });
+      },
+      resetSessionLeaderboard: () => set({ sessionLeaderboard: [] }),
 
       resetRoom: () => set({ 
         roomId: null, 
@@ -63,7 +79,12 @@ export const useGameStore = create(
         roomStatus: 'idle',
         currentWord: '',
         timer: 60,
-        scores: { teamA: 0, teamB: 0 }
+        scores: { teamA: 0, teamB: 0 },
+        sessionLeaderboard: [],
+        customGame: null,
+        roomScores: [],
+        roundVerdict: null,
+        localEvaluation: null
       })
     }),
     {

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p c:/AI/Repositories/technonexus/app/api/generate-trivia)",
+      "Bash(mkdir -p c:/AI/Repositories/technonexus/app/games/nexus-blitz)",
+      "Read(//c/Users/archi/.claude/projects/c--AI-Repositories-technonexus/memory/**)",
+      "Bash(mkdir -p \"c:/Users/archi/.claude/projects/c--AI-Repositories-technonexus/memory\")",
+      "Bash(cat /c/AI/Repositories/technonexus/.github/workflows/*.yml)",
+      "Bash(npm install:*)"
+    ]
+  }
+}

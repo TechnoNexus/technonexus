@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Haptics, ImpactStyle } from '../../../lib/haptics';
 import NexusRoomManager from '../../../components/NexusRoomManager';
 import { useGameStore } from '../../../store/gameStore';
 

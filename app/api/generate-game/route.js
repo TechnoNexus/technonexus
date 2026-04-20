@@ -2,6 +2,16 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const runtime = 'edge';
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS });
+}
+
 export async function POST(req) {
   try {
     const { prompt, language = 'English' } = await req.json();
@@ -75,17 +85,17 @@ export async function POST(req) {
 
     return new Response(JSON.stringify(gameData), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...CORS }
     });
 
   } catch (error) {
     console.error('AI Generation Error:', error);
-    return new Response(JSON.stringify({ 
-      error: 'AI Forge failed to generate game', 
-      details: error.message 
+    return new Response(JSON.stringify({
+      error: 'AI Forge failed to generate game',
+      details: error.message
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...CORS }
     });
   }
 }

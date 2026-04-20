@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { getApiUrl } from '../lib/api';
 
 export default function NexusSearch({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
@@ -23,7 +24,7 @@ export default function NexusSearch({ isOpen, onClose }) {
 
     setIsLoading(true);
     try {
-      const res = await fetch('/api/nexus-search', {
+      const res = await fetch(getApiUrl('/api/nexus-search'), {
         method: 'POST',
         body: JSON.stringify({ query }),
         headers: { 'Content-Type': 'application/json' }

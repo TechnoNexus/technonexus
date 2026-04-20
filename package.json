@@ -9,11 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@capacitor/camera": "^8.0.2",
-    "@capacitor/haptics": "^8.0.2",
-    "@capacitor/preferences": "^8.0.1",
-    "@capacitor/splash-screen": "^8.0.1",
-    "@capacitor/status-bar": "^8.0.2",
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.101.1",
     "gray-matter": "^4.0.3",
@@ -27,10 +22,6 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@capacitor/android": "^8.3.0",
-    "@capacitor/cli": "^8.3.0",
-    "@capacitor/core": "^8.3.0",
-    "@capacitor/ios": "^8.3.0",
     "@cloudflare/next-on-pages": "^1.13.16",
     "@types/node": "25.5.0",
     "@types/react": "19.2.14",

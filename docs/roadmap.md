@@ -106,17 +106,47 @@
     - [x] **Dev Utility** (`/apps/dev-utility`): JSON formatter/minifier and Base64 encoder/decoder tools
     - [x] **Updated Apps Landing** (`/apps`): Linked to functional tools with status indicators
 
-## Phase 7 — Native Mobile Excellence (🚀 In Progress)
+## Phase 6.4 — Modular Game Development (Strategy Active)
+- [x] **Context Optimization**: Shifted to a "Clean Room" development pattern where new games are built in standalone sessions using the Nexus Blueprint.
+- [x] **Nexus NPATM**: Launched the classic Name-Place-Animal-Thing-Movie game with "Stop!" mechanic and AI Duplicate Detection.
+- [ ] **Integration Protocol**: Standardize `useGameStore` hooks to allow drag-and-drop game integration.
+- [ ] **Next Game: [Pending User Request]**: Ready to integrate the first modularly developed game.
+
+## Phase 8 — True Native Mobile Experience (✅ Completed)
+
+- [x] **Bundled Asset Build Pipeline**: Removed `server.url` from `capacitor.config.json`; app now serves UI from bundled `out/` assets instead of loading `technonexus.ca` remotely.
+- [x] **Mobile Build Scripts**: Added `build:mobile`, `cap:sync`, `cap:android`, `cap:ios` npm scripts with `cross-env` for cross-platform compatibility.
+- [x] **Centralized URL Helpers** (`lib/api.js`): `getApiUrl()` routes API calls to `technonexus.ca` on native (relative on web); `getWebUrl()` generates shareable HTTPS URLs regardless of platform.
+- [x] **CORS Headers**: Added `OPTIONS` preflight handler and `Access-Control-Allow-Origin: *` to all 6 API routes so native WebView requests are accepted by Cloudflare.
+- [x] **QR Code Join URL Fix**: Multiplayer room QR codes now encode `https://technonexus.ca/...?join=ID` on native instead of the unusable `capacitor://localhost` origin.
+- [x] **Android Back Button**: `CapacitorAppCheck.js` now registers a `backButton` listener via `@capacitor/app` — navigates back or exits app cleanly.
+- [x] **Native CSS Overrides** (`.is-native-app`): Footer hidden, tap highlight removed, overscroll disabled, `main` padding accounts for bottom tab bar + safe area.
+- [x] **BottomTabNav Polish**: Haptic feedback (Light) on every tab tap; active state now shows a neon-cyan indicator line at top edge + icon pill background, replacing the plain color change.
+- [x] **NativeGatekeeper Cleanup**: Removed unnecessary `pathname`/`router` dependencies; runs once on mount with eager footer hide to prevent flash.
+
+---
+
+## Phase 7 — Native Mobile Excellence (✅ Completed)
 
 - [x] **Phase 7.1: Mobile UI/UX Polish**: 
     - [x] Implement Safe Area padding for iOS notches in `layout.js`.
     - [x] Add a mobile-only Bottom Tab Navigation bar for easier one-handed use.
     - [x] Ensure all touch targets (like the Charades 'Skip' button) are thumb-friendly (min 44x44px).
     - [x] **Native Gatekeeper and Arcade Mobile Lock**: Implemented a global redirect that locks native mobile users into the `/games` (Arcade) section and hides standard web navigation.
-    - [x] **Native Gatekeeper Routing Adjustment**: Removed the forced redirect from root (/) to support Bottom Navigation access to the primary Dashboard.
-- [x] **Phase 7.2: Native Capacitor Features**: 
-    - [x] Integrate offline storage (Preferences) for the Nexus Vault so users can view saved games offline. 
-    - [x] Prepare native Camera hooks for future QR scanning.
-- [x] **Phase 7.3: App Store Prep**: 
-    - [x] Configure Android `strings.xml` and iOS `Info.plist` with final TechnoNexus branding.
-    - [x] Set up Splash Screens and generate App Icons for all densities (via `@capacitor/assets`).
+    - [x] **NativeGatekeeper Routing Adjustment**: Removed the forced redirect from root (/) to support Bottom Navigation access to the primary Dashboard.
+    - [x] **Phase 7.2: Native Capacitor Features**: 
+        - [x] Integrate offline storage (Preferences) for the Nexus Vault so users can view saved games offline. 
+        - [x] Prepare native Camera hooks for future QR scanning.
+    - [x] **Phase 7.3: App Store Prep**: 
+        - [x] Configure Android `strings.xml` and iOS `Info.plist` with final TechnoNexus branding.
+        - [x] Set up Splash Screens and generate App Icons for all densities (via `@capacitor/assets`).
+
+    ## Phase 9 — Fully Native Mobile Rebirth (In Progress)
+
+    - [x] **Deprecate Capacitor**: Removed all Capacitor dependencies, wrappers, and configuration from the web repository.
+    - [x] **Mock Native Hardware**: Created web-compatible mocks for Haptics, Camera, and Preferences to keep the web app functional.
+    - [x] **Initialize Native Projects**: Created `apps/native-ios` (SwiftUI) and `apps/native-android` (Jetpack Compose) directory structures.
+    - [x] **Nexus Vibe UI Port**: Ported the dark/neon branding, typography, and glassmorphism components to both SwiftUI and Jetpack Compose.
+    - [x] **Native Dashboard Implementation**: Built the primary "Nexus Dashboard" module in both native languages with fluid scrolling and interactive cards.
+    - [ ] **Core Native Infrastructure**: Integrate Supabase Swift/Kotlin SDKs and implement native Authentication flows.
+    - [ ] **Native Multiplayer Sync**: Re-implement PeerJS/WebRTC syncing in native code.

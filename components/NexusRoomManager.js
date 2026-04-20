@@ -3,15 +3,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { QRCodeSVG } from 'qrcode.react';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Haptics, ImpactStyle } from '../lib/haptics';
+import { getApiUrl, getWebUrl } from '../lib/api';
 
 export default function NexusRoomManager({ showForge = false }) {
-  const { 
-    roomId, setRoomId, isHost, setHost, players, setPlayers, 
+  const {
+    roomId, setRoomId, isHost, setHost, players, setPlayers,
     resetRoom, setCustomGame, roomStatus, setRoomStatus,
     setLocalEvaluation, roomScores, setRoomScores,
     setRoundVerdict, customGame, playerName, setPlayerName,
-    gameMode, setGameMode, hostName, setHostName
+    gameMode, setGameMode, hostName, setHostName, updateLeaderboard
   } = useGameStore();
 
   const [peer, setPeer] = useState(null);
@@ -32,7 +33,7 @@ export default function NexusRoomManager({ showForge = false }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setJoinUrl(`${window.location.origin}${window.location.pathname}?join=${roomId}`);
+      setJoinUrl(`${getWebUrl(window.location.pathname)}?join=${roomId}`);
     }
   }, [roomId]);
 
@@ -45,7 +46,7 @@ export default function NexusRoomManager({ showForge = false }) {
     setIsGenerating(true);
     hapticFeedback();
     try {
-      const response = await fetch('/api/generate-game', {
+      const response = await fetch(getApiUrl('/api/generate-game'), {
         method: 'POST',
         body: JSON.stringify({ prompt: aiPrompt, language }),
         headers: { 'Content-Type': 'application/json' }
@@ -58,8 +59,8 @@ export default function NexusRoomManager({ showForge = false }) {
       setSubmissions([]);
       hapticFeedback(ImpactStyle.Heavy);
       
-      connections.current.forEach(conn => {
-        conn.send({ type: 'new-custom-game', game: data });
+      connections.current.filter(c => c.open).forEach(conn => {
+        try { conn.send({ type: 'new-custom-game', game: data }); } catch (e) {}
       });
     } catch (e) {
       console.error('AI Generation Failed:', e);
@@ -73,7 +74,7 @@ export default function NexusRoomManager({ showForge = false }) {
     if (!isHost || scoresToUse.length === 0) return;
     setIsEvaluatingRound(true);
     try {
-      const res = await fetch('/api/evaluate-leaderboard', {
+      const res = await fetch(getApiUrl('/api/evaluate-leaderboard'), {
         method: 'POST',
         body: JSON.stringify({ 
           players: scoresToUse, 
@@ -84,7 +85,9 @@ export default function NexusRoomManager({ showForge = false }) {
       });
       const data = await res.json();
       setRoundVerdict(data);
-      connections.current.forEach(conn => conn.send({ type: 'round-verdict', verdict: data }));
+      connections.current.filter(c => c.open).forEach(conn => {
+        try { conn.send({ type: 'round-verdict', verdict: data }); } catch (e) {}
+      });
     } catch (e) {
       console.error('Round evaluation failed:', e);
     } finally {
@@ -98,26 +101,16 @@ export default function NexusRoomManager({ showForge = false }) {
       return;
     }
     setIsEvaluatingBatch(true);
-    console.log('📊 BATCH EVALUATION STARTED');
-    console.log('   Host:', playerName);
-    console.log('   Submissions:', submissions);
-    console.log('   Game:', customGame?.gameTitle);
-    
     const isSoloHost = connections.current.filter(c => c.open).length === 0;
-    console.log('   Solo host:', isSoloHost);
-    console.log('   Open connections:', connections.current.filter(c => c.open).length);
-    
+
     // Start keep-alive ONLY if there are guests to keep alive
     if (!isSoloHost) {
-      console.log('   ⏱️ Starting keep-alive heartbeat (2s interval)');
       keepAliveInterval.current = setInterval(() => {
         const activeConns = connections.current.filter(c => c.open);
         activeConns.forEach(conn => {
           try {
             conn.send({ type: 'keep-alive', timestamp: Date.now() });
-          } catch (e) {
-            console.log('   ⚠️ Keep-alive send failed:', e.message);
-          }
+          } catch (e) {}
         });
       }, 2000);
     } else {
@@ -126,13 +119,15 @@ export default function NexusRoomManager({ showForge = false }) {
     
     try {
       console.log('   🤖 Calling Gemini API...');
-      const res = await fetch('/api/evaluate-batch', {
+      const res = await fetch(getApiUrl('/api/evaluate-batch'), {
         method: 'POST',
         body: JSON.stringify({ 
           instructions: customGame?.instructions,
           submissions: submissions, 
           inputType: customGame?.inputType,
-          language: customGame?.language || 'English'
+          language: customGame?.language || 'English',
+          gameType: customGame?.gameType,
+          letter: customGame?.letter || customGame?.currentLetter
         }),
         headers: { 'Content-Type': 'application/json' }
       });
@@ -146,6 +141,19 @@ export default function NexusRoomManager({ showForge = false }) {
       console.log('   Results:', data.results);
       setRoomScores(data.results);
       
+      // Update session cumulative leaderboard
+      if (data.results?.length > 0) {
+        useGameStore.getState().updateSessionLeaderboard(data.results);
+      }
+
+      // Update persistent leaderboard with the top scorer
+      if (data.results?.length > 0) {
+        const topScorer = [...data.results].sort((a, b) => b.score - a.score)[0];
+        if (topScorer?.name && topScorer.score > 0) {
+          updateLeaderboard(topScorer.name);
+        }
+      }
+
       // Only broadcast to guests if there ARE guests
       if (!isSoloHost) {
         const activeConnections = connections.current.filter(c => c.open);
@@ -259,6 +267,14 @@ export default function NexusRoomManager({ showForge = false }) {
           if (data.type === 'submit-raw-submission') {
             setSubmissions(prev => [...prev, { name: data.name, submission: data.submission }]);
             hapticFeedback(ImpactStyle.Light);
+          }
+          if (data.type === 'game-action') {
+            // Generic bridge to pass any game action (like NPATM "STOP") to all clients
+            setCustomGame({
+              ...useGameStore.getState().customGame,
+              ...data.actionData
+            });
+            hapticFeedback(ImpactStyle.Heavy);
           }
         });
         
@@ -499,8 +515,31 @@ export default function NexusRoomManager({ showForge = false }) {
         hostConnection.current.send({ type: 'submit-raw-submission', name: playerName, submission });
       }
     };
+
+    const handleNPATMSubmit = (e) => {
+      const { playerId, data } = e.detail;
+      if (hostConnection.current) {
+        hostConnection.current.send({ 
+          type: 'npatm-submit', 
+          playerId, 
+          data,
+          name: playerName 
+        });
+      }
+    };
+
+    const handleClearSubmissions = () => {
+      setSubmissions([]);
+    };
+
     window.addEventListener('nexus-submit-to-host', handleLocalSubmit);
-    return () => window.removeEventListener('nexus-submit-to-host', handleLocalSubmit);
+    window.addEventListener('npatm-submit-to-host', handleNPATMSubmit);
+    window.addEventListener('nexus-clear-submissions', handleClearSubmissions);
+    return () => {
+      window.removeEventListener('nexus-submit-to-host', handleLocalSubmit);
+      window.removeEventListener('npatm-submit-to-host', handleNPATMSubmit);
+      window.removeEventListener('nexus-clear-submissions', handleClearSubmissions);
+    };
   }, [isHost, playerName]);
 
   return (
