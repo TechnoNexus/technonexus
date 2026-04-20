@@ -336,7 +336,11 @@ export default function NexusRoomManager({ showForge = false }) {
           if (data.type === 'npatm-submit') {
             // FIX: Correctly handle action and name for NPATM synchronization
             if (data.action === 'STOP') {
-              broadcastNPATMStop(data.name);
+              setCustomGame({
+                ...useGameStore.getState().customGame,
+                stopPressedBy: data.name
+              });
+              hapticFeedback(ImpactStyle.Heavy);
             }
           }
         });
