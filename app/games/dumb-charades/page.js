@@ -35,6 +35,7 @@ const INITIAL_CHARADES_STATE = {
   category: 'Movies',
   currentWord: '',
   timer: 60,
+  timerEndsAt: null,
   isActive: false,
   showWord: false,
   score: { teamA: 0, teamB: 0 },
@@ -63,7 +64,9 @@ export default function DumbCharades() {
   const applyCharadesState = (state) => {
     setCategory(state.category || 'Movies');
     setCurrentWord(state.currentWord || '');
-    setTimer(state.timer ?? 60);
+    if (!state.isActive || !state.timerEndsAt) {
+      setTimer(state.timer ?? 60);
+    }
     setIsActive(!!state.isActive);
     setShowWord(!!state.showWord);
     setScore(state.score || { teamA: 0, teamB: 0 });
@@ -108,22 +111,22 @@ export default function DumbCharades() {
 
   useEffect(() => {
     let interval = null;
-    if (isActive && timer > 0 && (!roomId || isHost)) {
+    if (isActive && customGame?.gameType === 'charades' && customGame?.timerEndsAt) {
       interval = setInterval(() => {
-        setTimer((prev) => {
-          const nextTimer = Math.max(prev - 1, 0);
-          syncCharadesState({ timer: nextTimer, isActive: nextTimer > 0 }, nextTimer > 0 ? 'playing' : undefined);
-          return nextTimer;
-        });
-        if (timer <= 5 && timer > 0) hapticFeedback(ImpactStyle.Light);
+        const nextTimer = Math.max(Math.ceil((customGame.timerEndsAt - Date.now()) / 1000), 0);
+        setTimer(nextTimer);
+        if (nextTimer <= 5 && nextTimer > 0) hapticFeedback(ImpactStyle.Light);
+        if (nextTimer === 0 && (!roomId || isHost)) {
+          syncCharadesState({ timer: 0, isActive: false, timerEndsAt: null }, 'playing');
+        }
       }, 1000);
-    } else if (timer === 0) {
+    } else if (timer === 0 && isActive) {
       setIsActive(false);
       hapticFeedback(ImpactStyle.Heavy);
       clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [isActive, timer]);
+  }, [isActive, customGame?.timerEndsAt, roomId, isHost]);
 
   const generateWord = () => {
     hapticFeedback();
@@ -134,6 +137,7 @@ export default function DumbCharades() {
       currentWord: list[randomIndex],
       showWord: false,
       timer: 60,
+      timerEndsAt: null,
       isActive: false,
       score,
       turn,
@@ -159,6 +163,7 @@ export default function DumbCharades() {
       currentWord: list[randomIndex],
       showWord: false,
       timer: 60,
+      timerEndsAt: null,
       isActive: false,
       score: nextScore,
       turn: nextTurn,
@@ -168,7 +173,11 @@ export default function DumbCharades() {
 
   const startTimer = () => {
     hapticFeedback();
-    syncCharadesState({ isActive: true }, 'playing');
+    syncCharadesState({
+      isActive: true,
+      timer,
+      timerEndsAt: Date.now() + (timer * 1000)
+    }, 'playing');
   };
   
   const resetGame = () => {
