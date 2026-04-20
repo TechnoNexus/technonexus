@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useGameStore } from '../../store/gameStore';
+import { fetchGlobalLeaderboard } from '../../lib/leaderboard';
 
 const RANK_COLORS = ['text-yellow-400', 'text-slate-300', 'text-orange-400'];
 const RANK_LABELS = ['1ST', '2ND', '3RD'];
@@ -10,9 +11,25 @@ const RANK_LABELS = ['1ST', '2ND', '3RD'];
 export default function LeaderboardPage() {
   const { leaderboard } = useGameStore();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [globalLeaderboard, setGlobalLeaderboard] = useState(null);
+  const [leaderboardSource, setLeaderboardSource] = useState('local');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    fetchGlobalLeaderboard().then((rows) => {
+      if (!isMounted || !rows) return;
+      setGlobalLeaderboard(rows);
+      setLeaderboardSource('global');
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Zustand persist hydrates asynchronously — leaderboard may be [] on first render
-  const sorted = [...(leaderboard || [])].sort((a, b) => b.wins - a.wins);
+  const sorted = [...(globalLeaderboard || leaderboard || [])].sort((a, b) => b.wins - a.wins);
 
   return (
     <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-12 px-4">
@@ -30,7 +47,7 @@ export default function LeaderboardPage() {
             <span className="text-yellow-400">BOARD</span>
           </h1>
           <p className="text-slate-500 text-xs uppercase tracking-[0.2em]">
-            Cross-game wins — persisted locally
+            Cross-game wins — {leaderboardSource === 'global' ? 'synced globally' : 'local fallback'}
           </p>
         </div>
 

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { recordGlobalWin } from '../lib/leaderboard';
 
 export const useGameStore = create(
   persist(
@@ -55,6 +56,8 @@ export const useGameStore = create(
               .sort((a, b) => b.wins - a.wins) 
           });
         }
+
+        recordGlobalWin(winnerName);
       },
       updateSessionLeaderboard: (results) => {
         set((state) => {

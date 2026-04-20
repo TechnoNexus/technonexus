@@ -45,7 +45,7 @@ export default function NPATMPage() {
     customGame, 
     setCustomGame, 
     setRoomStatus, 
-    leaderboard,
+    playerName,
     roomScores
   } = useGameStore();
 
@@ -61,6 +61,7 @@ export default function NPATMPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [evaluationResults, setEvaluationResults] = useState(null);
   const [currentLetter, setCurrentLetter] = useState('');
+  const lastRoundKey = useRef(null);
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -81,7 +82,7 @@ export default function NPATMPage() {
     Haptics.notification('success');
 
     const me = players.find(p => p.isMe);
-    const myName = me?.name || 'Anonymous';
+    const myName = playerName || me?.name || 'Anonymous';
     
     // Dispatch STOP action to room if first
     if (!customGame?.stopPressedBy) {
@@ -96,9 +97,13 @@ export default function NPATMPage() {
     }));
 
     if (isHost) {
+      setCustomGame({
+        ...customGame,
+        stopPressedBy: customGame?.stopPressedBy || myName
+      });
       setRoomStatus('finished');
     }
-  }, [isSubmitting, inputs, players, isHost, customGame, setRoomStatus]);
+  }, [isSubmitting, inputs, playerName, players, isHost, customGame, setCustomGame, setRoomStatus]);
 
   // Sync state from customGame
   useEffect(() => {
@@ -109,10 +114,21 @@ export default function NPATMPage() {
         handleSubmit();
       }
     }
-    if (customGame?.currentLetter) {
-      setCurrentLetter(customGame.currentLetter);
-    }
+    if (customGame?.currentLetter) setCurrentLetter(customGame.currentLetter);
   }, [customGame, roomStatus, isSubmitting, handleSubmit]);
+
+  // Reset every client for a fresh host-started round.
+  useEffect(() => {
+    const roundKey = customGame?.roundId || customGame?.currentLetter;
+    if (roomStatus !== 'playing' || !roundKey || lastRoundKey.current === roundKey) return;
+
+    lastRoundKey.current = roundKey;
+    setInputs({ name: '', place: '', animal: '', thing: '', movie: '' });
+    setEvaluationResults(null);
+    setStopPressedBy(null);
+    setIsSubmitting(false);
+    setCurrentLetter(customGame.currentLetter || '');
+  }, [customGame?.roundId, customGame?.currentLetter, roomStatus]);
 
   // Clear results on new round
   useEffect(() => {
@@ -154,6 +170,7 @@ export default function NPATMPage() {
 
     setCustomGame({
       gameType: 'npatm',
+      roundId: Date.now(),
       currentLetter: randomLetter,
       stopPressedBy: null,
       instructions: `Name, Place, Animal, Thing, Movie starting with ${randomLetter}`,
@@ -191,11 +208,11 @@ export default function NPATMPage() {
 
       <div className="max-w-2xl mx-auto space-y-8 mt-12">
         
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-black tracking-tighter uppercase italic animate-in fade-in slide-in-from-top duration-700">
-            <span className="gradient-text-cyan">NEXUS</span> NPATM
+        <div className="text-center space-y-3">
+          <h1 className="text-4xl font-black tracking-tight uppercase italic leading-tight animate-in fade-in slide-in-from-top duration-700">
+            <span className="gradient-text-cyan inline-block pr-1">NEXUS</span> <span className="inline-block">NPATM</span>
           </h1>
-          <p className="text-gray-400 text-sm font-medium tracking-widest uppercase">Name • Place • Animal • Thing • Movie</p>
+          <p className="text-gray-400 text-sm font-medium tracking-widest uppercase leading-relaxed">Name • Place • Animal • Thing • Movie</p>
         </div>
 
         <div className="relative">
@@ -367,7 +384,7 @@ export default function NPATMPage() {
         </div>
 
         {roomStatus !== 'idle' && (
-          <div className="fixed bottom-32 left-0 right-0 px-6 flex justify-center pointer-events-none">
+          <div className="mt-8 flex justify-center pointer-events-none">
              <div className="bg-black/80 backdrop-blur-md border border-white/10 px-6 py-3 rounded-full flex gap-6 items-center pointer-events-auto shadow-2xl animate-in slide-in-from-bottom duration-700">
                 <div className="flex -space-x-2">
                   {players.slice(0, 3).map((p, i) => (
@@ -380,7 +397,7 @@ export default function NPATMPage() {
                 <div className="flex items-center gap-2">
                   <div className="text-yellow-500 scale-75"><Icons.Trophy /></div>
                   <span className="text-xs font-black tracking-tighter uppercase">
-                    {leaderboard[0]?.name || '---'} : {leaderboard[0]?.score || 0}
+                    {sessionLeaderboard[0]?.name || '---'} : {sessionLeaderboard[0]?.score || 0}
                   </span>
                 </div>
              </div>

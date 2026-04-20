@@ -61,7 +61,7 @@ export async function POST(req) {
     
     // Safety check for markdown fences
     if (responseText.startsWith('```')) {
-      responseText = responseText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      responseText = responseText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
     }
     
     const data = JSON.parse(responseText);
