@@ -136,6 +136,20 @@ export default function ForgeLobby({ navigation }) {
               </Text>
             </View>
 
+            {isHost && (
+              <View style={styles.qrContainer}>
+                <View style={styles.qrWrapper}>
+                  <QRCode
+                    value={`https://technonexus.ca/games/ai-forge?join=${roomId}`}
+                    size={160}
+                    color={Colors.neonCyan}
+                    backgroundColor="transparent"
+                  />
+                </View>
+                <Text style={styles.qrLabel}>SCAN TO JOIN MISSION</Text>
+              </View>
+            )}
+
             <Text style={styles.instructionsText}>
               {isHost 
                 ? "Waiting for guests to join via Web or App..."

@@ -45,6 +45,13 @@ export default function ArcadeHome({ navigation }) {
           color={Colors.white}
           onPress={() => navigation.navigate('DumbCharades')}
         />
+
+        <GameCard
+          title="NEXUS NPATM"
+          description="Name, Place, Animal, Thing, Movie. Be the first to shout STOP!"
+          color={Colors.neonCyan}
+          onPress={() => navigation.navigate('Npatm')}
+        />
       </ScrollView>
     </View>
   );

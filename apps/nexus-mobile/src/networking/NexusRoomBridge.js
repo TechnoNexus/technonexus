@@ -46,6 +46,18 @@ const NexusRoomBridge = forwardRef((props, ref) => {
                   });
                   conn.on('data', (data) => sendMessageToNative('data', { peer: conn.peer, payload: data }));
               }
+
+              function broadcastData(dataString) {
+                  try {
+                      const data = JSON.parse(dataString);
+                      connections.forEach(conn => {
+                          if(conn.open) conn.send(data);
+                      });
+                      if (hostConnection && hostConnection.open) {
+                          hostConnection.send(data);
+                      }
+                  } catch(e) {}
+              }
           </script>
       </head>
       <body></body>
@@ -62,6 +74,15 @@ const NexusRoomBridge = forwardRef((props, ref) => {
     },
     joinRoom: (roomId, playerName) => {
       webViewRef.current.injectJavaScript(`initPeer(); setTimeout(() => connectToPeer('Nexus-${roomId}', '${playerName}'), 1000); true;`);
+    },
+    broadcastAction: (actionData, nextStatus) => {
+      const payload = JSON.stringify({
+        type: "game-action",
+        actionData: actionData,
+        roomStatus: nextStatus,
+        timestamp: Date.now()
+      });
+      webViewRef.current.injectJavaScript(`broadcastData(${JSON.stringify(payload)}); true;`);
     }
   }));
 

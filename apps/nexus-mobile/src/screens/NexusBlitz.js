@@ -197,6 +197,18 @@ export default function NexusBlitz({ navigation }) {
           
           {isHost ? (
             <View style={{ gap: 16 }}>
+              <View style={{ alignItems: 'center', marginVertical: 16 }}>
+                <View style={{ padding: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(0,255,255,0.2)' }}>
+                  <QRCode
+                    value={`https://technonexus.ca/games/nexus-blitz?join=${roomId}`}
+                    size={140}
+                    color={Colors.neonCyan}
+                    backgroundColor="transparent"
+                  />
+                </View>
+                <Text style={{ color: Colors.neonCyan, fontSize: 8, fontWeight: '900', letterSpacing: 2, marginTop: 8 }}>SCAN TO JOIN TRIVIA</Text>
+              </View>
+
               <Text style={styles.label}>QUIZ TOPIC</Text>
               <TextInput style={styles.input} placeholder="e.g. Space, Movies..." placeholderTextColor={Colors.slateGray} value={topic} onChangeText={setTopic} />
               <Pressable onPress={generateQuiz} disabled={!topic} style={[styles.primaryButton, !topic && styles.disabled, { backgroundColor: '#FACC1533', borderColor: '#FACC15' }]}>

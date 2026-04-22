@@ -181,9 +181,23 @@ export default function DumbCharades({ navigation }) {
             {isHost ? (
               <View>
                 {!currentWord ? (
-                  <Pressable onPress={generateWord} style={styles.primaryButton}>
-                    <Text style={styles.primaryButtonText}>GENERATE WORD</Text>
-                  </Pressable>
+                  <View>
+                    <View style={{ alignItems: 'center', marginBottom: 24 }}>
+                      <View style={{ padding: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(0,255,255,0.2)' }}>
+                        <QRCode
+                          value={`https://technonexus.ca/games/dumb-charades?join=${roomId}`}
+                          size={140}
+                          color={Colors.neonCyan}
+                          backgroundColor="transparent"
+                        />
+                      </View>
+                      <Text style={{ color: Colors.neonCyan, fontSize: 8, fontWeight: '900', letterSpacing: 2, marginTop: 8 }}>SCAN TO JOIN ROOM</Text>
+                    </View>
+
+                    <Pressable onPress={generateWord} style={styles.primaryButton}>
+                      <Text style={styles.primaryButtonText}>GENERATE WORD</Text>
+                    </Pressable>
+                  </View>
                 ) : (
                   <View>
                     <Text style={styles.turnText}>TURN: {turn === 'teamA' ? 'TEAM A' : 'TEAM B'}</Text>

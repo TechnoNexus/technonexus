@@ -9,6 +9,7 @@ import ArcadeHome from './src/screens/ArcadeHome';
 import ForgeLobby from './src/screens/ForgeLobby';
 import NexusBlitz from './src/screens/NexusBlitz';
 import DumbCharades from './src/screens/DumbCharades';
+import Npatm from './src/screens/Npatm';
 
 const Stack = createNativeStackNavigator();
 
