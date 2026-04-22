@@ -79,7 +79,7 @@ Preserve the established Nexus aesthetic:
 - Background: `#0A0A0A`
 - Primary accent: neon cyan `#00FFFF`
 - Secondary accent: electric violet `#8B5CF6`
-- Use Tailwind classes, not CSS-in-JS or inline style workarounds.
+- Use Tailwind classes for base styling, and Framer Motion (`motion.div`) for physics-based interactions and animations.
 - Keep `glass-panel`, neon borders/glows, uppercase heavy headings, and Geist Sans.
 - Hub names should keep the established gradient `NEXUS` pattern.
 - Do not introduce new theme variables unless explicitly requested.

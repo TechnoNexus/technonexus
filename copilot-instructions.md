@@ -69,7 +69,7 @@ These documents encode 2 weeks of production debugging (April 5-6, 2026) and MUS
 
 ### Visual & Branding Standards
 **Theme**: Dark Mode (`#0A0A0A`) + Neon Cyan (`#00FFFF`) + Electric Violet (`#8B5CF6`)
-- Use Tailwind CSS exclusively
+- Use Tailwind CSS alongside Framer Motion (for animations) and React Three Fiber (for 3D WebGL)
 - Favor glassmorphism + subtle neon glows
 - All section headings: `font-black`, `tracking-tighter`, `uppercase`
 - Use `<span className="gradient-text-cyan">NEXUS</span>` for hub names (NEXUS ARCADE, NEXUS FORGE, etc.)

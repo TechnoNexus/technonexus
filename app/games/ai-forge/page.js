@@ -47,11 +47,6 @@ export default function AIForgeGame() {
     setRoomScores([]);
   }, []);
 
-  // Log state changes for debugging
-  useEffect(() => {
-    // State tracking enabled for development - remove when stable
-  }, [roomStatus, customGame, isHost, playerName]);
-
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
@@ -77,10 +72,8 @@ export default function AIForgeGame() {
     
     if (!error && data) {
       setSavedGames(data);
-      // Sync to local storage for offline use
       saveVaultOffline(data);
     } else {
-      // If error (offline?), try loading from local cache
       const localData = await getVaultOffline();
       if (localData && localData.length > 0) {
         setSavedGames(localData);
@@ -180,10 +173,6 @@ export default function AIForgeGame() {
     if (customGame?.gameType === 'performance') {
       finalSubmission = `${manualPerf || "Round ended"}. Completed ${sessionPoints} items.`;
     }
-
-    // In batch mode, we don't call the API here.
-    // We send the 'submit-raw-submission' event to the host via PeerJS.
-    // NexusRoomManager handles this communication.
     window.dispatchEvent(new CustomEvent('nexus-submit-to-host', { 
       detail: { submission: finalSubmission } 
     }));
@@ -238,7 +227,7 @@ export default function AIForgeGame() {
         </header>
 
         {roomStatus === 'idle' && (
-          <>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <NexusAuth />
             
             <div className="text-center mb-12 mt-8">
@@ -310,7 +299,7 @@ export default function AIForgeGame() {
             )}
 
             {customGame && (
-              <div className="glass-panel rounded-[2rem] p-8 border-neon-cyan/20 text-center animate-in fade-in zoom-in duration-500 mb-8">
+              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-panel rounded-[2rem] p-8 border-neon-cyan/20 text-center mb-8">
                  <div className="inline-block px-3 py-1 bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
                    MISSION PREPARED
                  </div>
@@ -356,13 +345,13 @@ export default function AIForgeGame() {
                      </button>
                    )}
                  </div>
-              </div>
+              </motion.div>
             )}
-          </>
+          </motion.div>
         )}
 
         {roomStatus === 'playing' && customGame && (
-          <div className="flex-1 flex flex-col pt-12 animate-in slide-in-from-bottom duration-700">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col pt-12">
             <div className="flex justify-between items-start mb-8">
               <div className="flex-1">
                 <div className="text-center mb-12">
@@ -370,9 +359,10 @@ export default function AIForgeGame() {
                     {timeLeft}<span className="text-2xl text-neon-cyan">s</span>
                   </div>
                   <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
-                    <div 
+                    <motion.div 
+                      initial={{ width: '100%' }}
+                      animate={{ width: `${(timeLeft / customGame.timeLimitSeconds) * 100}%` }}
                       className={`h-full transition-all duration-1000 ${timeLeft < 10 ? 'bg-red-500' : 'bg-neon-cyan'}`}
-                      style={{ width: `${(timeLeft / customGame.timeLimitSeconds) * 100}%` }}
                     />
                   </div>
                 </div>
@@ -400,16 +390,17 @@ export default function AIForgeGame() {
                 <div className="flex-1 flex flex-col justify-center items-center text-center">
                    <p className="text-[10px] font-bold text-neon-violet uppercase tracking-widest mb-6">Act this out:</p>
                    {showContent ? (
-                     <h2 className="text-5xl font-black text-white mb-12 animate-in zoom-in duration-300">
+                     <motion.h2 initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-5xl font-black text-white mb-12">
                        {customGame.gameContent[currentContentIndex]}
-                     </h2>
+                     </motion.h2>
                    ) : (
-                     <div 
+                     <motion.div 
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => { hapticFeedback(ImpactStyle.Heavy); setShowContent(true); }}
                         className="w-full h-48 bg-white/5 border-2 border-dashed border-white/20 rounded-3xl flex items-center justify-center cursor-pointer hover:bg-white/10 transition-all mb-12"
                      >
                         <span className="text-neon-cyan font-black tracking-[0.2em] uppercase">Tap to Reveal</span>
-                     </div>
+                     </motion.div>
                    )}
                    
                    <div className="grid grid-cols-2 gap-4 w-full">
@@ -445,54 +436,80 @@ export default function AIForgeGame() {
                 </>
               )}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {roomStatus === 'finished' && (
-          <div className="flex-1 flex flex-col justify-center items-center text-center animate-in zoom-in duration-500 pb-20 w-full">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex-1 flex flex-col justify-center items-center text-center pb-20 w-full">
             <h2 className="text-4xl font-black uppercase tracking-tighter mb-8">Mission Analysis</h2>
             
             {roundVerdict && (
-               <div className="w-full mb-12 space-y-4 animate-in fade-in slide-in-from-top-4 duration-1000">
-                  <div className="glass-panel p-8 rounded-[2.5rem] border-neon-violet/30 bg-neon-violet/5 text-center">
-                     <p className="text-[10px] font-black text-neon-violet uppercase tracking-[0.3em] mb-4">Round Summary</p>
-                     <p className="text-white italic text-lg leading-relaxed mb-6">"{roundVerdict.roundSummary}"</p>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                           <p className="text-[8px] font-black text-neon-cyan uppercase mb-1">Nexus MVP</p>
-                           <p className="text-xs text-slate-300">{roundVerdict.mvpVerdict}</p>
-                        </div>
-                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                           <p className="text-[8px] font-black text-red-500 uppercase mb-1">Legacy Bottleneck</p>
-                           <p className="text-xs text-slate-300">{roundVerdict.bottleneckVerdict}</p>
-                        </div>
+               <motion.div 
+                 initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
+                 animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                 transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                 className="w-full mb-12 space-y-4"
+               >
+                  <div className="glass-panel p-8 rounded-[2.5rem] border-neon-violet/30 shadow-violet-glow relative overflow-hidden">
+                     <div className="absolute inset-0 bg-spatial-gradient opacity-50"></div>
+                     <div className="relative z-10">
+                       <p className="text-[10px] font-black text-neon-violet uppercase tracking-[0.3em] mb-4">Round Summary</p>
+                       <p className="text-white italic text-xl font-medium leading-relaxed mb-8">"{roundVerdict.roundSummary}"</p>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                          <div className="p-5 rounded-3xl bg-black/40 border border-white/10 shadow-inner">
+                             <p className="text-[9px] font-black text-neon-cyan uppercase tracking-widest mb-2 flex items-center gap-2">
+                               <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-pulse shadow-[0_0_8px_#00FFFF]"></span> Nexus MVP
+                             </p>
+                             <p className="text-sm text-slate-200">{roundVerdict.mvpVerdict}</p>
+                          </div>
+                          <div className="p-5 rounded-3xl bg-black/40 border border-white/10 shadow-inner">
+                             <p className="text-[9px] font-black text-red-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                               <span className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></span> Legacy Bottleneck
+                             </p>
+                             <p className="text-sm text-slate-200">{roundVerdict.bottleneckVerdict}</p>
+                          </div>
+                       </div>
                      </div>
                   </div>
-               </div>
+               </motion.div>
             )}
 
-            {/* LIVE SCOREBOARD */}
             {roomScores.length > 0 && (
-              <div className="w-full mb-12 animate-in fade-in duration-700">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Live Scoreboard</h3>
-                <div className="space-y-3">
-                  {[...roomScores].sort((a, b) => b.score - a.score).map((s, i) => (
-                    <div key={i} className={`p-4 rounded-2xl border flex justify-between items-center ${s.name === playerName ? 'bg-neon-cyan/10 border-neon-cyan/30' : 'bg-white/5 border-white/10'}`}>
-                      <div className="text-left">
-                        <p className="text-xs font-black text-white uppercase tracking-wider">{s.name}</p>
-                        <p className="text-[10px] text-slate-400 italic">"{s.judgeComment}"</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-2xl font-black text-neon-cyan">{s.score}</span>
-                      </div>
-                    </div>
-                  ))}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full mb-12">
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Live Scoreboard</h3>
+                <div className="space-y-4">
+                  <AnimatePresence>
+                    {[...roomScores].sort((a, b) => b.score - a.score).map((s, i) => (
+                      <motion.div 
+                        initial={{ opacity: 0, x: -30, filter: 'blur(8px)' }}
+                        animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                        transition={{ delay: i * 0.15, type: 'spring', bounce: 0.4 }}
+                        key={s.name} 
+                        className={`p-6 rounded-[2rem] border flex justify-between items-center glass-panel ${s.name === playerName ? 'bg-neon-cyan/10 border-neon-cyan/30 shadow-neon-glow' : 'border-white/10'}`}
+                      >
+                        <div className="text-left flex-1 pr-6">
+                          <p className="text-sm font-black text-white uppercase tracking-widest mb-1">{s.name}</p>
+                          <p className="text-[11px] text-slate-300 italic font-medium leading-relaxed">"{s.judgeComment}"</p>
+                        </div>
+                        <div className="text-right">
+                          <motion.span 
+                            initial={{ scale: 0.5 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: i * 0.15 + 0.3, type: 'spring', bounce: 0.6 }}
+                            className="text-4xl font-black text-neon-cyan drop-shadow-[0_0_12px_rgba(0,255,255,0.6)] tabular-nums"
+                          >
+                            {s.score}
+                          </motion.span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {localEvaluation ? (
-              <div className="w-full space-y-6 mb-12">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full space-y-6 mb-12">
                 <div className="glass-panel p-8 rounded-[2.5rem] border-neon-cyan/30 relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-4">
                     <span className="text-4xl font-black text-neon-cyan/20">#{localEvaluation.score}</span>
@@ -502,10 +519,9 @@ export default function AIForgeGame() {
                     "{localEvaluation.judgeComment}"
                   </p>
                 </div>
-              </div>
+              </motion.div>
             ) : roomScores.length > 0 && roomScores.find(s => s.name === playerName) ? (
-              // Fallback: check roomScores directly if localEvaluation not yet synced
-              <div className="w-full space-y-6 mb-12">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full space-y-6 mb-12">
                 {(() => {
                   const score = roomScores.find(s => s.name === playerName);
                   return score ? (
@@ -520,23 +536,25 @@ export default function AIForgeGame() {
                     </div>
                   ) : null;
                 })()}
-              </div>
+              </motion.div>
             ) : customGame?.gameType === 'performance' && !roomScores.find(s => s.name === playerName) ? (
               <div className="glass-panel p-8 rounded-[2.5rem] border-white/5 w-full mb-8">
                 <p className="text-slate-500 text-sm italic mb-6">Round complete. How was the performance?</p>
                 <div className="grid grid-cols-2 gap-4">
-                   <button 
+                   <motion.button 
+                     whileTap={{ scale: 0.95 }}
                      onClick={() => submitToHost("It was perfect and creative.")}
                      className="py-4 rounded-xl bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan font-bold"
                    >
                      CRUSHED IT
-                   </button>
-                   <button 
+                   </motion.button>
+                   <motion.button 
+                     whileTap={{ scale: 0.95 }}
                      onClick={() => submitToHost("It was a total failure.")}
                      className="py-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 font-bold"
                    >
                      LAGGED OUT
-                   </button>
+                   </motion.button>
                 </div>
               </div>
             ) : (
@@ -545,7 +563,9 @@ export default function AIForgeGame() {
               </div>
             )}
 
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 setRoomStatus('idle');
                 setLocalEvaluation(null);
@@ -557,11 +577,10 @@ export default function AIForgeGame() {
               className="px-12 py-4 rounded-full bg-white/5 border border-white/10 font-bold hover:bg-white/10 transition-all uppercase text-xs tracking-widest mt-8"
             >
               Return to Nexus
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         )}
 
-        {/* ALWAYS RENDER - prevents unmount/remount on roomStatus changes */}
         <NexusRoomManager showForge={true} />
       </div>
     </div>

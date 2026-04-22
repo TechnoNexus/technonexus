@@ -19,7 +19,7 @@ These three docs encode weeks of production debugging. Read the relevant one bef
 | Layer | Tech |
 |-------|------|
 | Framework | Next.js 16.2.1 (App Router) + React 19 |
-| Styling | Tailwind CSS 3.x only — no CSS-in-JS, no inline styles |
+| Styling | Tailwind CSS 3.x + Framer Motion (for physics animations) + React Three Fiber (for 3D) |
 | State | Zustand 5.x (games), React hooks (UI components) |
 | AI | Google Gemini 2.5 Flash — **hardcoded, never change the model** |
 | Database | Supabase (Auth + PostgreSQL) |
