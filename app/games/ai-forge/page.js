@@ -9,6 +9,7 @@ import { supabase } from '../../../lib/supabase';
 import { Haptics, ImpactStyle } from '../../../lib/haptics';
 import { saveVaultOffline, getVaultOffline } from '../../../lib/capacitor-storage';
 import { startQRScanner } from '../../../lib/native-hardware';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AIForgeGame() {
   const { 

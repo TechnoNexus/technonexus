@@ -748,24 +748,43 @@ export default function NexusRoomManager({ showForge = false }) {
                 </div>
              </div>
           )}
-          <div className="flex flex-col gap-4 mb-8 text-left bg-black/20 p-4 rounded-2xl border border-white/5">
+          <div className="flex flex-col gap-4 mb-8 text-left bg-black/20 p-5 rounded-3xl border border-white/5 shadow-inner">
             <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-black">In the Nexus: {(players?.length || 0) + 1}</p>
-            <div className="flex flex-wrap gap-3">
-               <div className="flex items-center gap-2 px-4 py-2 bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/30 rounded-xl shadow-cyan-glow/20">
+            <motion.div layout className="flex flex-wrap gap-3">
+               <motion.div 
+                 layout 
+                 initial={{ opacity: 0, scale: 0.8 }} 
+                 animate={{ opacity: 1, scale: 1 }} 
+                 className="flex items-center gap-2 px-4 py-2 bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/30 rounded-xl shadow-neon-glow"
+               >
                   <span className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse shadow-[0_0_8px_#00FFFF]" />
                   <span className="text-[10px] font-black uppercase tracking-widest">HOST: {hostName || '...' }</span>
-               </div>
-               {(players || []).filter(p => p.name !== playerName).map((p, i) => (
-                 <div key={i} className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] text-slate-400 uppercase font-bold tracking-wider">
-                   {p.name}
-                 </div>
-               ))}
-               {!isHost && (
-                 <div className="px-4 py-2 bg-electric-violet/10 border border-electric-violet/30 rounded-xl text-[10px] text-electric-violet font-black uppercase tracking-widest animate-in fade-in zoom-in duration-500">
-                   YOU
-                 </div>
-               )}
-            </div>
+               </motion.div>
+               <AnimatePresence>
+                 {(players || []).filter(p => p.name !== playerName).map((p, i) => (
+                   <motion.div 
+                     layout
+                     initial={{ opacity: 0, scale: 0.8, filter: 'blur(4px)' }} 
+                     animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }} 
+                     exit={{ opacity: 0, scale: 0.8 }}
+                     key={p.peerId || i} 
+                     className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] text-slate-300 uppercase font-bold tracking-wider shadow-sm"
+                   >
+                     {p.name}
+                   </motion.div>
+                 ))}
+                 {!isHost && (
+                   <motion.div 
+                     layout 
+                     initial={{ opacity: 0, scale: 0.8 }} 
+                     animate={{ opacity: 1, scale: 1 }} 
+                     className="px-4 py-2 bg-electric-violet/10 border border-electric-violet/30 rounded-xl text-[10px] text-electric-violet font-black uppercase tracking-widest shadow-violet-glow"
+                   >
+                     YOU
+                   </motion.div>
+                 )}
+               </AnimatePresence>
+            </motion.div>
           </div>
           <button onClick={resetRoom} className="text-[10px] font-bold text-slate-600 hover:text-red-500 uppercase tracking-widest transition-colors">Leave Room</button>
         </div>
