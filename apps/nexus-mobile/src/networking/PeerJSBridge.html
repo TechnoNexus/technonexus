@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script>
+        let peer = null;
+        let hostConnection = null;
+        const connections = [];
+
+        function sendMessageToNative(action, data) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({ action, data }));
+        }
+
+        function initPeer(id) {
+            if (peer) { peer.destroy(); }
+            peer = new Peer(id);
+            
+            peer.on('open', (id) => {
+                sendMessageToNative('open', { id: id });
+            });
+
+            peer.on('connection', (conn) => {
+                conn.on('data', (data) => {
+                    sendMessageToNative('data', { peer: conn.peer, payload: data });
+                });
+                conn.on('close', () => {
+                    const idx = connections.indexOf(conn);
+                    if(idx > -1) connections.splice(idx, 1);
+                    sendMessageToNative('close', { peer: conn.peer });
+                });
+                
+                connections.push(conn);
+                sendMessageToNative('connection', { peer: conn.peer });
+            });
+
+            peer.on('error', (err) => {
+                sendMessageToNative('error', { type: err.type, message: err.message });
+            });
+        }
+
+        function connectToPeer(idToJoin, playerName) {
+            if (!peer) return;
+            const conn = peer.connect(idToJoin);
+            
+            conn.on('open', () => {
+                hostConnection = conn;
+                conn.send({ type: 'join', name: playerName });
+                sendMessageToNative('connectedToHost', { id: idToJoin });
+            });
+            
+            conn.on('data', (data) => {
+                sendMessageToNative('data', { peer: conn.peer, payload: data });
+            });
+            
+            conn.on('close', () => {
+                hostConnection = null;
+                sendMessageToNative('disconnectedFromHost', {});
+            });
+            
+            conn.on('error', (err) => {
+                sendMessageToNative('error', { type: 'connection_error', message: err });
+            });
+        }
+
+        function broadcastData(dataString) {
+            try {
+                const data = JSON.parse(dataString);
+                connections.forEach(conn => {
+                    if(conn.open) conn.send(data);
+                });
+            } catch(e) {}
+        }
+    </script>
+</head>
+<body>
+    <div id="status">React Native Nexus Bridge Active</div>
+</body>
+</html>

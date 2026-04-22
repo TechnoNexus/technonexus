@@ -165,17 +165,10 @@ Leaderboard status:
 
 ## Mobile Status
 
-There is an important documentation mismatch:
-
-- `AGENTS.md` still describes a Capacitor mobile architecture.
-- Current `package.json` has no Capacitor dependencies or mobile scripts.
-- `lib/haptics.js`, `lib/capacitor-storage.js`, and `lib/native-hardware.js` are web-compatible mocks.
-- `docs/roadmap.md` says Phase 9 deprecated Capacitor and started true native clients.
-- Native projects exist under:
-  - `apps/native-ios`
-  - `apps/native-android`
-
-Working assumption: the web app is now web-first with compatibility mocks, while true native work lives in the native app folders. Confirm with the user before making mobile architecture changes.
+- The project previously explored Capacitor and then pure native (SwiftUI/Jetpack Compose).
+- **Current Strategy:** The mobile app is now a **React Native (Expo)** project located in `apps/nexus-mobile`.
+- It uses `expo-blur`, `react-native-reanimated` (for physics), and a hidden `react-native-webview` bridge to reuse the web `peerjs` multiplayer logic.
+- Do NOT use Capacitor commands or pure native Swift/Kotlin code unless explicitly requested.
 
 ## Development Rules For Codex
 

@@ -24,7 +24,7 @@ These three docs encode weeks of production debugging. Read the relevant one bef
 | AI | Google Gemini 2.5 Flash — **hardcoded, never change the model** |
 | Database | Supabase (Auth + PostgreSQL) |
 | Multiplayer | PeerJS (decentralized P2P, no dedicated server) |
-| Mobile | Capacitor 8.x (iOS + Android native wrapper) |
+| Mobile | React Native (Expo) in `apps/nexus-mobile` |
 | Deployment | Cloudflare Pages with Edge Runtime |
 | Language | JavaScript (.js) only — no TypeScript files |
 
@@ -129,28 +129,18 @@ docs/
 
 ## 7. Mobile App Architecture
 
-The Capacitor app uses `webDir: "out"` to serve **bundled local assets** (not the live URL).
+The native mobile app is built with **React Native (Expo)** in the `apps/nexus-mobile` directory.
 
-**Build commands:**
+**Dev Commands:**
 ```bash
-npm run build:mobile    # static export to out/
-npm run cap:android     # build:mobile + sync + open Android Studio
-npm run cap:ios         # build:mobile + sync + open Xcode
+cd apps/nexus-mobile
+npx expo start -c --tunnel
 ```
 
-**How native/web URL routing works:**
-- `lib/api.js` exports `getApiUrl(path)` — returns absolute `https://technonexus.ca/api/...` on native, relative `/api/...` on web
-- `lib/api.js` exports `getWebUrl(path)` — always returns public HTTPS URL (used for QR code join links)
-- All 6 API routes have CORS headers (`Access-Control-Allow-Origin: *`) for native WebView requests
-
-**Native detection:** `Capacitor.isNativePlatform()` — returns true in the app, false on web
-
-**On native app:**
-- `.is-native-app` class is added to `document.body`
-- Web `<Navbar>` is hidden (returns null)
-- `<Footer>` is hidden via CSS
-- `<BottomTabNav>` shows with haptics + neon pill indicator
-- Android back button navigates or exits via `@capacitor/app`
+**Architecture Details:**
+- `lib/api.js` connects native UI back to the Cloudflare Next.js edge functions.
+- Uses `expo-blur` and native `Animated` physics for Spatial UI.
+- Multiplayer uses `react-native-webview` holding a background `PeerJS` connection (`NexusRoomBridge.js`).
 
 ---
 
