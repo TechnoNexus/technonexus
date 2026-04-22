@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "../components/navbar";
 import BottomTabNav from "../components/navbar/BottomTabNav";
 import Footer from "../components/Footer";
+import SpatialBackground from "../components/SpatialBackground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,11 +32,14 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
-      <body className="flex flex-col min-h-screen bg-[#0A0A0A]">
-        <Navbar />
-        <main className="flex-grow pb-20 md:pb-0">{children}</main>
-        <BottomTabNav />
-        <Footer />
+      <body className="flex flex-col min-h-screen bg-[#0A0A0A] relative">
+        <SpatialBackground />
+        <div className="relative z-10 flex flex-col min-h-screen w-full">
+          <Navbar />
+          <main className="flex-grow pb-20 md:pb-0">{children}</main>
+          <BottomTabNav />
+          <Footer />
+        </div>
       </body>
     </html>
   );

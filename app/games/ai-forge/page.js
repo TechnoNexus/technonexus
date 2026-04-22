@@ -9,6 +9,7 @@ import { supabase } from '../../../lib/supabase';
 import { Haptics, ImpactStyle } from '../../../lib/haptics';
 import { saveVaultOffline, getVaultOffline } from '../../../lib/capacitor-storage';
 import { startQRScanner } from '../../../lib/native-hardware';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AIForgeGame() {
   const { 
@@ -522,6 +523,51 @@ export default function AIForgeGame() {
               </div>
             ) : customGame?.gameType === 'performance' && !roomScores.find(s => s.name === playerName) ? (
               <div className="glass-panel p-8 rounded-[2.5rem] border-white/5 w-full mb-8">
+                <p className="text-slate-500 text-sm italic mb-6">Round complete. How was the performance?</p>
+                <div className="grid grid-cols-2 gap-4">
+                   <button 
+                     onClick={() => submitToHost("It was perfect and creative.")}
+                     className="py-4 rounded-xl bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan font-bold"
+                   >
+                     CRUSHED IT
+                   </button>
+                   <button 
+                     onClick={() => submitToHost("It was a total failure.")}
+                     className="py-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 font-bold"
+                   >
+                     LAGGED OUT
+                   </button>
+                </div>
+              </div>
+            ) : (
+              <div className="glass-panel p-6 rounded-2xl border-white/5 w-full mb-8">
+                <p className="text-white italic">Awaiting AI analysis from Host...</p>
+              </div>
+            )}
+
+            <button 
+              onClick={() => {
+                setRoomStatus('idle');
+                setLocalEvaluation(null);
+                setSubmission('');
+                setRoundVerdict(null);
+                setSessionPoints(0);
+                setRoomScores([]);
+              }}
+              className="px-12 py-4 rounded-full bg-white/5 border border-white/10 font-bold hover:bg-white/10 transition-all uppercase text-xs tracking-widest mt-8"
+            >
+              Return to Nexus
+            </button>
+          </div>
+        )}
+
+        {/* ALWAYS RENDER - prevents unmount/remount on roomStatus changes */}
+        <NexusRoomManager showForge={true} />
+      </div>
+    </div>
+  );
+}
+hite/5 w-full mb-8">
                 <p className="text-slate-500 text-sm italic mb-6">Round complete. How was the performance?</p>
                 <div className="grid grid-cols-2 gap-4">
                    <button 
