@@ -19,7 +19,7 @@ If the user asks you to perform a specific task, you MUST read the corresponding
 ### Visual Identity (The "Nexus" Vibe)
 - **Theme:** Dark Mode by default. Background: `#0A0A0A`. 
 - **Accent Colors:** Neon Cyan (`#00FFFF`) and Electric Violet (`#8B5CF6`).
-- **Styling:** Use Tailwind CSS exclusively. Favor glassmorphism, subtle neon glows on hover, and high-contrast typography. Use `glass-panel` and `rounded-[2rem]` or `rounded-[3rem]` for containers.
+- **Styling:** Use Tailwind CSS, Framer Motion, and React Three Fiber. Favor spatial computing aesthetics (deep glassmorphism), physics-based spring animations, and high-contrast typography. Use `glass-panel` and `rounded-[2rem]` or `rounded-[3rem]` for containers.
 - **Branding Consistency:** - All major section headings must use `font-black`, `tracking-tighter`, and be `uppercase` with `mb-8`.
     - Use `<span className="gradient-text-cyan">NEXUS</span>` for the first word in major hub headings.
     - All sub-pages must use the `Geist Sans` font family via `var(--font-geist-sans)`.
