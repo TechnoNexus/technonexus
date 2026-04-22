@@ -5,6 +5,7 @@ import { useGameStore } from '../store/gameStore';
 import { QRCodeSVG } from 'qrcode.react';
 import { Haptics, ImpactStyle } from '../lib/haptics';
 import { getApiUrl, getWebUrl } from '../lib/api';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function NexusRoomManager({ showForge = false }) {
   const {
