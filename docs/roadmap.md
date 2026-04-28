@@ -149,15 +149,24 @@
         - [x] Configure Android `strings.xml` and iOS `Info.plist` with final TechnoNexus branding.
         - [x] Set up Splash Screens and generate App Icons for all densities (via `@capacitor/assets`).
 
-    ## Phase 9 — Fully Native Mobile Rebirth (In Progress)
+    ## Phase 9 — Cross-Platform Mobile Pivot (In Progress)
 
     - [x] **Deprecate Capacitor**: Removed all Capacitor dependencies, wrappers, and configuration from the web repository.
     - [x] **Mock Native Hardware**: Created web-compatible mocks for Haptics, Camera, and Preferences to keep the web app functional.
-    - [x] **Initialize Native Projects**: Created `apps/native-ios` (SwiftUI) and `apps/native-android` (Jetpack Compose) directory structures.
-    - [x] **Nexus Vibe UI Port**: Ported the dark/neon branding, typography, and glassmorphism components to both SwiftUI and Jetpack Compose.
-    - [x] **Native Dashboard Implementation**: Built the primary "Nexus Dashboard" module in both native languages with fluid scrolling and interactive cards.
-    - [ ] **Core Native Infrastructure**: Integrate Supabase Swift/Kotlin SDKs and implement native Authentication flows.
-    - [ ] **Native Multiplayer Sync**: Re-implement PeerJS/WebRTC syncing in native code.
+    - [x] **Initialize Expo Project**: Created `apps/nexus-mobile` as a React Native (Expo) project to allow cross-platform testing on Windows via Expo Go.
+    - [x] **Nexus Vibe UI Port (React Native)**: Ported the dark/neon branding, typography, and glassmorphism components to React Native using `expo-blur` and `react-native-reanimated`.
+    - [x] **Native Dashboard Implementation**: Built the primary "Nexus Dashboard" module in Expo with fluid scrolling and interactive cards.
+    - [x] **Native Multiplayer Sync (WebView Bridge)**: Implemented PeerJS WebRTC syncing via an invisible `react-native-webview` bridge (`NexusRoomBridge.js`).
+    - [x] **Arcade Spatial UI (Expo)**: Built `ArcadeHome.js`, `GlassPanel.js`, and `SpatialBackground.js` using animated linear gradients and blurs.
+    - [x] **Core Native Infrastructure**: Integrated Supabase JS SDK for native Authentication (Email, Google, Apple, Meta) and session persistence.
+    - [x] **Full Arcade Integration**: Implemented the complete game engines for Dumb Charades (Host/Guest views, Score Sync) and Nexus Blitz (AI Generation, Timing, Shared Results) in the React Native Expo app.
+    - [x] **AI Forge Native First Pass**: Upgraded the Expo AI Forge screen from a room-only lobby to a full mission flow with Gemini generation, vault save/load/delete, host-authoritative batch scoring, room verdicts, and shared room start/results.
+    - [x] **Expo Bridge Reliability Hardening**: Refactored `NexusRoomBridge.js` so host connections register only after guest `join`, room welcomes carry current snapshot state, and the native navigator now wires the NPATM screen correctly.
+    - [x] **Expo Runtime Bug Fixes**: Fixed the Nexus Blitz option reveal crash from an undefined `opacity` variable and normalized native QR code component usage across the Expo game screens.
+    - [x] **NPATM Native Analysis Flow**: Replaced the placeholder post-STOP state with real host-collected NPATM submissions, a manual host “Start Analysis Now” button like web, batch AI scoring, and room-wide results sync.
+    - [x] **Expo Release Identity Setup**: Renamed the Expo app to Nexus Arcade and added the Android package ID/version code needed for Play Store release builds.
+    - [x] **Native Auth Diagnostics Hardening**: Aligned the Expo Supabase client with the official React Native auth setup, added clearer runtime login diagnostics, and blocked the still-unconfigured social auth buttons from failing with misleading network errors in Play tester builds.
+    - [x] **Production UI Polish**: Removed internal debug configurations (like the raw Supabase URL) from the AuthScreen to finalize the production user experience.
 
 ## Phase 10 — Spatial Computing & Ultra HD Overhaul (In Progress)
 - [x] **Phase 10.1: Foundation & Theming**: 
