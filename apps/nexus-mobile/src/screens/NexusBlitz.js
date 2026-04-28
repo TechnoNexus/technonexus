@@ -6,6 +6,7 @@ import NexusRoomBridge from '../networking/NexusRoomBridge';
 import { Colors } from '../theme/Colors';
 import * as Haptics from 'expo-haptics';
 import { getApiUrl } from '../lib/api';
+import QRCodeSVG from 'react-native-qrcode-svg';
 
 const QUESTION_TIME = 15;
 const OPTION_KEYS = ['A', 'B', 'C', 'D'];
@@ -199,7 +200,7 @@ export default function NexusBlitz({ navigation }) {
             <View style={{ gap: 16 }}>
               <View style={{ alignItems: 'center', marginVertical: 16 }}>
                 <View style={{ padding: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(0,255,255,0.2)' }}>
-                  <QRCode
+                  <QRCodeSVG
                     value={`https://technonexus.ca/games/nexus-blitz?join=${roomId}`}
                     size={140}
                     color={Colors.neonCyan}
@@ -248,11 +249,12 @@ export default function NexusBlitz({ navigation }) {
             let bg = 'rgba(255,255,255,0.05)';
             let borderColor = 'rgba(255,255,255,0.1)';
             let textColor = Colors.slateGray;
+            let optionOpacity = 1;
 
             if (revealed) {
               if (isCorrect) { bg = 'rgba(34,197,94,0.2)'; borderColor = 'rgba(34,197,94,0.6)'; textColor = '#86EFAC'; }
               else if (isSelected && !isCorrect) { bg = 'rgba(239,68,68,0.2)'; borderColor = 'rgba(239,68,68,0.6)'; textColor = '#FCA5A5'; }
-              else { opacity = 0.5; }
+              else { optionOpacity = 0.5; }
             }
 
             return (
@@ -260,7 +262,7 @@ export default function NexusBlitz({ navigation }) {
                 key={key} 
                 onPress={() => handleReveal(key)} 
                 disabled={revealed}
-                style={[styles.optionButton, { backgroundColor: bg, borderColor }]}
+                style={[styles.optionButton, { backgroundColor: bg, borderColor, opacity: optionOpacity }]}
               >
                 <Text style={{ color: textColor, fontWeight: 'bold', fontSize: 14 }}>{key}: {q.options[key]}</Text>
               </Pressable>

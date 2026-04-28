@@ -5,6 +5,7 @@ import GlassPanel from '../components/GlassPanel';
 import NexusRoomBridge from '../networking/NexusRoomBridge';
 import { Colors } from '../theme/Colors';
 import * as Haptics from 'expo-haptics';
+import QRCodeSVG from 'react-native-qrcode-svg';
 
 const DATABASE = {
   Movies: [
@@ -184,7 +185,7 @@ export default function DumbCharades({ navigation }) {
                   <View>
                     <View style={{ alignItems: 'center', marginBottom: 24 }}>
                       <View style={{ padding: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(0,255,255,0.2)' }}>
-                        <QRCode
+                        <QRCodeSVG
                           value={`https://technonexus.ca/games/dumb-charades?join=${roomId}`}
                           size={140}
                           color={Colors.neonCyan}

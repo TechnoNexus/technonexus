@@ -43,6 +43,7 @@ export default function App() {
             <Stack.Screen name="ForgeLobby" component={ForgeLobby} />
             <Stack.Screen name="NexusBlitz" component={NexusBlitz} />
             <Stack.Screen name="DumbCharades" component={DumbCharades} />
+            <Stack.Screen name="Npatm" component={Npatm} />
           </>
         ) : (
           // No session, show Auth screen

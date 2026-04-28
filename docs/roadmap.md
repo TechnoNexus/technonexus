@@ -160,6 +160,10 @@
     - [x] **Arcade Spatial UI (Expo)**: Built `ArcadeHome.js`, `GlassPanel.js`, and `SpatialBackground.js` using animated linear gradients and blurs.
     - [x] **Core Native Infrastructure**: Integrated Supabase JS SDK for native Authentication (Email, Google, Apple, Meta) and session persistence.
     - [x] **Full Arcade Integration**: Implemented the complete game engines for Dumb Charades (Host/Guest views, Score Sync) and Nexus Blitz (AI Generation, Timing, Shared Results) in the React Native Expo app.
+    - [x] **AI Forge Native First Pass**: Upgraded the Expo AI Forge screen from a room-only lobby to a full mission flow with Gemini generation, vault save/load/delete, host-authoritative batch scoring, room verdicts, and shared room start/results.
+    - [x] **Expo Bridge Reliability Hardening**: Refactored `NexusRoomBridge.js` so host connections register only after guest `join`, room welcomes carry current snapshot state, and the native navigator now wires the NPATM screen correctly.
+    - [x] **Expo Runtime Bug Fixes**: Fixed the Nexus Blitz option reveal crash from an undefined `opacity` variable and normalized native QR code component usage across the Expo game screens.
+    - [x] **NPATM Native Analysis Flow**: Replaced the placeholder post-STOP state with real host-collected NPATM submissions, a manual host “Start Analysis Now” button like web, batch AI scoring, and room-wide results sync.
 
 ## Phase 10 — Spatial Computing & Ultra HD Overhaul (In Progress)
 - [x] **Phase 10.1: Foundation & Theming**: 
