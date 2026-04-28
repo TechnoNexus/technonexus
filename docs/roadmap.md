@@ -167,6 +167,8 @@
     - [x] **Expo Release Identity Setup**: Renamed the Expo app to Nexus Arcade and added the Android package ID/version code needed for Play Store release builds.
     - [x] **Native Auth Diagnostics Hardening**: Aligned the Expo Supabase client with the official React Native auth setup, added clearer runtime login diagnostics, and blocked the still-unconfigured social auth buttons from failing with misleading network errors in Play tester builds.
     - [x] **Production UI Polish**: Removed internal debug configurations (like the raw Supabase URL) from the AuthScreen to finalize the production user experience.
+    - [x] **Security Hardening**: Replaced hardcoded default Supabase URLs and keys with strict environment variable configuration.
+    - [x] **Network Reliability**: Bundled PeerJS locally into the networking bridge to eliminate CDN dependency and improve connection stability.
 
 ## Phase 10 — Spatial Computing & Ultra HD Overhaul (In Progress)
 - [x] **Phase 10.1: Foundation & Theming**: 
