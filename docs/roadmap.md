@@ -165,6 +165,8 @@
     - [x] **Expo Runtime Bug Fixes**: Fixed the Nexus Blitz option reveal crash from an undefined `opacity` variable and normalized native QR code component usage across the Expo game screens.
     - [x] **NPATM Native Analysis Flow**: Replaced the placeholder post-STOP state with real host-collected NPATM submissions, a manual host “Start Analysis Now” button like web, batch AI scoring, and room-wide results sync.
     - [x] **Expo Release Identity Setup**: Renamed the Expo app to Nexus Arcade and added the Android package ID/version code needed for Play Store release builds.
+    - [x] **Native Auth Diagnostics Hardening**: Aligned the Expo Supabase client with the official React Native auth setup, added clearer runtime login diagnostics, and blocked the still-unconfigured social auth buttons from failing with misleading network errors in Play tester builds.
+    - [x] **Production UI Polish**: Removed internal debug configurations (like the raw Supabase URL) from the AuthScreen to finalize the production user experience.
 
 ## Phase 10 — Spatial Computing & Ultra HD Overhaul (In Progress)
 - [x] **Phase 10.1: Foundation & Theming**: 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, Pressable, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { supabase } from '../lib/supabase';
+import { StyleSheet, Text, View, TextInput, Pressable, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
+import { probeSupabaseConnection, supabase, supabaseConfig } from '../lib/supabase';
 import SpatialBackground from '../components/SpatialBackground';
 import GlassPanel from '../components/GlassPanel';
 import { Colors } from '../theme/Colors';
@@ -11,6 +11,26 @@ export default function AuthScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
+  const hasSupabaseConfig = supabaseConfig.hasConfiguredUrl && supabaseConfig.hasConfiguredKey;
+
+  const showAuthError = async (error) => {
+    const message = error?.message || 'Authentication failed.';
+
+    if (!message.includes('Network request failed')) {
+      Alert.alert('Authentication Failed', message);
+      return;
+    }
+
+    const probe = await probeSupabaseConnection();
+    const details = [
+      `Supabase config: ${hasSupabaseConfig ? 'READY' : 'MISSING'}`,
+      `Supabase host: ${supabaseConfig.host}`,
+      probe.ok ? `Reachability: HTTP ${probe.status}` : `Reachability: ${probe.message}`,
+      'If you recently changed EAS variables, install a freshly rebuilt tester app.'
+    ].join('\n');
+
+    Alert.alert('Network Request Failed', details);
+  };
 
   const handleAuth = async () => {
     if (!email || !password) return;
@@ -18,18 +38,22 @@ export default function AuthScreen({ navigation }) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
     let error;
-    if (isLogin) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-      error = signInError;
-    } else {
-      const { error: signUpError } = await supabase.auth.signUp({ email, password });
-      error = signUpError;
+    try {
+      if (isLogin) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        error = signInError;
+      } else {
+        const { error: signUpError } = await supabase.auth.signUp({ email, password });
+        error = signUpError;
+      }
+    } catch (unexpectedError) {
+      error = unexpectedError;
     }
 
     setLoading(false);
     
     if (error) {
-      alert(error.message);
+      await showAuthError(error);
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // Supabase onAuthStateChange listener in App.js will handle the redirect
@@ -38,16 +62,10 @@ export default function AuthScreen({ navigation }) {
 
   const handleOAuth = async (provider) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // Note: True OAuth in Expo requires configuring app schemes and redirect URIs in Supabase.
-    // This initiates the standard Supabase flow.
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: provider,
-      options: {
-        redirectTo: 'exp://localhost:8081' // Replace with your scheme
-      }
-    });
-    
-    if (error) alert(error.message);
+    Alert.alert(
+      'Social Login Setup Pending',
+      `${provider.toUpperCase()} sign-in still needs a native redirect scheme and provider setup for Play builds. Use email/password for this tester build.`
+    );
   };
 
   return (
@@ -61,6 +79,9 @@ export default function AuthScreen({ navigation }) {
         <View style={styles.header}>
           <Text style={styles.subtitle}>NEXUS ID</Text>
           <Text style={styles.title}>AUTHENTICATION</Text>
+          <Text style={[styles.statusText, { color: hasSupabaseConfig ? Colors.neonCyan : Colors.electricViolet }]}>
+            {hasSupabaseConfig ? 'SECURE CONNECTION ESTABLISHED' : 'AUTH LINK MISCONFIGURED • REBUILD REQUIRED'}
+          </Text>
         </View>
 
         <GlassPanel style={styles.panel} intensity={60}>
@@ -159,6 +180,13 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '900',
     letterSpacing: -1,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1,
+    marginTop: 12,
+    textAlign: 'center'
   },
   panel: {
     padding: 24,
