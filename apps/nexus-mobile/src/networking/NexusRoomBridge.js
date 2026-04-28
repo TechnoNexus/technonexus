@@ -350,8 +350,8 @@ const NexusRoomBridge = forwardRef((props, ref) => {
     },
     joinRoom: (roomId, playerName) => {
       inject(`
+        window.__pendingConnectId = ${JSON.stringify(`Nexus-${roomId}`)};
         initPeer(undefined, ${JSON.stringify(playerName)});
-        setTimeout(() => connectToPeer(${JSON.stringify(`Nexus-${roomId}`)}, ${JSON.stringify(playerName)}), 400);
       `);
     },
     broadcastAction: (actionData, nextStatus) => {
@@ -399,6 +399,17 @@ const NexusRoomBridge = forwardRef((props, ref) => {
           setIsReady(true);
           pendingScriptsRef.current.forEach((script) => {
             webViewRef.current?.injectJavaScript(`${script}\ntrue;`);
+          });
+          pendingScriptsRef.current = [];
+        }}
+        javaScriptEnabled={true}
+      />
+    </View>
+  );
+});
+
+export default NexusRoomBridge;
+urrent?.injectJavaScript(`${script}\ntrue;`);
           });
           pendingScriptsRef.current = [];
         }}
