@@ -164,6 +164,7 @@
     - [x] **Expo Bridge Reliability Hardening**: Refactored `NexusRoomBridge.js` so host connections register only after guest `join`, room welcomes carry current snapshot state, and the native navigator now wires the NPATM screen correctly.
     - [x] **Expo Runtime Bug Fixes**: Fixed the Nexus Blitz option reveal crash from an undefined `opacity` variable and normalized native QR code component usage across the Expo game screens.
     - [x] **NPATM Native Analysis Flow**: Replaced the placeholder post-STOP state with real host-collected NPATM submissions, a manual host “Start Analysis Now” button like web, batch AI scoring, and room-wide results sync.
+    - [x] **Expo Release Identity Setup**: Renamed the Expo app to Nexus Arcade and added the Android package ID/version code needed for Play Store release builds.
 
 ## Phase 10 — Spatial Computing & Ultra HD Overhaul (In Progress)
 - [x] **Phase 10.1: Foundation & Theming**: 
