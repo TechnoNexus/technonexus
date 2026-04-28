@@ -7,13 +7,14 @@ import React, {
 } from 'react';
 import { View } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { PEERJS_SOURCE } from './peerjs';
 
 const createBridgeHtml = () => `
   <!DOCTYPE html>
   <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script>${PEERJS_SOURCE}</script>
     <script>
       let peer = null;
       let hostConnection = null;

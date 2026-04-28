@@ -3,23 +3,23 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, processLock } from '@supabase/supabase-js';
 
-const DEFAULT_SUPABASE_URL = 'https://your-project-id.supabase.co';
-const DEFAULT_SUPABASE_KEY = 'your-anon-key';
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_KEY;
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
 const supabaseFetch = (...args) => fetch(...args);
 
 export const supabaseConfig = {
   host: supabaseUrl.replace(/^https?:\/\//, ''),
-  hasConfiguredUrl: supabaseUrl !== DEFAULT_SUPABASE_URL,
-  hasConfiguredKey: supabaseAnonKey !== DEFAULT_SUPABASE_KEY,
+  hasConfiguredUrl: !!supabaseUrl,
+  hasConfiguredKey: !!supabaseAnonKey,
   keyPreview: `${supabaseAnonKey || ''}`.slice(0, 12),
   url: supabaseUrl
 };
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(
+  supabaseUrl || 'https://unconfigured-project.supabase.co',
+  supabaseAnonKey || 'unconfigured-key',
+  {
   auth: {
     ...(Platform.OS !== 'web' ? { storage: AsyncStorage } : {}),
     autoRefreshToken: true,
