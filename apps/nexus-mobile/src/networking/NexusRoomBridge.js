@@ -409,14 +409,3 @@ const NexusRoomBridge = forwardRef((props, ref) => {
 });
 
 export default NexusRoomBridge;
-urrent?.injectJavaScript(`${script}\ntrue;`);
-          });
-          pendingScriptsRef.current = [];
-        }}
-        javaScriptEnabled={true}
-      />
-    </View>
-  );
-});
-
-export default NexusRoomBridge;
