@@ -5,6 +5,7 @@ import { supabase } from './src/lib/supabase';
 
 import AuthScreen from './src/screens/AuthScreen';
 import Dashboard from './src/screens/Dashboard';
+import ProfileScreen from './src/screens/ProfileScreen';
 import ArcadeHome from './src/screens/ArcadeHome';
 import ForgeLobby from './src/screens/ForgeLobby';
 import NexusBlitz from './src/screens/NexusBlitz';
@@ -39,6 +40,7 @@ export default function App() {
           // User is signed in
           <>
             <Stack.Screen name="Dashboard" component={Dashboard} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
             <Stack.Screen name="ArcadeHome" component={ArcadeHome} />
             <Stack.Screen name="ForgeLobby" component={ForgeLobby} />
             <Stack.Screen name="NexusBlitz" component={NexusBlitz} />

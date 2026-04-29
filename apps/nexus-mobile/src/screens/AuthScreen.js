@@ -62,10 +62,51 @@ export default function AuthScreen({ navigation }) {
 
   const handleOAuth = async (provider) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert(
-      'Social Login Setup Pending',
-      `${provider.toUpperCase()} sign-in still needs a native redirect scheme and provider setup for Play builds. Use email/password for this tester build.`
-    );
+    setLoading(true);
+
+    try {
+      const redirectUrl = makeRedirectUri({
+        path: '/auth/callback',
+      });
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: redirectUrl,
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data?.url) {
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl, {
+          showInRecents: true,
+        });
+
+        if (result.type === 'success' && result.url) {
+          const queryOrFragment = result.url.split('#')[1] || result.url.split('?')[1];
+          if (queryOrFragment) {
+            const params = {};
+            queryOrFragment.split('&').forEach(pair => {
+              const [k, v] = pair.split('=');
+              params[k] = decodeURIComponent(v);
+            });
+            
+            if (params.access_token && params.refresh_token) {
+              const { error: sessionError } = await supabase.auth.setSession({
+                access_token: params.access_token,
+                refresh_token: params.refresh_token,
+              });
+              if (sessionError) throw sessionError;
+            }
+          }
+        }
+      }
+    } catch (unexpectedError) {
+      await showAuthError(unexpectedError);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
