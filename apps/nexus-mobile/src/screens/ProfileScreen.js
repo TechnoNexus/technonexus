@@ -36,19 +36,17 @@ export default function ProfileScreen({ navigation }) {
       <SpatialBackground />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Pressable
-            onPress={async () => {
-              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          <Pressable 
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               navigation.goBack();
             }}
             style={styles.backButton}
           >
-            <Text style={styles.headerIcon}>{'<'}</Text>
+            <Text style={styles.backText}>← DASHBOARD</Text>
           </Pressable>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={[styles.headerTitle, { color: Colors.neonCyan }]}>MEMBER IDENTITY</Text>
-            <Text style={[styles.headerTitle, { fontSize: 20 }]}>NEXUS PROFILE</Text>
-          </View>
+          <Text style={styles.subtitle}>MEMBER IDENTITY</Text>
+          <Text style={styles.title}>NEXUS PROFILE</Text>
         </View>
 
         <GlassPanel style={styles.panel} intensity={50}>

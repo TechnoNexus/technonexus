@@ -5,6 +5,10 @@ import SpatialBackground from '../components/SpatialBackground';
 import GlassPanel from '../components/GlassPanel';
 import { Colors } from '../theme/Colors';
 import * as Haptics from 'expo-haptics';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function AuthScreen({ navigation }) {
   const [email, setEmail] = useState('');
