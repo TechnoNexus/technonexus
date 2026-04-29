@@ -12,9 +12,9 @@ TechnoNexus is a Next.js 16.2.1 and React 19 platform that combines:
 - PeerJS room-based multiplayer.
 - Supabase authentication and saved-game vaults.
 - Enterprise IT consulting and open-source showcase content.
-- A separate native mobile direction under SwiftUI and Jetpack Compose.
+- A fully native React Native (Expo) mobile application under `apps/nexus-mobile`.
 
-The web app uses JavaScript only, Tailwind CSS only, Zustand for game state, Gemini 2.5 Flash for AI generation/evaluation, and Cloudflare Pages with Edge Runtime for deployment.
+The web app uses JavaScript only, Tailwind CSS only, Zustand for game state, Gemini 2.5 Flash for AI generation/evaluation, and Cloudflare Pages with Edge Runtime for deployment. The mobile app uses Expo, React Navigation, React Native WebView for PeerJS WebRTC syncing, and Supabase for authentication.
 
 ## Authoritative Docs
 

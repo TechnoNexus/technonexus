@@ -6,7 +6,7 @@ Create a unified platform that combines:
 - Open-source repositories
 - Small apps & utilities
 - Gaming section (local multiplayer)
-- Future mobile app
+- React Native (Expo) mobile app
 
 ## The Platform Acts As:
 - Personal brand & Developer portfolio

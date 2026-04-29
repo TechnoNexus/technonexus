@@ -173,7 +173,7 @@
     - [x] **Nexus Profile Module**: Designed and integrated a dedicated `ProfileScreen` with linked protocols, synced user stats, and a polished dashboard navigation flow.
     - [x] **Social Authentication (OAuth)**: Implemented deep-linked `expo-auth-session` WebBrowser integration for Google, Apple, and Meta sign-in.
 
-## Phase 10 — Spatial Computing & Ultra HD Overhaul (In Progress)
+## Phase 10 — Spatial Computing & Ultra HD Overhaul (✅ Completed)
 - [x] **Phase 10.1: Foundation & Theming**: 
     - [x] Deprecated "Tailwind-only" constraints and integrated `framer-motion`, `three.js`, and `lucide-react`.
     - [x] Set up `lib/utils.js` with `cn` utility for dynamic class merging.
@@ -181,3 +181,13 @@
 - [x] **Phase 10.2: Layout Dynamics**: Implement Framer Motion page transitions and magnetic navigations.
 - [x] **Phase 10.3: Immersive Games Experience**: Overhaul Lobbies and AI Judges with staggered reveals, ghost typing, and fluid score counters.
 - [x] **Phase 10.4: 3D WebGL Layer**: Integrate React Three Fiber canvas for dynamic, state-reactive backgrounds.
+
+## Phase 11 — Advanced Mobile Features & Ecosystem Sync (Up Next)
+- [ ] **Global Native Leaderboards**: Build a global "Nexus Rankings" screen on the Dashboard where players can see the top 100 players worldwide for games like NPATM and Blitz.
+- [ ] **Push Notifications**: Integrate Expo Push Notifications for multiplayer invites (e.g., Ping Friends when a host creates a room).
+- [ ] **In-App Subscriptions (RevenueCat)**: Implement "Nexus Pro" subscriptions for advanced AI judges or unlimited saved vault slots via Apple Pay/Google Play Billing.
+- [ ] **Offline Mode Optimization**: Use `AsyncStorage` to aggressively cache the user's "Nexus Vault" to allow browsing saved games without network access.
+- [ ] **Nexus Member Profiles Expansion**: Expand the Profile Screen into a full dashboard for users to view global stats and manage their saved "Nexus Vault" content.
+- [ ] **GitHub Forge Sync**: Integration of live commit history/activity for Forge projects.
+- [ ] **Integration Protocol**: Standardize `useGameStore` hooks to allow drag-and-drop game integration.
+- [ ] **New Modular Game**: Build the next brand-new game mode using the "Clean Room" development pattern.
