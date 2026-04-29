@@ -7,11 +7,6 @@ import * as Haptics from 'expo-haptics';
 import { supabase } from '../lib/supabase';
 
 export default function Dashboard({ navigation }) {
-  const handleSignOut = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
-    await supabase.auth.signOut();
-  };
-
   return (
     <View style={styles.container}>
       <SpatialBackground />
@@ -19,8 +14,14 @@ export default function Dashboard({ navigation }) {
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <Text style={styles.subtitle}>NEXUS DASHBOARD</Text>
-            <Pressable onPress={handleSignOut} style={styles.signOutButton}>
-              <Text style={styles.signOutText}>SIGN OUT</Text>
+            <Pressable 
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate('Profile');
+              }} 
+              style={styles.profileButton}
+            >
+              <Text style={styles.profileText}>PROFILE</Text>
             </Pressable>
           </View>
           <View style={styles.titleRow}>
@@ -93,17 +94,17 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 8,
   },
-  signOutButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: 'rgba(255,0,0,0.1)',
+  profileButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255,0,0,0.3)',
-    borderRadius: 8,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
   },
-  signOutText: {
-    color: 'red',
-    fontSize: 8,
+  profileText: {
+    color: Colors.white,
+    fontSize: 10,
     fontWeight: '900',
     letterSpacing: 1,
   },
