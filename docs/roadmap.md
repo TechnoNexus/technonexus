@@ -169,6 +169,9 @@
     - [x] **Production UI Polish**: Removed internal debug configurations (like the raw Supabase URL) from the AuthScreen to finalize the production user experience.
     - [x] **Security Hardening**: Replaced hardcoded default Supabase URLs and keys with strict environment variable configuration.
     - [x] **Network Reliability**: Bundled PeerJS locally into the networking bridge to eliminate CDN dependency and improve connection stability.
+    - [x] **Performance Refactoring**: Extracted monolithic monolithic game logic from `ForgeLobby.js` and `Npatm.js` into custom hooks (`useForgeLogic`, `useNpatmLogic`) for scalability and maintainability.
+    - [x] **Nexus Profile Module**: Designed and integrated a dedicated `ProfileScreen` with linked protocols, synced user stats, and a polished dashboard navigation flow.
+    - [x] **Social Authentication (OAuth)**: Implemented deep-linked `expo-auth-session` WebBrowser integration for Google, Apple, and Meta sign-in.
 
 ## Phase 10 — Spatial Computing & Ultra HD Overhaul (In Progress)
 - [x] **Phase 10.1: Foundation & Theming**: 
