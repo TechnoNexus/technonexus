@@ -169,6 +169,9 @@
     - [x] **Production UI Polish**: Removed internal debug configurations (like the raw Supabase URL) from the AuthScreen to finalize the production user experience.
     - [x] **Security Hardening**: Replaced hardcoded default Supabase URLs and keys with strict environment variable configuration.
     - [x] **Network Reliability**: Bundled PeerJS locally into the networking bridge to eliminate CDN dependency and improve connection stability.
+    - [x] **Google OAuth Redirect Fix**: Corrected redirect behavior to return to the mobile app instead of the website after login.
+    - [x] **Native WebView Stability**: Fixed Android-specific crashes in the networking bridge by adding origin whitelisting.
+    - [x] **AI Forge Logic Fixes**: Resolved `ReferenceError` for missing state setters in the Forge Lobby.
 
 ## Phase 10 — Spatial Computing & Ultra HD Overhaul (✅ Completed)
 - [x] **Phase 10.1: Foundation & Theming**: 
