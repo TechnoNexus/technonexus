@@ -395,6 +395,7 @@ const NexusRoomBridge = forwardRef((props, ref) => {
       <WebView
         ref={webViewRef}
         source={{ html: htmlUri }}
+        originWhitelist={['*']}
         onMessage={handleMessage}
         onLoadEnd={() => {
           setIsReady(true);

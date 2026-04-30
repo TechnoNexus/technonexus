@@ -27,7 +27,9 @@ export default function ForgeLobby({ navigation }) {
   const {
     playerName, setPlayerName,
     joinRoomId, setJoinRoomId,
-    status, roomId, isHost,
+    status, setStatus,
+    roomId, setRoomId,
+    isHost, setIsHost,
     hostName, players, roomStatus, setGameMode,
     gameMode, customGame, language, setLanguage,
     aiPrompt, setAiPrompt, submission, setSubmission,
