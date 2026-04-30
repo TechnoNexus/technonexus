@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable, Modal, ActivityIndicator, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Pressable, Modal, ActivityIndicator, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import SpatialBackground from '../components/SpatialBackground';
 import GlassPanel from '../components/GlassPanel';
 import { Colors } from '../theme/Colors';
@@ -84,20 +85,6 @@ export default function Dashboard({ navigation }) {
           </GlassPanel>
         </Pressable>
 
-        <View style={styles.moduleWrapper}>
-          <GlassPanel style={styles.moduleCard} intensity={50}>
-            <View style={styles.moduleHeader}>
-              <Text style={styles.moduleTitle}>NEXUS FORGE</Text>
-              <View style={[styles.statusBadge, { backgroundColor: Colors.violetGlow, borderColor: Colors.electricViolet }]}>
-                <Text style={[styles.statusText, { color: Colors.electricViolet }]}>SYNCED</Text>
-              </View>
-            </View>
-            <Text style={styles.moduleDescription}>
-              Open-source repositories and automation.
-            </Text>
-          </GlassPanel>
-        </View>
-
         {/* Global Leaderboards Card */}
         <View style={styles.moduleWrapper}>
           <GlassPanel style={styles.moduleCard} intensity={50}>
@@ -159,9 +146,12 @@ export default function Dashboard({ navigation }) {
                   <Text style={styles.closeButtonText}>CLOSE</Text>
                 </Pressable>
               </View>
-              <ScrollView contentContainerStyle={styles.modalScroll}>
-                {leaderboard.map((item, index) => renderLeaderboardRow(item, index, true))}
-              </ScrollView>
+              <FlatList
+                data={leaderboard}
+                keyExtractor={(_, index) => index.toString()}
+                renderItem={({ item, index }) => renderLeaderboardRow(item, index, true)}
+                contentContainerStyle={styles.modalScroll}
+              />
             </SafeAreaView>
           </GlassPanel>
         </View>
@@ -335,8 +325,8 @@ const styles = StyleSheet.create({
   modalTitle: {
     color: Colors.white,
     fontSize: 20,
-    fontWeight: 'black',
-    letterSpacing: 1,
+    fontWeight: '900',
+    letterSpacing: -1,
   },
   closeButton: {
     paddingVertical: 8,

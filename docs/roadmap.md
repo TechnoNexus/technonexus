@@ -186,8 +186,8 @@
 - [x] **Global Native Leaderboards**: Build a global "Nexus Rankings" screen on the Dashboard where players can see the top 100 players worldwide for games like NPATM and Blitz.
 - [ ] **Push Notifications**: Integrate Expo Push Notifications for multiplayer invites (e.g., Ping Friends when a host creates a room).
 - [ ] **In-App Subscriptions (RevenueCat)**: Implement "Nexus Pro" subscriptions for advanced AI judges or unlimited saved vault slots via Apple Pay/Google Play Billing.
-- [ ] **Offline Mode Optimization**: Use `AsyncStorage` to aggressively cache the user's "Nexus Vault" to allow browsing saved games without network access.
-- [ ] **Nexus Member Profiles Expansion**: Expand the Profile Screen into a full dashboard for users to view global stats and manage their saved "Nexus Vault" content.
-- [ ] **GitHub Forge Sync**: Integration of live commit history/activity for Forge projects.
+- [x] **Offline Mode Optimization**: Use `AsyncStorage` to aggressively cache the user's "Nexus Vault" to allow browsing saved games without network access.
+- [x] **Nexus Member Profiles Expansion**: Expand the Profile Screen into a full dashboard for users to view global stats and manage their saved "Nexus Vault" content.
+- [~] **GitHub Forge Sync**: Integration of live commit history/activity for Forge projects. (Canceled - Forge removed from mobile)
 - [ ] **Integration Protocol**: Standardize `useGameStore` hooks to allow drag-and-drop game integration.
 - [ ] **New Modular Game**: Build the next brand-new game mode using the "Clean Room" development pattern.
