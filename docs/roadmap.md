@@ -183,7 +183,7 @@
 - [x] **Phase 10.4: 3D WebGL Layer**: Integrate React Three Fiber canvas for dynamic, state-reactive backgrounds.
 
 ## Phase 11 — Advanced Mobile Features & Ecosystem Sync (Up Next)
-- [ ] **Global Native Leaderboards**: Build a global "Nexus Rankings" screen on the Dashboard where players can see the top 100 players worldwide for games like NPATM and Blitz.
+- [x] **Global Native Leaderboards**: Build a global "Nexus Rankings" screen on the Dashboard where players can see the top 100 players worldwide for games like NPATM and Blitz.
 - [ ] **Push Notifications**: Integrate Expo Push Notifications for multiplayer invites (e.g., Ping Friends when a host creates a room).
 - [ ] **In-App Subscriptions (RevenueCat)**: Implement "Nexus Pro" subscriptions for advanced AI judges or unlimited saved vault slots via Apple Pay/Google Play Billing.
 - [ ] **Offline Mode Optimization**: Use `AsyncStorage` to aggressively cache the user's "Nexus Vault" to allow browsing saved games without network access.
