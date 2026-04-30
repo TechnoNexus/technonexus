@@ -14,8 +14,8 @@ export default function Footer() {
         </div>
         
         <div className="flex justify-center space-x-8 text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-8">
-          <Link href="#" className="hover:text-neon-cyan transition-colors">Privacy Policy</Link>
-          <Link href="#" className="hover:text-neon-cyan transition-colors">Terms of Service</Link>
+          <Link href="/privacy" className="hover:text-neon-cyan transition-colors">Privacy Policy</Link>
+          <Link href="/terms" className="hover:text-neon-cyan transition-colors">Terms of Service</Link>
           <Link href="#" className="hover:text-neon-cyan transition-colors">Cookies</Link>
         </div>
 
