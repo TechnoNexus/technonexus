@@ -116,6 +116,16 @@ export default function ProfileScreen({ navigation }) {
             </View>
           )}
 
+          <Pressable 
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              navigation.navigate('NexusProPaywall');
+            }} 
+            style={styles.proButton}
+          >
+            <Text style={styles.proButtonText}>UPGRADE TO <Text style={{ color: Colors.electricViolet }}>PRO</Text></Text>
+          </Pressable>
+
           <Pressable onPress={handleSignOut} style={styles.signOutButton}>
             <Text style={styles.signOutButtonText}>TERMINATE SESSION (SIGN OUT)</Text>
           </Pressable>
@@ -293,6 +303,22 @@ const styles = StyleSheet.create({
   },
   signOutButtonText: {
     color: '#F87171',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1
+  },
+  proButton: {
+    width: '100%',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderColor: Colors.electricViolet,
+    borderWidth: 1,
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginBottom: 16
+  },
+  proButtonText: {
+    color: Colors.white,
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 1

@@ -191,6 +191,19 @@ export default function ForgeLobby({ navigation }) {
               {isHost ? 'Waiting for guests to join...' : 'Connected to host. Waiting for mission setup...'}
             </Text>
           )}
+
+          {isHost && (
+            <Pressable
+              style={styles.pingButton}
+              onPress={async () => {
+                await tap(Haptics.ImpactFeedbackStyle.Light);
+                // Placeholder for actual Push Notification backend call
+                Alert.alert('Ping Sent', 'Your friends have been notified to join the room!');
+              }}
+            >
+              <Text style={styles.pingButtonText}>PING FRIENDS</Text>
+            </Pressable>
+          )}
         </View>
 
         {isHost && roomStatus === 'idle' && (
@@ -757,6 +770,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
     textAlign: 'center'
+  },
+  pingButton: {
+    marginTop: 16,
+    backgroundColor: 'rgba(0, 255, 255, 0.1)',
+    borderColor: Colors.neonCyan,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: 'center'
+  },
+  pingButtonText: {
+    color: Colors.neonCyan,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1
   },
   modeRow: {
     flexDirection: 'row',

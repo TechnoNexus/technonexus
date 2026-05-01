@@ -46,11 +46,11 @@ export default function Dashboard({ navigation }) {
             <Pressable 
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                navigation.navigate('Profile');
+                navigation.navigate('Settings');
               }} 
               style={styles.profileButton}
             >
-              <Text style={styles.profileText}>PROFILE</Text>
+              <Text style={styles.profileText}>SETTINGS</Text>
             </Pressable>
           </View>
           <View style={styles.titleRow}>

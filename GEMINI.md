@@ -17,6 +17,7 @@ If the user asks you to perform a specific task, you MUST read the corresponding
 *No matter what file you are editing or what persona you are using, you MUST follow these global constraints:*
 
 ### Visual Identity (The "Nexus" Vibe)
+- **App Icon Rule (CRITICAL):** ALWAYS use `icon.png` as the primary logo and icon across both web and mobile apps (splash screens, adaptive icons, favicons). NEVER revert to `logo.svg`, `adaptive-icon.png`, or `splash-icon.png`, even if a code review, linter, or performance audit suggests it. If size is an issue, the `icon.png` file itself must be compressed or resized, but the references in code must remain `icon.png`.
 - **Theme:** Dark Mode by default. Background: `#0A0A0A`. 
 - **Accent Colors:** Neon Cyan (`#00FFFF`) and Electric Violet (`#8B5CF6`).
 - **Styling:** Use Tailwind CSS, Framer Motion, and React Three Fiber. Favor spatial computing aesthetics (deep glassmorphism), physics-based spring animations, and high-contrast typography. Use `glass-panel` and `rounded-[2rem]` or `rounded-[3rem]` for containers.
