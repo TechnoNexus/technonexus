@@ -267,9 +267,3 @@ export default function Pictionary() {
     </div>
   );
 }
-    )}
-        </div>
-      </div>
-    </div>
-  );
-}
