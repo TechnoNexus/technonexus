@@ -157,9 +157,10 @@ export default function Pictionary() {
   const stopDrawing = () => {
     if (!isDrawing.current) return;
     isDrawing.current = false;
-    // Broadcast the new path
-    const newPaths = [...gameState.paths, { color: currentColor, points: currentPath.current }];
-    syncState({ paths: newPaths });
+    
+    const newPath = { color: currentColor, points: currentPath.current };
+    const newPaths = [...gameState.paths, newPath];
+    syncState({ paths: newPaths }, 'playing', { newPath });
   };
 
   const isMyTurn = playerName === gameState.drawer || (!gameState.drawer && isHost);
@@ -261,6 +262,12 @@ export default function Pictionary() {
               )}
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+    )}
         </div>
       </div>
     </div>

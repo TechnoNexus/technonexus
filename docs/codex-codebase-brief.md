@@ -68,7 +68,8 @@ Current multiplayer status:
 
 - AI Forge uses `NexusRoomManager` for room orchestration, AI generation, batch scoring, and result broadcast.
 - NPATM uses the shared room manager, `customGame` payloads, host-collected submissions, batch scoring, and session leaderboard updates.
-- Dumb Charades now syncs host-controlled word, timer, category, turn, and team score through `customGame` using `nexus-game-action`; guests see live state but not the secret title.
+- Dumb Charades now syncs host-controlled word, timer, category, turn, and team score through `customGame` using `nexus-game-action`; guests see live state but not the secret title. Now supports **AI Topic Forge** on both Web and Mobile.
+- Pictionary: Fully synchronized drawing game. Supports real-time stroke relay where the Host rebroadcasts guest drawings to the entire room.
 - Nexus Blitz now supports room-aware shared quiz generation and shared room results; each player still answers locally, then reports their objective score back into the shared room payload.
 - Team Picker remains local-only.
 
@@ -92,6 +93,10 @@ Gemini model usage is production-sensitive:
 - Do not upgrade, rename, or abstract the model without explicit permission.
 - API responses should be valid JSON.
 - Prompts that expect structured output should end with clear JSON-only instructions.
+- **API Endpoint Selection**: 
+    - Use `/api/generate-game` for list-based content (Charades, Pictionary).
+    - Use `/api/generate-trivia` strictly for quiz-style data. 
+    - *Avoid rendering trivia objects as raw text strings to prevent React 'Object as Child' crashes.*
 - Multiplayer scoring should use `/api/evaluate-batch`; do not add per-player Gemini calls in multiplayer flows.
 
 Important AI routes:
@@ -111,6 +116,7 @@ Must preserve:
 
 - `NexusRoomManager` must stay mounted at the bottom of `app/games/ai-forge/page.js`, outside conditionals.
 - PeerJS guest connections should be added to `connections.current` only after the host receives the guest's `join` message.
+- **Host Action Relay**: Host must relay `game-action` events received from guests to all other guests. This ensures real-time sync for games like Pictionary where guests draw.
 - Game start sync must be atomic: one `start-game` message should contain `status`, `customGame`, and `gameMode`.
 - Always filter open connections before sending:
 

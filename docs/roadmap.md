@@ -73,9 +73,12 @@
 - [ ] **Nexus Member Profiles**: Standalone dashboard for users to view global stats and managed saved Vault content.
 - [ ] **GitHub Forge Sync**: Integration of live commit history/activity for Forge projects.
 
-## Phase 6.1 — Game Engine & Multiplayer Optimizations
+## Phase 6.1 — Game Engine & Multiplayer Optimizations (✅ Completed)
 - [x] **Natural AI Judge:** Refactor the `evaluate-submission` prompt. Keep the sarcastic/funny personality, but drastically simplify the vocabulary so it sounds natural, conversational, and easy for everyone to understand.
-- [x] **Charades 'Skip' Feature:** In rapid-fire/charades game modes, add a "Skip" button for the current player. Skipping moves to the next word without awarding points.
+- [x] **Charades 'Skip' Feature:** In rapid-fire/charades game modes, add a "Skip" button for the current player. Skipping moves to the next word without awarding points and keeping the timer running.
+- [x] **AI Custom Categories (Dumb Charades):** Added Gemini-powered category generation (e.g. "Bollywood movies", "Baby items") for both Web and Mobile platforms.
+- [x] **Pictionary Relay Sync:** Implemented host-authoritative drawing relay in `NexusRoomManager` to ensure all guests see strokes in real-time, regardless of who is drawing.
+- [x] **Mobile Drawing Fixes:** Resolved color selection closure bugs and improved stroke persistence in the Expo mobile app.
 - [x] **Player Nicknames:** Update registration and PeerJS lobby joining logic to require a Name/Nickname. The game should display the Nickname (or first name if missing) instead of generic IDs.
 - [x] **Live Scoreboard:** Track the exact number of players in the PeerJS session and render a live, dynamic scoreboard after every single round.
 - [x] **Game Modes (Team vs. Individual):** Add a toggle in the Host UI allowing the Host to assign players into Teams or set the game as a Free-For-All (Individual) before starting the mission.

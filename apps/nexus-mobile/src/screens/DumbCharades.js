@@ -44,6 +44,11 @@ export default function DumbCharades({ navigation }) {
   const [turn, setTurn] = useState('teamA');
   const [timerEndsAt, setTimerEndsAt] = useState(null);
 
+  // AI Generation State
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [customList, setCustomList] = useState(null);
+
   const handleMessage = (action, data) => {
     if (action === 'open') setStatus('Ready');
     else if (action === 'connectedToHost' || action === 'connection') setStatus('Player Connected');
@@ -64,6 +69,7 @@ export default function DumbCharades({ navigation }) {
         if (state.turn) setTurn(state.turn);
         if (state.timerEndsAt) setTimerEndsAt(state.timerEndsAt);
         if (state.timer !== undefined && !state.isActive) setTimer(state.timer);
+        if (state.customList) setCustomList(state.customList);
       }
     }
   };
@@ -73,7 +79,7 @@ export default function DumbCharades({ navigation }) {
       gameType: 'charades',
       category, currentWord, isActive, showWord, 
       score: { teamA: scoreA, teamB: scoreB }, 
-      turn, timerEndsAt, timer
+      turn, timerEndsAt, timer, customList
     };
     const nextState = { ...currentState, ...patch };
     
@@ -86,6 +92,7 @@ export default function DumbCharades({ navigation }) {
     if (patch.turn) setTurn(patch.turn);
     if (patch.timerEndsAt !== undefined) setTimerEndsAt(patch.timerEndsAt);
     if (patch.timer !== undefined) setTimer(patch.timer);
+    if (patch.customList) setCustomList(patch.customList);
 
     // Broadcast if host
     if (isHost && bridgeRef.current) {
@@ -115,18 +122,53 @@ export default function DumbCharades({ navigation }) {
 
   const generateWord = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const list = DATABASE[category];
+    const list = customList || DATABASE[category];
     const word = list[Math.floor(Math.random() * list.length)];
     syncState({ currentWord: word, showWord: false, timer: 60, timerEndsAt: null, isActive: false });
+  };
+
+  const generateAIWords = async () => {
+    if (!aiPrompt) return;
+    setIsGenerating(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
+    try {
+      const response = await fetch('https://technonexus.ca/api/generate-game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          prompt: `Generate a list of 20 items for a Dumb Charades game based on this topic: ${aiPrompt}. Return the list in gameContent.`,
+          language: 'English'
+        })
+      });
+      const data = await response.json();
+      const list = data.gameContent || [];
+      if (Array.isArray(list) && list.length > 0) {
+        setCustomList(list);
+        setCategory('AI Custom');
+        const word = list[Math.floor(Math.random() * list.length)];
+        syncState({ customList: list, category: 'AI Custom', currentWord: word, showWord: false });
+      }
+    } catch (error) {
+      console.error('AI Generation error:', error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handlePoint = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     const nextScore = turn === 'teamA' ? { teamA: scoreA + 1, teamB: scoreB } : { teamA: scoreA, teamB: scoreB + 1 };
-    const nextTurn = turn === 'teamA' ? 'teamB' : 'teamA';
-    const list = DATABASE[category];
+    const list = customList || DATABASE[category];
     const word = list[Math.floor(Math.random() * list.length)];
-    syncState({ currentWord: word, showWord: false, timer: 60, timerEndsAt: null, isActive: false, score: nextScore, turn: nextTurn });
+    syncState({ currentWord: word, showWord: true, score: nextScore });
+  };
+
+  const handlePass = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const list = customList || DATABASE[category];
+    const word = list[Math.floor(Math.random() * list.length)];
+    syncState({ currentWord: word, showWord: true });
   };
 
   const startTimer = () => {
@@ -196,6 +238,34 @@ export default function DumbCharades({ navigation }) {
                       <Text style={{ color: Colors.neonCyan, fontSize: 8, fontWeight: '900', letterSpacing: 2, marginTop: 8 }}>SCAN TO JOIN ROOM</Text>
                     </View>
 
+                    <View style={styles.aiSection}>
+                      <Text style={styles.label}>FORGE CUSTOM TOPIC</Text>
+                      <View style={styles.joinRow}>
+                        <TextInput 
+                          style={[styles.input, styles.flexInput]} 
+                          placeholder="e.g. Bollywood, Baby items" 
+                          placeholderTextColor={Colors.slateGray} 
+                          value={aiPrompt} 
+                          onChangeText={setAiPrompt} 
+                        />
+                        <Pressable 
+                          onPress={generateAIWords} 
+                          disabled={isGenerating || !aiPrompt}
+                          style={[styles.joinButton, {backgroundColor: Colors.electricViolet + '33', borderColor: Colors.electricViolet}]}>
+                          <Text style={[styles.primaryButtonText, {color: Colors.electricViolet}]}>{isGenerating ? '...' : 'FORGE'}</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+
+                    <Text style={[styles.label, {textAlign: 'center', marginBottom: 12}]}>OR CHOOSE CATEGORY</Text>
+                    <View style={styles.categoryRow}>
+                      {Object.keys(DATABASE).map(cat => (
+                        <Pressable key={cat} onPress={() => { setCategory(cat); setCustomList(null); syncState({category: cat, customList: null}); }} style={[styles.catChip, category === cat && !customList && styles.catChipActive]}>
+                          <Text style={[styles.catChipText, category === cat && !customList && styles.catChipTextActive]}>{cat.replace('_', ' ')}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+
                     <Pressable onPress={generateWord} style={styles.primaryButton}>
                       <Text style={styles.primaryButtonText}>GENERATE WORD</Text>
                     </Pressable>
@@ -215,14 +285,19 @@ export default function DumbCharades({ navigation }) {
                         <Pressable onPress={handlePoint} style={[styles.actionButton, {backgroundColor: Colors.neonCyan}]}>
                           <Text style={styles.actionButtonTextBlack}>GUESSED!</Text>
                         </Pressable>
-                        <Pressable onPress={generateWord} style={[styles.actionButton, {backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.slateGray}]}>
+                        <Pressable onPress={handlePass} style={[styles.actionButton, {backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.slateGray}]}>
                           <Text style={styles.actionButtonText}>PASS</Text>
                         </Pressable>
                       </View>
                     ) : (
-                      <Pressable onPress={startTimer} style={styles.primaryButton}>
-                        <Text style={styles.primaryButtonText}>START TIMER</Text>
-                      </Pressable>
+                      <View style={styles.actionRow}>
+                        <Pressable onPress={startTimer} style={styles.primaryButton}>
+                          <Text style={styles.primaryButtonText}>START TIMER</Text>
+                        </Pressable>
+                        <Pressable onPress={() => syncState({currentWord: ''})} style={[styles.primaryButton, {backgroundColor: 'transparent', flex: 0.4}]}>
+                          <Text style={styles.primaryButtonText}>NEW TOPIC</Text>
+                        </Pressable>
+                      </View>
                     )}
                   </View>
                 )}
@@ -259,7 +334,7 @@ const styles = StyleSheet.create({
   inputGroup: { marginBottom: 24 },
   label: { color: Colors.slateGray, fontSize: 10, fontWeight: 'bold', letterSpacing: 1, marginBottom: 8 },
   input: { backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', borderRadius: 16, padding: 16, color: Colors.white, fontSize: 16, fontWeight: 'bold' },
-  primaryButton: { backgroundColor: Colors.cyanGlow, borderColor: Colors.neonCyan, borderWidth: 1, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginBottom: 16 },
+  primaryButton: { backgroundColor: Colors.cyanGlow, borderColor: Colors.neonCyan, borderWidth: 1, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginBottom: 16, flex: 1 },
   primaryButtonText: { color: Colors.neonCyan, fontSize: 12, fontWeight: '900', letterSpacing: 1 },
   joinRow: { flexDirection: 'row', gap: 16, marginBottom: 24 },
   flexInput: { flex: 1 },
@@ -282,4 +357,11 @@ const styles = StyleSheet.create({
   guestTitle: { color: Colors.neonCyan, fontSize: 12, fontWeight: '900', letterSpacing: 2, marginBottom: 16 },
   hiddenWord: { color: Colors.white, fontSize: 18, fontWeight: 'bold', letterSpacing: 2, marginBottom: 16 },
   waitingText: { color: Colors.slateGray, fontSize: 14, fontStyle: 'italic' },
+  aiSection: { marginBottom: 24, padding: 16, backgroundColor: 'rgba(139, 92, 246, 0.05)', borderRadius: 20, borderLeftWidth: 4, borderLeftColor: Colors.electricViolet },
+  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24, justifyContent: 'center' },
+  catChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWith: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)' },
+  catChipActive: { borderColor: Colors.neonCyan, backgroundColor: Colors.neonCyan + '22' },
+  catChipText: { color: Colors.slateGray, fontSize: 10, fontWeight: 'bold' },
+  catChipTextActive: { color: Colors.neonCyan },
 });
+
