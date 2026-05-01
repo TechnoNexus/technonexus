@@ -115,10 +115,14 @@
 - [x] **Global Leaderboard Bridge**: Added Supabase-backed leaderboard read/write helpers with local Zustand fallback when the `leaderboard` table or `record_win` RPC is unavailable.
 - [x] **Generic Room Action Bridge**: Extended `NexusRoomManager` with a safe `nexus-game-action` event path for host-authoritative game payload sync across reusable games.
 - [x] **Dumb Charades Multiplayer Sync**: Moved Charades word, timer, score, turn, and category into synced room state so guests see live host-driven gameplay without seeing the secret word.
+- [x] **Dumb Charades Rapid-Fire Update**: Updated Dumb Charades (Web & Mobile Expo) to auto-reveal cards. Guessing or passing now instantly generates a new word while keeping the timer running, allowing for rapid-fire rounds until the 60-second timer hits zero.
 - [x] **Nexus Blitz Multiplayer Mode**: Added room-aware shared quiz generation, guest quiz sync, per-player room result reporting, and shared room results display.
 - [x] **Review Feedback Hardening**: Removed non-atomic direct leaderboard write fallback, broadened trivia markdown fence cleanup, and changed Charades timer sync to timestamp-based local countdowns instead of per-second room broadcasts.
+- [x] **Undercover (Mr. White)**: Created a new social deduction game where players receive identical words except for the Undercover who receives a different word or no word. Uses `NexusRoomManager` for synced game state.
+- [x] **Pictionary**: Added a new synchronized drawing game mode featuring a shared HTML5 Canvas. The host assigns a drawer who receives a secret word, while the rest of the room attempts to guess the drawing in real-time.
+- [x] **Pictionary Drawing Fix**: Fixed the drawing logic across Web (HTML5 Canvas `beginPath()`) and Native Mobile (`PanResponder` pointer event ignoring) to prevent stroke jumps and incorrect line connections.
+- [x] **Android Build Issue Fix**: Generated optimized 1024x1024 PNG icons for the Google Play Store build to prevent Android's AAPT2 compiler from choking on the massive uncompressed source icon and defaulting to the Android robot logo.
 - [ ] **Integration Protocol**: Standardize `useGameStore` hooks to allow drag-and-drop game integration.
-- [ ] **Next Game: [Pending User Request]**: Ready to integrate the first modularly developed game.
 
 ## Phase 8 — True Native Mobile Experience (✅ Completed)
 

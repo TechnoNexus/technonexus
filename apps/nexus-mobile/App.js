@@ -11,6 +11,8 @@ import ForgeLobby from './src/screens/ForgeLobby';
 import NexusBlitz from './src/screens/NexusBlitz';
 import DumbCharades from './src/screens/DumbCharades';
 import Npatm from './src/screens/Npatm';
+import MrWhite from './src/screens/MrWhite';
+import Pictionary from './src/screens/Pictionary';
 
 const Stack = createNativeStackNavigator();
 
@@ -46,6 +48,8 @@ export default function App() {
             <Stack.Screen name="NexusBlitz" component={NexusBlitz} />
             <Stack.Screen name="DumbCharades" component={DumbCharades} />
             <Stack.Screen name="Npatm" component={Npatm} />
+            <Stack.Screen name="MrWhite" component={MrWhite} />
+            <Stack.Screen name="Pictionary" component={Pictionary} />
           </>
         ) : (
           // No session, show Auth screen
