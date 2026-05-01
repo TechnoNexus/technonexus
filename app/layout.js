@@ -19,7 +19,7 @@ export const metadata = {
   title: "TechnoNexus | AI Ecosystem & IT Consulting",
   description: "High-performance digital ecosystem for enterprise automation and indie gaming.",
   icons: {
-    icon: '/logo.svg',
+    icon: '/icon.png',
   },
 };
 
