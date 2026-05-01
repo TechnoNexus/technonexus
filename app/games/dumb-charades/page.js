@@ -415,13 +415,4 @@ export default function DumbCharades() {
     </div>
   );
 }
-</div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+
