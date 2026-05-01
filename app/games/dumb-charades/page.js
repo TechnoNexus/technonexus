@@ -60,6 +60,9 @@ export default function DumbCharades() {
   const [showWord, setShowWord] = useState(false);
   const [score, setScore] = useState({ teamA: 0, teamB: 0 });
   const [turn, setTurn] = useState('teamA');
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [customList, setCustomList] = useState(null);
 
   const applyCharadesState = (state) => {
     setCategory(state.category || 'Movies');
@@ -71,6 +74,7 @@ export default function DumbCharades() {
     setShowWord(!!state.showWord);
     setScore(state.score || { teamA: 0, teamB: 0 });
     setTurn(state.turn || 'teamA');
+    setCustomList(state.customList || null);
   };
 
   const syncCharadesState = (patch, nextStatus) => {
@@ -117,7 +121,15 @@ export default function DumbCharades() {
         setTimer(nextTimer);
         if (nextTimer <= 5 && nextTimer > 0) hapticFeedback(ImpactStyle.Light);
         if (nextTimer === 0 && (!roomId || isHost)) {
-          syncCharadesState({ timer: 0, isActive: false, timerEndsAt: null }, 'playing');
+          const nextTurn = turn === 'teamA' ? 'teamB' : 'teamA';
+          syncCharadesState({ 
+            timer: 0, 
+            isActive: false, 
+            timerEndsAt: null,
+            turn: nextTurn,
+            currentWord: '',
+            showWord: true
+          }, 'playing');
         }
       }, 1000);
     } else if (timer === 0 && isActive) {
@@ -126,11 +138,11 @@ export default function DumbCharades() {
       clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [isActive, customGame?.timerEndsAt, roomId, isHost]);
+  }, [isActive, customGame?.timerEndsAt, roomId, isHost, turn]);
 
   const generateWord = () => {
     hapticFeedback();
-    const list = DATABASE[category];
+    const list = customList || DATABASE[category];
     const randomIndex = Math.floor(Math.random() * list.length);
     syncCharadesState({
       category,
@@ -145,10 +157,46 @@ export default function DumbCharades() {
     }, 'playing');
   };
 
+  const generateAIWords = async () => {
+    if (!aiPrompt) return;
+    setIsGenerating(true);
+    hapticFeedback();
+    
+    try {
+      const response = await fetch('/api/generate-game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          prompt: `Generate a list of 20 items for a Dumb Charades game based on this topic: ${aiPrompt}. Return the list in gameContent.`,
+          language: 'English'
+        })
+      });
+      const data = await response.json();
+      const list = data.gameContent || [];
+      if (Array.isArray(list) && list.length > 0) {
+        setCustomList(list);
+        setCategory('AI Custom');
+        const word = list[Math.floor(Math.random() * list.length)];
+        syncCharadesState({ 
+          customList: list, 
+          category: 'AI Custom', 
+          currentWord: word, 
+          showWord: false,
+          timer: 60,
+          timerEndsAt: null,
+          isActive: false
+        }, 'playing');
+      }
+    } catch (error) {
+      console.error('AI Generation error:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handlePoint = (team) => {
     hapticFeedback(ImpactStyle.Heavy);
     const nextScore = { ...score, [team]: score[team] + 1 };
-    const nextTurn = team === 'teamA' ? 'teamB' : 'teamA';
     const teamName = team === 'teamA' ? 'Team Alpha' : 'Team Beta';
     
     if (!roomId || isHost) {
@@ -156,20 +204,27 @@ export default function DumbCharades() {
       updateSessionLeaderboard([{ name: teamName, score: 1 }]);
     }
     
-    const list = DATABASE[category];
+    const list = customList || DATABASE[category];
     const randomIndex = Math.floor(Math.random() * list.length);
     syncCharadesState({
-      category,
       currentWord: list[randomIndex],
-      showWord: false,
-      timer: 60,
-      timerEndsAt: null,
-      isActive: false,
+      showWord: true,
       score: nextScore,
-      turn: nextTurn,
       roundId: Date.now()
     }, 'playing');
   };
+
+  const handlePass = () => {
+    hapticFeedback();
+    const list = customList || DATABASE[category];
+    const randomIndex = Math.floor(Math.random() * list.length);
+    syncCharadesState({
+      currentWord: list[randomIndex],
+      showWord: true,
+      roundId: Date.now()
+    }, 'playing');
+  };
+
 
   const startTimer = () => {
     hapticFeedback();
@@ -239,10 +294,11 @@ export default function DumbCharades() {
                 onClick={() => {
                   hapticFeedback(ImpactStyle.Light);
                   setCategory(cat);
-                  syncCharadesState({ category: cat }, currentWord ? 'playing' : undefined);
+                  setCustomList(null);
+                  syncCharadesState({ category: cat, customList: null }, currentWord ? 'playing' : undefined);
                 }}
                 className={`px-4 py-2 rounded-full text-[10px] font-bold transition-all border whitespace-nowrap ${
-                  category === cat 
+                  category === cat && !customList
                   ? 'bg-neon-cyan text-black border-neon-cyan shadow-neon-glow' 
                   : 'bg-white/5 text-slate-400 border-white/10'
                 } ${roomId && !isHost ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -251,6 +307,28 @@ export default function DumbCharades() {
               </button>
             ))}
           </div>
+
+          {isHost && !currentWord && (
+            <div className="mb-8 p-4 bg-neon-violet/5 border border-neon-violet/20 rounded-2xl text-left">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">AI Topic Forge</p>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="e.g. Bollywood, Baby items"
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-neon-violet transition-all"
+                />
+                <button 
+                  onClick={generateAIWords}
+                  disabled={isGenerating || !aiPrompt}
+                  className="px-4 py-3 rounded-xl bg-neon-violet text-white text-[10px] font-black uppercase tracking-widest hover:shadow-violet-glow transition-all disabled:opacity-50"
+                >
+                  {isGenerating ? '...' : 'FORGE'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {roomId && !isHost ? (
             <div className="flex-1 flex flex-col justify-center items-center text-center">

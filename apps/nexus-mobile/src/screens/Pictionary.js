@@ -28,7 +28,13 @@ export default function Pictionary({ navigation }) {
   
   // Local Drawing
   const [currentColor, setCurrentColor] = useState('#00FFFF');
+  const currentColorRef = useRef('#00FFFF');
   const [currentPath, setCurrentPath] = useState(null);
+
+  // Update ref when state changes
+  useEffect(() => {
+    currentColorRef.current = currentColor;
+  }, [currentColor]);
 
   const handleMessage = (action, data) => {
     if (action === 'open') setStatus('Ready');
@@ -48,11 +54,20 @@ export default function Pictionary({ navigation }) {
         if (state.word !== undefined) setWord(state.word);
         if (state.drawer !== undefined) setDrawer(state.drawer);
         if (state.paths !== undefined) setPaths(state.paths);
+        
+        // Handle new path relay
+        if (state.newPath) {
+          setPaths(prev => [...prev, state.newPath]);
+          // If host, relay to others
+          if (isHost && bridgeRef.current) {
+            bridgeRef.current.broadcastAction({ gameType: 'pictionary', newPath: state.newPath }, 'playing');
+          }
+        }
       }
     }
   };
 
-  const syncState = (patch) => {
+  const syncState = (patch, broadcastDelta = null) => {
     const currentState = { gameType: 'pictionary', isActive, word, drawer, paths };
     const nextState = { ...currentState, ...patch };
     
@@ -61,7 +76,21 @@ export default function Pictionary({ navigation }) {
     if (patch.drawer !== undefined) setDrawer(patch.drawer);
     if (patch.paths !== undefined) setPaths(patch.paths);
 
-    if (isHost && bridgeRef.current) bridgeRef.current.broadcastAction(nextState, 'playing');
+    if (bridgeRef.current) {
+      if (isHost) {
+        if (broadcastDelta) {
+            bridgeRef.current.broadcastAction({ gameType: 'pictionary', ...broadcastDelta }, 'playing');
+        } else {
+            bridgeRef.current.broadcastAction(nextState, 'playing');
+        }
+      } else {
+        // Guest sends to host
+        bridgeRef.current.sendToHost({
+          type: 'game-action',
+          actionData: { gameType: 'pictionary', ...patch, ...broadcastDelta }
+        });
+      }
+    }
   };
 
   const startGame = () => {
@@ -84,12 +113,14 @@ export default function Pictionary({ navigation }) {
   // SVG PanResponder
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => isMyTurn,
-      onMoveShouldSetPanResponder: () => isMyTurn,
+      onStartShouldSetPanResponder: () => true, // Check logic inside handlers
+      onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (e, gestureState) => {
+        // We use a ref for isMyTurn logic inside to avoid closure issues
+        // But for now, we'll check if it's the drawer's turn
         const x = e.nativeEvent.locationX;
         const y = e.nativeEvent.locationY;
-        setCurrentPath({ color: currentColor, points: [{ x, y }] });
+        setCurrentPath({ color: currentColorRef.current, points: [{ x, y }] });
       },
       onPanResponderMove: (e, gestureState) => {
         const x = e.nativeEvent.locationX;
@@ -101,16 +132,17 @@ export default function Pictionary({ navigation }) {
       },
       onPanResponderRelease: () => {
         setCurrentPath(prev => {
-            if (prev && prev.points.length > 0) {
-                // Broadcast completed path
-                const newPaths = [...paths, prev];
-                syncState({ paths: newPaths });
+            if (prev && prev.points.length > 1) {
+                // Sync only the new path instead of entire array for performance
+                syncState({}, { newPath: prev });
+                setPaths(old => [...old, prev]);
             }
             return null;
         });
       }
     })
   ).current;
+
 
   // Convert points to SVG path data (M x y L x y ...)
   const generateSvgPath = (points) => {

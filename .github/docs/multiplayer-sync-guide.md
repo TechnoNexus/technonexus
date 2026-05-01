@@ -97,28 +97,23 @@ connections.current = [
 
 Only the HOST broadcasts state. Guests NEVER broadcast.
 
-```javascript
-// In NexusRoomManager, inside useEffect
-if (!isHost) return;  // Only host broadcasts
+### Rule 2: Host Relay for Guest Actions
 
-// Host broadcasts to all connected guests
-const activeConnections = connections.current.filter(c => c.open);
-activeConnections.forEach(conn => {
-  try {
-    conn.send({
-      type: 'start-game',
-      status: 'playing',
-      customGame: customGame,  // ✅ Include game data
-      gameMode: gameMode,      // ✅ Include mode
-      timestamp: Date.now()    // ✅ Include timestamp for ordering
-    });
-  } catch (e) {
-    console.error('Failed to send start-game:', e);
-  }
-});
+In games where guests initiate real-time state changes (like Pictionary drawing), the host must relay the guest's action to all other participants.
+
+```javascript
+// In NexusRoomManager, host's data handler
+if (data.type === 'game-action') {
+  // 1. Update local state
+  applyRoomAction(data.actionData, data.roomStatus);
+
+  // 2. RELAY to all OTHER guests
+  // Use excludePeer to avoid echoing back to the sender
+  broadcastRoomAction(data.actionData, data.roomStatus, conn.peer);
+}
 ```
 
-### Rule 2: Atomic Updates
+### Rule 3: Atomic Updates
 
 Never send state in multiple messages. Combine into one:
 

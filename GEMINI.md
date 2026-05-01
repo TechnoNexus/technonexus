@@ -30,6 +30,9 @@ If the user asks you to perform a specific task, you MUST read the corresponding
 - **Deployment:** Optimized for Cloudflare Pages (Edge Runtime).
 - **State Management:** Use Zustand for games; React Context/State for apps.
 - **AI Engine:** ALWAYS use `gemini-2.5-flash` for AI game generation. This is a hard rule.
+- **AI API Usage:** 
+    - Use `/api/generate-game` for generating game content lists (Charades, Pictionary items). It returns a simple array of strings in `gameContent`.
+    - Use `/api/generate-trivia` ONLY for quiz/trivia games. It returns complex objects that will CRASH the UI if rendered as simple text.
 - **Tool Usage Safety:** ALWAYS prefer the `replace` tool for surgical edits to prevent component loss. Use `write_file` ONLY for creating brand-new files.
 
 ### Workflow & Documentation (CRITICAL)

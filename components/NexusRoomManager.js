@@ -330,9 +330,22 @@ export default function NexusRoomManager({ showForge = false }) {
             hapticFeedback(ImpactStyle.Light);
           }
           if (data.type === 'game-action') {
-            // Generic bridge to pass game-specific actions to all clients.
+            let newGame = data.customGame;
+            if (!newGame) {
+                const oldGame = useGameStore.getState().customGame || {};
+                newGame = { ...oldGame, ...data.actionData };
+                if (data.actionData.newPath) {
+                    newGame.paths = [...(oldGame.paths || []), data.actionData.newPath];
+                    delete newGame.newPath;
+                }
+            }
+
+            setCustomGame(newGame);
+            if (data.roomStatus) setRoomStatus(data.roomStatus);
+            hapticFeedback(ImpactStyle.Light);
+
+            // RELAY to other guests
             broadcastRoomAction(data.actionData, data.roomStatus, conn.peer);
-            hapticFeedback(ImpactStyle.Heavy);
           }
           if (data.type === 'npatm-submit') {
             // FIX: Correctly handle action and name for NPATM synchronization
