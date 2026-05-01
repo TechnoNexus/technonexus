@@ -38,6 +38,20 @@ export default function GamesPage() {
       status: 'AVAILABLE',
     },
     {
+      id: 'mr-white',
+      name: 'Undercover',
+      description: 'A social deduction game of hidden words and secret identities. Find the imposter among you.',
+      tag: 'PARTY',
+      status: 'AVAILABLE',
+    },
+    {
+      id: 'pictionary',
+      name: 'Pictionary',
+      description: 'The classic drawing and guessing game. Share a real-time canvas and put your art skills to the test.',
+      tag: 'PARTY',
+      status: 'AVAILABLE',
+    },
+    {
       id: 'neon-runner',
       name: 'Neon Runner',
       description: 'An experimental high-speed arcade experience. Test your reflexes in the digital void.',

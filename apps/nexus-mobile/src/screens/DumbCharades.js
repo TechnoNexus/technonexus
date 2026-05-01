@@ -101,7 +101,8 @@ export default function DumbCharades({ navigation }) {
         setTimer(nextTimer);
         if (nextTimer <= 5 && nextTimer > 0) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         if (nextTimer === 0 && isHost) {
-          syncState({ timer: 0, isActive: false, timerEndsAt: null });
+          const nextTurn = turn === 'teamA' ? 'teamB' : 'teamA';
+          syncState({ timer: 60, isActive: false, timerEndsAt: null, turn: nextTurn, currentWord: '', showWord: true });
         }
       }, 1000);
     } else if (timer === 0 && isActive) {
@@ -110,7 +111,7 @@ export default function DumbCharades({ navigation }) {
       clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [isActive, timerEndsAt, isHost]);
+  }, [isActive, timerEndsAt, isHost, turn]);
 
   const generateWord = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

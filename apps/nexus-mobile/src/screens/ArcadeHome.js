@@ -47,6 +47,20 @@ export default function ArcadeHome({ navigation }) {
         />
 
         <GameCard
+          title="UNDERCOVER"
+          description="A social deduction game of hidden words and secret identities."
+          color={Colors.electricViolet}
+          onPress={() => navigation.navigate('MrWhite')}
+        />
+
+        <GameCard
+          title="PICTIONARY"
+          description="The classic drawing and guessing game on a shared real-time canvas."
+          color={Colors.neonCyan}
+          onPress={() => navigation.navigate('Pictionary')}
+        />
+
+        <GameCard
           title="NEXUS NPATM"
           description="Name, Place, Animal, Thing, Movie. Be the first to shout STOP!"
           color={Colors.neonCyan}

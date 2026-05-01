@@ -313,7 +313,7 @@ export default function DumbCharades() {
                           GUESSED!
                         </button>
                         <button 
-                          onClick={generateWord}
+                          onClick={handlePass}
                           className="py-6 rounded-2xl font-black bg-white/5 text-slate-400 border border-white/10 text-xl"
                         >
                           PASS
@@ -328,6 +328,16 @@ export default function DumbCharades() {
                       </button>
                     )}
                   </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+</div>
                 </div>
               )}
             </>
