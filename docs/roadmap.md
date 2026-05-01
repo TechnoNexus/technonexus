@@ -196,6 +196,7 @@
 
 ## Phase 11 — Advanced Mobile Features & Ecosystem Sync (Up Next)
 - [x] **Global Native Leaderboards**: Build a global "Nexus Rankings" screen on the Dashboard where players can see the top 100 players worldwide for games like NPATM and Blitz.
+- [x] **App Icon & Branding Alignment**: Fixed the app icon configuration across mobile (Expo) and web (Next.js) to consistently use the high-detail `icon.png` asset, resolving issues where the simpler `adaptive-icon.png` or `logo.svg` were being displayed.
 - [ ] **Push Notifications**: Integrate Expo Push Notifications for multiplayer invites (e.g., Ping Friends when a host creates a room).
 - [ ] **In-App Subscriptions (RevenueCat)**: Implement "Nexus Pro" subscriptions for advanced AI judges or unlimited saved vault slots via Apple Pay/Google Play Billing.
 - [x] **Offline Mode Optimization**: Use `AsyncStorage` to aggressively cache the user's "Nexus Vault" to allow browsing saved games without network access.
