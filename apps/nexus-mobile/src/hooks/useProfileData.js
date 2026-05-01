@@ -18,7 +18,7 @@ export function useProfileData(user) {
       const { data, error } = await supabase
         .from('leaderboard')
         .select('wins, total_games')
-        .or(`player_name.eq."${user.email}",player_name.eq."${user.user_metadata?.name || user.email}"`)
+        .in('player_name', [user.email, user.user_metadata?.name || user.email])
         .single();
       
       if (data && !error) {

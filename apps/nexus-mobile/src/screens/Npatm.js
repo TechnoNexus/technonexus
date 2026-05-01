@@ -17,6 +17,7 @@ import GlassPanel from '../components/GlassPanel';
 import NexusRoomBridge from '../networking/NexusRoomBridge';
 import { Colors } from '../theme/Colors';
 import { useNpatmLogic, getPlayerDisplayName } from '../hooks/useNpatmLogic';
+import { getApiUrl } from '../lib/api';
 
 const CATEGORIES = [
   { id: 'name', label: 'Name' },
@@ -147,7 +148,7 @@ export default function Npatm({ navigation }) {
                   <Text style={styles.label}>ROOM ID: {roomId}</Text>
                   {isHost && (
                     <View style={{ marginVertical: 16, alignItems: 'center' }}>
-                      <QRCodeSVG value={`https://technonexus.ca/games/npatm?join=${roomId}`} size={140} color={Colors.neonCyan} backgroundColor="transparent" />
+                      <QRCodeSVG value={getApiUrl(`/games/npatm?join=${roomId}`).replace('/api', '')} size={140} color={Colors.neonCyan} backgroundColor="transparent" />
                       <Text style={styles.scanLabel}>SCAN TO JOIN</Text>
                     </View>
                   )}

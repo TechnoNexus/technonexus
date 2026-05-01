@@ -160,7 +160,7 @@ export default function Pictionary() {
     
     const newPath = { color: currentColor, points: currentPath.current };
     const newPaths = [...gameState.paths, newPath];
-    syncState({ paths: newPaths }, 'playing', { newPath });
+    syncState({ paths: newPaths, newPath }, 'playing');
   };
 
   const isMyTurn = playerName === gameState.drawer || (!gameState.drawer && isHost);

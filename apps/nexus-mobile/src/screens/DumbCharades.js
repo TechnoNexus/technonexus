@@ -6,6 +6,7 @@ import NexusRoomBridge from '../networking/NexusRoomBridge';
 import { Colors } from '../theme/Colors';
 import * as Haptics from 'expo-haptics';
 import QRCodeSVG from 'react-native-qrcode-svg';
+import { getApiUrl } from '../lib/api';
 
 const DATABASE = {
   Movies: [
@@ -133,7 +134,7 @@ export default function DumbCharades({ navigation }) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
     try {
-      const response = await fetch('https://technonexus.ca/api/generate-game', {
+      const response = await fetch(getApiUrl('/api/generate-game'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -229,7 +230,7 @@ export default function DumbCharades({ navigation }) {
                     <View style={{ alignItems: 'center', marginBottom: 24 }}>
                       <View style={{ padding: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(0,255,255,0.2)' }}>
                         <QRCodeSVG
-                          value={`https://technonexus.ca/games/dumb-charades?join=${roomId}`}
+                          value={getApiUrl(`/games/dumb-charades?join=${roomId}`).replace('/api', '')}
                           size={140}
                           color={Colors.neonCyan}
                           backgroundColor="transparent"

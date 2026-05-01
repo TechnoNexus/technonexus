@@ -83,6 +83,11 @@
 - [x] **Live Scoreboard:** Track the exact number of players in the PeerJS session and render a live, dynamic scoreboard after every single round.
 - [x] **Game Modes (Team vs. Individual):** Add a toggle in the Host UI allowing the Host to assign players into Teams or set the game as a Free-For-All (Individual) before starting the mission.
 - [x] **Batch AI Evaluation (Rate Limit Protection):** To prevent hitting Gemini's RPM limits, individual players must not call the evaluation API. The Host must collect all player submissions via PeerJS at the end of a round and make a single batched API call to `evaluate-submission` to score all players simultaneously.
+- [x] **Code Review Fixes:** Addressed multiple high-priority feedback items:
+    - Fixed Pictionary `syncState` parameter mismatch for optimized stroke relay.
+    - Replaced biased shuffle logic with Fisher-Yates across all game engines.
+    - Mitigated SQL injection risk in mobile profile hooks by using `.in()` filters.
+    - Externalized hardcoded API endpoints and QR code domains in the mobile app.
 - [x] **Multiplayer Joining Reliability:** 
     - [x] Implemented 'Nexus-' prefixing for PeerJS IDs to eliminate ID collisions on public servers.
     - [x] Enhanced QR Code to encode full Join URLs for instant mobile access.

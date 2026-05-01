@@ -30,11 +30,17 @@ export default function TeamPicker() {
 
   const generateTeams = () => {
     if (players.length < teamCount) return;
-    
+
     hapticFeedback(ImpactStyle.Heavy);
-    const shuffled = [...players].sort(() => Math.random() - 0.5);
+
+    // Fisher-Yates Shuffle
+    const shuffled = [...players];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
     const newTeams = Array.from({ length: teamCount }, () => []);
-    
     shuffled.forEach((player, index) => {
       newTeams[index % teamCount].push(player);
     });

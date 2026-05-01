@@ -168,7 +168,7 @@ export default function ForgeLobby({ navigation }) {
           <View style={styles.qrBlock}>
             <View style={styles.qrWrapper}>
               <QRCodeSVG
-                value={`https://technonexus.ca/games/ai-forge?join=${roomId}`}
+                value={getApiUrl(`/games/ai-forge?join=${roomId}`).replace('/api', '')}
                 size={148}
                 color={Colors.neonCyan}
                 backgroundColor="transparent"

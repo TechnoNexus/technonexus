@@ -201,7 +201,7 @@ export default function NexusBlitz({ navigation }) {
               <View style={{ alignItems: 'center', marginVertical: 16 }}>
                 <View style={{ padding: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(0,255,255,0.2)' }}>
                   <QRCodeSVG
-                    value={`https://technonexus.ca/games/nexus-blitz?join=${roomId}`}
+                    value={getApiUrl(`/games/nexus-blitz?join=${roomId}`).replace('/api', '')}
                     size={140}
                     color={Colors.neonCyan}
                     backgroundColor="transparent"

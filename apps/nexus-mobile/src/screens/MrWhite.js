@@ -140,13 +140,22 @@ export default function MrWhite({ navigation }) {
         return;
     }
 
+    const shuffle = (array) => {
+      const result = [...array];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    };
+
     const pair = WORD_PAIRS[Math.floor(Math.random() * WORD_PAIRS.length)];
-    let shuffled = [...allPlayers].sort(() => 0.5 - Math.random());
+    let shuffled = shuffle(allPlayers);
     
     const undercovers = shuffled.slice(0, undersReq);
     const mrWhites = shuffled.slice(undersReq, undersReq + whitesReq);
     const civilians = shuffled.slice(undersReq + whitesReq);
-    const newSpeakerOrder = [...allPlayers].sort(() => 0.5 - Math.random());
+    const newSpeakerOrder = shuffle(allPlayers);
 
     syncState({ 
         isActive: true, word: pair[0], undercoverWord: pair[1], 
@@ -180,7 +189,7 @@ export default function MrWhite({ navigation }) {
           if (allActivePlayers.length <= 3) {
               syncState({ eliminatedPlayers: newEliminated, phase: 'end', winner: 'Imposters' });
           } else {
-              const newSpeakerOrder = [...allActivePlayers].sort(() => 0.5 - Math.random());
+              const newSpeakerOrder = shuffle(allActivePlayers);
               syncState({ eliminatedPlayers: newEliminated, phase: 'speaking', speakerOrder: newSpeakerOrder, currentSpeakerIndex: 0 });
           }
       } else {
@@ -203,7 +212,7 @@ export default function MrWhite({ navigation }) {
               if (allActivePlayers.length <= 3) {
                   syncState({ phase: 'end', winner: 'Imposters' });
               } else {
-                  const newSpeakerOrder = [...allActivePlayers].sort(() => 0.5 - Math.random());
+                  const newSpeakerOrder = shuffle(allActivePlayers);
                   syncState({ phase: 'speaking', speakerOrder: newSpeakerOrder, currentSpeakerIndex: 0, guessingPlayer: null });
               }
           }
