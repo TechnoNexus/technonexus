@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as Linking from 'expo-linking';
 import { supabase } from './src/lib/supabase';
 import { usePushNotifications } from './src/hooks/usePushNotifications';
 
@@ -19,9 +20,29 @@ import SettingsScreen from './src/screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
 
+const prefix = Linking.createURL('/');
+
 export default function App() {
   const [session, setSession] = useState(null);
   const { expoPushToken } = usePushNotifications();
+
+  const linking = {
+    prefixes: [prefix, 'https://technonexus.ca', 'https://www.technonexus.ca'],
+    config: {
+      screens: {
+        Dashboard: 'dashboard',
+        Profile: 'profile',
+        Settings: 'settings',
+        ArcadeHome: 'games',
+        ForgeLobby: 'games/ai-forge',
+        NexusBlitz: 'games/nexus-blitz',
+        DumbCharades: 'games/dumb-charades',
+        Npatm: 'games/npatm',
+        MrWhite: 'games/mr-white',
+        Pictionary: 'games/pictionary',
+      },
+    },
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -34,7 +55,7 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,

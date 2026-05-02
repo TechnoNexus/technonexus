@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForgeLogic, getPromptText } from '../hooks/useForgeLogic';
 import {
   ActivityIndicator,
@@ -21,7 +21,7 @@ import { Colors } from '../theme/Colors';
 import { getApiUrl } from '../lib/api';
 import { supabase } from '../lib/supabase';
 
-export default function ForgeLobby({ navigation }) {
+export default function ForgeLobby({ navigation, route }) {
   const { bridgeRef, state, actions } = useForgeLogic();
 
   const {
@@ -65,6 +65,12 @@ export default function ForgeLobby({ navigation }) {
     deleteFromVault,
     cyclePerformancePrompt
   } = actions;
+
+  useEffect(() => {
+    if (route?.params?.join && !joinRoomId) {
+      setJoinRoomId(route.params.join);
+    }
+  }, [route?.params?.join]);
 
   const renderIdentityForm = () => (
     <GlassPanel style={styles.panel} intensity={50}>
