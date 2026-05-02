@@ -110,7 +110,7 @@ export default function MrWhite({ navigation }) {
   const allAssigned = [...undercoverPlayers, ...mrWhitePlayers, ...civilianPlayers];
   const allNetNames = [playerName, ...networkPlayers.map(p => p.name)];
   
-  const myDevicePlayers = allAssigned.filter(p => 
+  const myDevicePlayers = (speakerOrder || []).filter(p => 
     p === playerName || (isHost && !allNetNames.includes(p))
   );
 

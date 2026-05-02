@@ -1,13 +1,11 @@
 import { supabase } from './supabase';
 
-// Helper to push the token. In a real scenario, you'd run an ALTER TABLE to add this column to user_profiles
-// But since we can't alter the schema here easily, we'll assume it exists or fail gracefully.
+// Helper to push the token. 
 export async function savePushToken(userId, token) {
   try {
     const { error } = await supabase
       .from('user_profiles')
-      .update({ push_token: token })
-      .eq('id', userId);
+      .upsert({ id: userId, push_token: token }, { onConflict: 'id' });
       
     if (error) {
       console.error('Error saving push token to Supabase:', error);

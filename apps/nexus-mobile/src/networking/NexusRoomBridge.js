@@ -210,6 +210,11 @@ const createBridgeHtml = () => `
             playerNames[peer.id] = hostSnapshot.hostName;
           }
 
+          if (window.__pendingConnectId) {
+            connectToPeer(window.__pendingConnectId, playerName);
+            window.__pendingConnectId = null;
+          }
+
           sendMessageToNative('open', { id: openedId });
         });
 

@@ -21,10 +21,17 @@ export function usePushNotifications() {
   const responseListener = useRef();
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(token => {
+    registerForPushNotificationsAsync().then(async token => {
       setExpoPushToken(token);
       if (token) {
-        saveTokenToSupabase(token);
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            await savePushToken(session.user.id, token);
+          }
+        } catch (e) {
+          console.error('Failed to save push token on startup', e);
+        }
       }
     });
 
@@ -37,6 +44,16 @@ export function usePushNotifications() {
       // Handle navigation based on notification data here (e.g., join room)
     });
 
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user && expoPushToken) {
+        try {
+          await savePushToken(session.user.id, expoPushToken);
+        } catch (e) {
+          console.error('Failed to save push token on auth change', e);
+        }
+      }
+    });
+
     return () => {
       if (notificationListener.current) {
         Notifications.removeNotificationSubscription(notificationListener.current);
@@ -44,18 +61,9 @@ export function usePushNotifications() {
       if (responseListener.current) {
         Notifications.removeNotificationSubscription(responseListener.current);
       }
+      authListener?.subscription?.unsubscribe();
     };
-  }, []);
-
-  const saveTokenToSupabase = async (token) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
-      await savePushToken(session.user.id, token);
-    } catch (e) {
-      console.error('Failed to save push token', e);
-    }
-  };
+  }, [expoPushToken]);
 
   return { expoPushToken, notification };
 }
