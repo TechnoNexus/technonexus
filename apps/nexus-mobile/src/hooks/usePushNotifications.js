@@ -96,7 +96,7 @@ async function registerForPushNotificationsAsync() {
       ).data;
       console.log(token);
     } catch (e) {
-      token = `${e}`;
+      console.error('Error getting push token:', e);
     }
   } else {
     console.log('Must use physical device for Push Notifications');
