@@ -147,11 +147,14 @@ export default function NexusRoomManager({ showForge = false }) {
         useGameStore.getState().updateSessionLeaderboard(data.results);
       }
 
-      // Update persistent leaderboard with the top scorer
+      // Update persistent leaderboard with the top scorer and record participation for all
       if (data.results?.length > 0) {
         const topScorer = [...data.results].sort((a, b) => b.score - a.score)[0];
+        const allPlayerNames = data.results.map(r => r.name);
         if (topScorer?.name && topScorer.score > 0) {
-          updateLeaderboard(topScorer.name);
+          updateLeaderboard(topScorer.name, allPlayerNames);
+        } else {
+          updateLeaderboard(null, allPlayerNames); // Record participation only
         }
       }
 
@@ -495,9 +498,11 @@ export default function NexusRoomManager({ showForge = false }) {
 
   const joinRoom = () => {
     if (!playerName) return alert("Enter nickname first!");
-    if (!targetId && !peer) return alert("Enter Room ID!");
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinId = urlParams.get('join');
+    if (!targetId && !joinId && !peer) return alert("Enter Room ID!");
     if (!peer) initPeer(); 
-    else handleJoin();
+    else handleJoin(joinId || targetId);
   };
 
   // Main broadcast effect - triggers on state changes
@@ -603,7 +608,15 @@ export default function NexusRoomManager({ showForge = false }) {
   useEffect(() => {
     const handleLocalSubmit = (e) => {
       const { submission } = e.detail;
-      if (isHost) setSubmissions(prev => [...prev, { name: playerName, submission }]);
+      if (isHost) {
+        setSubmissions(prev => {
+          const existing = prev.find(s => s.name === playerName);
+          if (existing) {
+            return prev.map(s => s.name === playerName ? { name: playerName, submission } : s);
+          }
+          return [...prev, { name: playerName, submission }];
+        });
+      }
       else if (hostConnection.current) {
         hostConnection.current.send({ type: 'submit-raw-submission', name: playerName, submission });
       }

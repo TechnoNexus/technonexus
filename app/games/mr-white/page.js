@@ -104,7 +104,7 @@ export default function MrWhite() {
     ...(gameState.civilianPlayers || [])
   ];
 
-  const myDevicePlayers = allAssignedPlayers.filter(p => 
+  const myDevicePlayers = (gameState.speakerOrder || []).filter(p => 
     p === playerName || (isHost && !allNetworkNames.includes(p))
   );
 

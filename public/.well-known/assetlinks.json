@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ca.technonexus.nexusarcade",
+      "sha256_cert_fingerprints": [
+        "6B:7D:DB:6F:34:EC:D0:BA:F0:C2:96:1F:68:E1:5B:FA:82:F9:05:50:6F:45:7B:00:D0:FC:A0:B3:D0:82:3F:5A"
+      ]
+    }
+  }
+]

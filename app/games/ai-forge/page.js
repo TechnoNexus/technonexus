@@ -418,6 +418,29 @@ export default function AIForgeGame() {
                      </button>
                    </div>
                 </div>
+              ) : customGame.gameType === 'quiz' ? (
+                <>
+                  <p className="text-slate-400 leading-relaxed mb-4 italic">"{customGame.instructions}"</p>
+                  <div className="w-full text-left max-h-48 overflow-y-auto mb-4 pr-2 custom-scrollbar space-y-3">
+                    {customGame.gameContent?.map((q, i) => (
+                       <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                         <p className="text-sm font-bold text-neon-cyan">Q{i+1}: {q.question || q.content || q}</p>
+                       </div>
+                    ))}
+                  </div>
+                  <textarea 
+                    value={submission}
+                    onChange={(e) => setSubmission(e.target.value)}
+                    placeholder="Type answers (e.g. 1. A, 2. B)..."
+                    className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-base text-white focus:border-neon-cyan transition-all outline-none h-32 resize-none shadow-inner"
+                  />
+                  <button 
+                    onClick={finishGame}
+                    className="w-full py-4 rounded-2xl bg-white text-black font-black uppercase tracking-widest hover:bg-neon-cyan transition-colors mt-auto"
+                  >
+                    Submit Early
+                  </button>
+                </>
               ) : (
                 <>
                   <p className="text-slate-400 leading-relaxed mb-8 italic">"{customGame.instructions}"</p>

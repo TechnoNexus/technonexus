@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { recordGlobalWin } from '../lib/leaderboard';
+import { recordGlobalGame } from '../lib/leaderboard';
 
 export const useGameStore = create(
   persist(
@@ -41,23 +41,26 @@ export const useGameStore = create(
       setRoomScores: (scores) => set({ roomScores: scores }),
       setRoundVerdict: (verdict) => set({ roundVerdict: verdict }),
       setRoomStatus: (status) => set({ roomStatus: status }),
-      updateLeaderboard: (winnerName) => {
+      updateLeaderboard: (winnerName, allPlayers = []) => {
         const currentLeaderboard = get().leaderboard;
-        const playerIndex = currentLeaderboard.findIndex(p => p.name === winnerName);
-        
-        if (playerIndex > -1) {
-          const updated = [...currentLeaderboard];
-          updated[playerIndex].wins += 1;
-          updated[playerIndex].totalGames += 1;
-          set({ leaderboard: updated.sort((a, b) => b.wins - a.wins) });
-        } else {
-          set({ 
-            leaderboard: [...currentLeaderboard, { name: winnerName, wins: 1, totalGames: 1 }]
-              .sort((a, b) => b.wins - a.wins) 
-          });
-        }
+        const updated = [...currentLeaderboard];
+        const playersToProcess = allPlayers.length > 0 ? allPlayers : (winnerName ? [winnerName] : []);
 
-        recordGlobalWin(winnerName);
+        playersToProcess.forEach(player => {
+          const isWinner = player === winnerName;
+          const playerIndex = updated.findIndex(p => p.name === player);
+          
+          if (playerIndex > -1) {
+            if (isWinner) updated[playerIndex].wins += 1;
+            updated[playerIndex].totalGames += 1;
+          } else {
+            updated.push({ name: player, wins: isWinner ? 1 : 0, totalGames: 1 });
+          }
+          
+          recordGlobalGame(player, isWinner);
+        });
+
+        set({ leaderboard: updated.sort((a, b) => b.wins - a.wins) });
       },
       updateSessionLeaderboard: (results) => {
         set((state) => {

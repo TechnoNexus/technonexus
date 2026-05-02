@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
   username    TEXT UNIQUE,
   avatar_url  TEXT,
   bio         TEXT,
+  push_token  TEXT,
   created_at  TIMESTAMPTZ DEFAULT now() NOT NULL,
   updated_at  TIMESTAMPTZ DEFAULT now() NOT NULL
 );
@@ -129,7 +130,7 @@ CREATE POLICY "sessions_host_insert"
   ON public.game_sessions FOR INSERT
   WITH CHECK (auth.uid() = host_id OR host_id IS NULL);
 
--- leaderboard: public read, anyone can upsert via record_win()
+-- leaderboard: public read, anyone can upsert via record_game()
 ALTER TABLE public.leaderboard ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "leaderboard_public_read"
@@ -146,4 +147,6 @@ CREATE POLICY "leaderboard_anon_update"
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_user_games_user_id    ON public.user_games (user_id);
 CREATE INDEX IF NOT EXISTS idx_game_sessions_host_id ON public.game_sessions (host_id);
+CREATE INDEX IF NOT EXISTS idx_leaderboard_wins       ON public.leaderboard (wins DESC);
+st_id);
 CREATE INDEX IF NOT EXISTS idx_leaderboard_wins       ON public.leaderboard (wins DESC);

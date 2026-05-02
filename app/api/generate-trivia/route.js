@@ -35,6 +35,7 @@ export async function POST(req) {
       Generate exactly ${count} multiple-choice questions.
 
       Rules:
+      - CRITICAL FOR REPLAYABILITY: The questions MUST be highly unique, diverse, and unpredictable. DO NOT use standard, overused trivia questions. Dig deep into obscure or specific facts. Behave as if initialized with a random seed.
       - Each question must have exactly 4 options labeled "A", "B", "C", "D"
       - correctOption must be exactly one of: "A", "B", "C", "D"
       - Make questions interesting and varied in difficulty

@@ -48,6 +48,8 @@ export async function POST(req) {
       If the language is Hinglish, use a mix of Hindi (written in Roman script) and English.
       
       You must design a quick, fun party game based on this idea. 
+      CRITICAL FOR REPLAYABILITY: You MUST generate highly unique, obscure, and diverse words/items for the 'gameContent'. NEVER use common, generic, or predictable examples. Actively avoid repeating standard words. To ensure true randomness, behave as if initialized with a random seed.
+      
       Decide the best "gameType" based on the prompt:
       - 'performance': For Charades, Acting, or Pictionary. Provide a list of items to act out in 'gameContent'.
       - 'text': For Creative Writing, Poetry, or Storytelling. Players type their response.
