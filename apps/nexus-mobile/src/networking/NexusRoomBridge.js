@@ -360,6 +360,16 @@ const NexusRoomBridge = forwardRef((props, ref) => {
         initPeer(undefined, ${JSON.stringify(playerName)});
       `);
     },
+    startGame: (customGame, gameMode) => {
+      const payload = JSON.stringify({
+        type: 'start-game',
+        status: 'playing',
+        customGame,
+        gameMode,
+        timestamp: Date.now()
+      });
+      inject(`broadcastData(${JSON.stringify(payload)});`);
+    },
     broadcastAction: (actionData, nextStatus) => {
       const payload = JSON.stringify({
         type: 'game-action',

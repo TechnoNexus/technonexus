@@ -3,10 +3,10 @@ import { StyleSheet, Text, View, TextInput, Pressable, KeyboardAvoidingView, Pla
 import SpatialBackground from '../components/SpatialBackground';
 import GlassPanel from '../components/GlassPanel';
 import NexusRoomBridge from '../networking/NexusRoomBridge';
+import UnifiedGameLobby from '../components/UnifiedGameLobby';
 import { Colors } from '../theme/Colors';
 import * as Haptics from 'expo-haptics';
 import { getApiUrl } from '../lib/api';
-import QRCodeSVG from 'react-native-qrcode-svg';
 
 const QUESTION_TIME = 15;
 const OPTION_KEYS = ['A', 'B', 'C', 'D'];
@@ -14,12 +14,15 @@ const OPTION_KEYS = ['A', 'B', 'C', 'D'];
 export default function NexusBlitz({ navigation }) {
   const bridgeRef = useRef(null);
   
-  // Lobby State
-  const [playerName, setPlayerName] = useState('');
-  const [joinRoomId, setJoinRoomId] = useState('');
-  const [status, setStatus] = useState('Disconnected');
+  // Replaced useGameStore with local state for Mobile
   const [roomId, setRoomId] = useState('');
   const [isHost, setIsHost] = useState(false);
+  const [playerName, setPlayerName] = useState('');
+  const [players, setPlayers] = useState([]);
+  const [customGame, setCustomGame] = useState(null);
+  const [roomStatus, setRoomStatus] = useState('idle');
+
+  const [status, setStatus] = useState('Disconnected');
 
   // Game State
   const [phase, setPhase] = useState('setup'); // setup | loading | playing | result
@@ -41,17 +44,17 @@ export default function NexusBlitz({ navigation }) {
     else if (action === 'error') setStatus('Error');
     else if (action === 'data') {
       const payload = data.payload;
+      if (payload.type === 'start-game' && payload.customGame?.gameType === 'blitz') {
+        setQuiz(payload.customGame.quiz);
+        setPhase('playing');
+        setCurrentIndex(0);
+        setScores([]);
+        setSelected(null);
+        setRevealed(false);
+        setTimeLeft(QUESTION_TIME);
+      }
       if (payload.type === 'game-action' && payload.actionData && payload.actionData.gameType === 'blitz') {
         const state = payload.actionData;
-        if (state.quiz) {
-          setQuiz(state.quiz);
-          setPhase('playing');
-          setCurrentIndex(0);
-          setScores([]);
-          setSelected(null);
-          setRevealed(false);
-          setTimeLeft(QUESTION_TIME);
-        }
         if (state.blitzResult) {
           setRoomResults(prev => {
             const exists = prev.find(r => r.name === state.blitzResult.name);
@@ -64,7 +67,7 @@ export default function NexusBlitz({ navigation }) {
   };
 
   const generateQuiz = async () => {
-    if (!topic.trim() || (roomId && !isHost)) return;
+    if (!topic.trim()) return alert('Choose a topic first!');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setPhase('loading');
     
@@ -88,17 +91,18 @@ export default function NexusBlitz({ navigation }) {
       setPhase('playing');
       
       if (roomId && bridgeRef.current) {
-        bridgeRef.current.broadcastAction({
+        bridgeRef.current.startGame({
           gameType: 'blitz',
           quiz: data,
           topic: topic.trim(),
           language,
-          questionCount
+          questionCount,
+          roundId: Date.now()
         }, 'playing');
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {
-      alert('Failed to generate quiz. Check network or try another topic.');
+      alert('Failed to generate quiz. Try another topic.');
       setPhase('setup');
     }
   };
@@ -169,65 +173,13 @@ export default function NexusBlitz({ navigation }) {
     }
   }, [phase]);
 
-  const renderSetup = () => (
-    <View style={{ gap: 24 }}>
-      {!roomId ? (
-        <GlassPanel style={styles.panel} intensity={50}>
-          <Text style={styles.label}>YOUR IDENTITY</Text>
-          <TextInput style={styles.input} placeholder="NICKNAME" placeholderTextColor={Colors.slateGray} value={playerName} onChangeText={setPlayerName} autoCapitalize="characters" />
-          
-          <Pressable onPress={() => { if(playerName){ setIsHost(true); setStatus('Creating...'); bridgeRef.current?.createRoom(playerName); } }} style={[styles.primaryButton, !playerName && styles.disabled, { marginTop: 16, backgroundColor: Colors.violetGlow, borderColor: Colors.electricViolet }]}>
-            <Text style={[styles.primaryButtonText, { color: Colors.electricViolet }]}>HOST GAME</Text>
-          </Pressable>
-          
-          <View style={{ flexDirection: 'row', gap: 16, marginTop: 8 }}>
-            <TextInput style={[styles.input, { flex: 1 }]} placeholder="ROOM ID" placeholderTextColor={Colors.slateGray} value={joinRoomId} onChangeText={setJoinRoomId} autoCapitalize="characters" />
-            <Pressable onPress={() => { if(playerName && joinRoomId){ setIsHost(false); setRoomId(joinRoomId); setStatus('Connecting...'); bridgeRef.current?.joinRoom(joinRoomId, playerName); } }} style={[styles.primaryButton, (!playerName || !joinRoomId) && styles.disabled, { marginBottom: 0, paddingHorizontal: 24 }]}>
-              <Text style={styles.primaryButtonText}>JOIN</Text>
-            </Pressable>
-          </View>
-          <Text style={[styles.statusText, { marginTop: 16 }]}>STATUS: {status.toUpperCase()}</Text>
-        </GlassPanel>
-      ) : (
-        <GlassPanel style={styles.panel} intensity={50}>
-          <View style={{ alignItems: 'center', marginBottom: 16 }}>
-            <Text style={styles.label}>ACTIVE ROOM</Text>
-            <Text style={{ color: Colors.white, fontSize: 32, fontWeight: '900' }}>{roomId}</Text>
-            <Text style={[styles.statusText, { color: Colors.neonCyan, marginTop: 8 }]}>{status.toUpperCase()}</Text>
-          </View>
-          
-          {isHost ? (
-            <View style={{ gap: 16 }}>
-              <View style={{ alignItems: 'center', marginVertical: 16 }}>
-                <View style={{ padding: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(0,255,255,0.2)' }}>
-                  <QRCodeSVG
-                    value={getApiUrl(`/games/nexus-blitz?join=${roomId}`).replace('/api', '')}
-                    size={140}
-                    color={Colors.neonCyan}
-                    backgroundColor="transparent"
-                  />
-                </View>
-                <Text style={{ color: Colors.neonCyan, fontSize: 8, fontWeight: '900', letterSpacing: 2, marginTop: 8 }}>SCAN TO JOIN TRIVIA</Text>
-              </View>
-
-              <Text style={styles.label}>QUIZ TOPIC</Text>
-              <TextInput style={styles.input} placeholder="e.g. Space, Movies..." placeholderTextColor={Colors.slateGray} value={topic} onChangeText={setTopic} />
-              <Pressable onPress={generateQuiz} disabled={!topic} style={[styles.primaryButton, !topic && styles.disabled, { backgroundColor: '#FACC1533', borderColor: '#FACC15' }]}>
-                <Text style={[styles.primaryButtonText, { color: '#FACC15' }]}>GENERATE & START</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <Text style={{ color: Colors.slateGray, textAlign: 'center', marginVertical: 16 }}>Waiting for Host to generate quiz...</Text>
-          )}
-        </GlassPanel>
-      )}
-    </View>
-  );
+  const handleStartMission = () => {
+      generateQuiz();
+  };
 
   const renderPlaying = () => {
     if (!quiz) return null;
     const q = quiz.questions[currentIndex];
-    
     return (
       <View style={{ flex: 1 }}>
         <GlassPanel style={[styles.panel, { marginBottom: 24, borderColor: '#FACC1540' }]} intensity={50}>
@@ -321,7 +273,7 @@ export default function NexusBlitz({ navigation }) {
           </GlassPanel>
         )}
 
-        <Pressable onPress={() => { setPhase('setup'); setRoomId(''); setStatus('Ready'); Haptics.impactAsync(); }} style={[styles.primaryButton, { backgroundColor: 'transparent' }]}>
+        <Pressable onPress={() => { setPhase('setup'); setRoomStatus('idle'); Haptics.impactAsync(); }} style={[styles.primaryButton, { backgroundColor: 'transparent' }]}>
           <Text style={styles.primaryButtonText}>EXIT TO LOBBY</Text>
         </Pressable>
       </View>
@@ -344,15 +296,45 @@ export default function NexusBlitz({ navigation }) {
           </View>
         </View>
 
-        {phase === 'setup' && renderSetup()}
-        {phase === 'loading' && (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 100 }}>
-            <ActivityIndicator size="large" color="#FACC15" />
-            <Text style={{ color: Colors.slateGray, marginTop: 24, fontWeight: 'bold', letterSpacing: 2 }}>GENERATING QUIZ...</Text>
-          </View>
+        {(phase === 'setup' || !roomId) ? (
+              <UnifiedGameLobby
+              gameTitle="Nexus Blitz"
+              onStart={handleStartMission}
+              isHost={isHost}
+              setIsHost={setIsHost}
+              playerName={playerName}
+              setPlayerName={setPlayerName}
+              players={players}
+              roomStatus={roomStatus}
+              roomId={roomId}
+              setRoomId={setRoomId}
+              status={status}
+              bridgeRef={bridgeRef}
+              customSettingsUI={
+                <View style={{ gap: 16 }}>
+                    <Text style={styles.label}>QUIZ TOPIC</Text>
+                    <TextInput 
+                        style={styles.input} 
+                        placeholder="e.g. Space, Movies..." 
+                        placeholderTextColor={Colors.slateGray} 
+                        value={topic} 
+                        onChangeText={setTopic} 
+                    />
+                </View>
+              }
+            />
+        ) : (
+          <>
+            {phase === 'loading' && (
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 100 }}>
+                <ActivityIndicator size="large" color="#FACC15" />
+                <Text style={{ color: Colors.slateGray, marginTop: 24, fontWeight: 'bold', letterSpacing: 2 }}>GENERATING QUIZ...</Text>
+              </View>
+            )}
+            {phase === 'playing' && renderPlaying()}
+            {phase === 'result' && renderResult()}
+          </>
         )}
-        {phase === 'playing' && renderPlaying()}
-        {phase === 'result' && renderResult()}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -360,7 +342,7 @@ export default function NexusBlitz({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.darkBg },
-  scrollContent: { padding: 24, paddingTop: 60 },
+  scrollContent: { padding: 24, paddingTop: 60, paddingBottom: 120 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 40 },
   backButton: { padding: 8 },
   headerIcon: { color: Colors.neonCyan, fontSize: 24, fontWeight: 'bold' },

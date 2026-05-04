@@ -17,6 +17,25 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
   updated_at  TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
+-- Enable RLS
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Allow users to view their own profile
+CREATE POLICY "Users can view their own profile"
+ON public.user_profiles FOR SELECT
+USING (auth.uid() = id);
+
+-- Allow users to insert their own profile
+CREATE POLICY "Users can insert their own profile"
+ON public.user_profiles FOR INSERT
+WITH CHECK (auth.uid() = id);
+
+-- Allow users to update their own profile (push_token, etc.)
+CREATE POLICY "Users can update their own profile"
+ON public.user_profiles FOR UPDATE
+USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);
+
 -- Auto-create a blank profile row when a new user signs up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$

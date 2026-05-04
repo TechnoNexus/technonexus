@@ -5,6 +5,31 @@
 ### Current Status
 ⚠️ **CRITICAL**: RLS policies are NOT enabled by default. All user data is publicly accessible.
 
+### Enable RLS on `user_profiles` Table
+
+Execute the following SQL in your Supabase SQL Editor:
+
+```sql
+-- Enable RLS on user_profiles table
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Allow users to view their own profile
+CREATE POLICY "Users can view their own profile"
+ON user_profiles FOR SELECT
+USING (auth.uid() = id);
+
+-- Allow users to insert their own profile
+CREATE POLICY "Users can insert their own profile"
+ON user_profiles FOR INSERT
+WITH CHECK (auth.uid() = id);
+
+-- Allow users to update their own profile (push_token, etc.)
+CREATE POLICY "Users can update their own profile"
+ON user_profiles FOR UPDATE
+USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);
+```
+
 ### Enable RLS on `user_games` Table
 
 Execute the following SQL in your Supabase SQL Editor:

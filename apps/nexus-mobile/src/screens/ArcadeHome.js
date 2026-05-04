@@ -66,6 +66,13 @@ export default function ArcadeHome({ navigation }) {
           color={Colors.neonCyan}
           onPress={() => navigation.navigate('Npatm')}
         />
+
+        <GameCard
+          title="MAFIA"
+          description="A digital social deduction game of logic and deceit. Identify the rogue agents."
+          color={Colors.electricViolet}
+          onPress={() => navigation.navigate('Mafia')}
+        />
       </ScrollView>
     </View>
   );

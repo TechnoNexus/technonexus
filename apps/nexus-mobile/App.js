@@ -17,6 +17,7 @@ import MrWhite from './src/screens/MrWhite';
 import Pictionary from './src/screens/Pictionary';
 import NexusProPaywall from './src/screens/NexusProPaywall';
 import SettingsScreen from './src/screens/SettingsScreen';
+import Mafia from './src/screens/Mafia';
 
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +41,7 @@ export default function App() {
         Npatm: 'games/npatm',
         MrWhite: 'games/mr-white',
         Pictionary: 'games/pictionary',
+        Mafia: 'games/mafia',
       },
     },
   };
@@ -77,6 +79,7 @@ export default function App() {
               <Stack.Screen name="Npatm" component={Npatm} />
               <Stack.Screen name="MrWhite" component={MrWhite} />
               <Stack.Screen name="Pictionary" component={Pictionary} />
+              <Stack.Screen name="Mafia" component={Mafia} />
             </Stack.Group>
             <Stack.Group screenOptions={{ presentation: 'modal', animation: 'slide_from_bottom' }}>
               <Stack.Screen name="NexusProPaywall" component={NexusProPaywall} />

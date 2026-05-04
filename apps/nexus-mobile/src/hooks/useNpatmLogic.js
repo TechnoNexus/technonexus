@@ -173,6 +173,15 @@ export function useNpatmLogic() {
       return;
     }
 
+    if (payload.type === 'submit-raw-submission' && isHost) {
+      const submitterName = getPlayerDisplayName(payload.name);
+      setSubmissions((current) => upsertSubmission(current, {
+        name: submitterName,
+        submission: payload.submission
+      }));
+      return;
+    }
+
     if (payload.type === 'batch-results') {
       const results = payload.results || [];
       setRoomScores(results);
@@ -214,8 +223,10 @@ export function useNpatmLogic() {
   };
 
   useEffect(() => {
-    if (!stopPressedBy || hasSubmitted || roomStatus !== 'finished') return;
+    if (!stopPressedBy || hasSubmitted) return;
 
+    // Auto-submit if someone pressed STOP, regardless of roomStatus timing
+    console.log('🛑 Auto-submitting mobile NPATM for guest because STOP was pressed by:', stopPressedBy);
     const myName = getPlayerDisplayName(playerName);
 
     if (isHost) {
@@ -225,17 +236,14 @@ export function useNpatmLogic() {
       }));
     } else {
       bridgeRef.current?.sendToHost({
-        type: 'npatm-submit',
-        action: 'SUBMIT',
+        type: 'submit-raw-submission',
         name: myName,
-        submission: inputs,
-        roundId: roundIdRef.current,
-        timestamp: Date.now()
+        submission: inputs
       });
     }
 
     setHasSubmitted(true);
-  }, [hasSubmitted, inputs, isHost, playerName, roomStatus, stopPressedBy]);
+  }, [stopPressedBy, hasSubmitted, inputs, isHost, playerName]);
 
   const handleSubmit = async () => {
     if (stopPressedBy || hasSubmitted) return;
@@ -253,6 +261,13 @@ export function useNpatmLogic() {
         submission: inputs
       }));
       syncState({ stopPressedBy: myName }, 'finished');
+      
+      // Also send to "self" via bridge so the Room Manager captures it
+      bridgeRef.current?.sendToHost({
+        type: 'submit-raw-submission',
+        name: myName,
+        submission: inputs
+      });
       return;
     }
 
