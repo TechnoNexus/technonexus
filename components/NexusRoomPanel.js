@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
 

@@ -7,7 +7,8 @@ import QRCodeSVG from 'react-native-qrcode-svg';
 import { getApiUrl } from '../lib/api';
 
 export default function UnifiedGameLobby({ 
-  gameTitle, 
+  gameTitle,
+  gameSlug,
   customSettingsUI, 
   onStart, 
   isHost, 

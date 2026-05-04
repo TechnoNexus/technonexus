@@ -73,7 +73,12 @@ export default function Mafia({ navigation }) {
       return;
     }
 
-    const shuffled = [...unifiedPlayers].sort(() => Math.random() - 0.5);
+    const shuffled = [...unifiedPlayers];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
     const playersWithRoles = shuffled.map((p, i) => {
       let role = 'USER';
       if (i === 0) role = 'ROGUE AI';

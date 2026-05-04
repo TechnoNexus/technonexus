@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabase';
 export const runtime = 'edge';
 
 const CORS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://technonexus.ca',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
@@ -24,11 +24,12 @@ export async function POST(req) {
     }
 
     // 1. Fetch all user profiles with a push token
-    // In a real app, you'd filter by 'friends' or 'recent players'
+    // Limit to 100 to avoid Edge memory limits and spamming
     const { data: profiles, error: fetchError } = await supabase
       .from('user_profiles')
       .select('push_token')
-      .not('push_token', 'is', null);
+      .not('push_token', 'is', null)
+      .limit(100);
 
     if (fetchError) throw fetchError;
 
@@ -40,6 +41,8 @@ export async function POST(req) {
       });
     }
 
+    const gameSlug = (gameType || 'ai-forge').toLowerCase().replace(/\s+/g, '-');
+
     // 2. Prepare the Expo Push messages
     const messages = tokens.map(token => ({
       to: token,
@@ -50,24 +53,33 @@ export async function POST(req) {
         type: 'invite',
         roomId: roomId,
         gameType: gameType,
-        url: `https://technonexus.ca/games/${gameType || 'ai-forge'}?join=${roomId}`
+        url: `https://technonexus.ca/games/${gameSlug}?join=${roomId}`
       },
     }));
 
-    // 3. Send to Expo Push API
-    const response = await fetch('https://exp.host/--/api/v2/push/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Accept-encoding': 'gzip, deflate',
-      },
-      body: JSON.stringify(messages),
-    });
+    // 3. Send to Expo Push API in chunks of 100
+    const chunkSize = 100;
+    const chunks = [];
+    for (let i = 0; i < messages.length; i += chunkSize) {
+      chunks.push(messages.slice(i, i + chunkSize));
+    }
 
-    const result = await response.json();
+    const results = [];
+    for (const chunk of chunks) {
+      const response = await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Accept-encoding': 'gzip, deflate',
+        },
+        body: JSON.stringify(chunk),
+      });
+      const result = await response.json();
+      results.push(result);
+    }
 
-    return new Response(JSON.stringify({ success: true, result }), {
+    return new Response(JSON.stringify({ success: true, results }), {
       headers: { 'Content-Type': 'application/json', ...CORS }
     });
 
