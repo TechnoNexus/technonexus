@@ -161,6 +161,7 @@ export default function Mafia({ navigation }) {
         {gameState.phase === 'lobby' ? (
           <UnifiedGameLobby
             gameTitle="Digital Insurgency"
+            gameSlug="mafia"
             onStart={handleStartMission}
             isHost={isHost}
             setIsHost={setIsHost}
