@@ -3,22 +3,21 @@ import { StyleSheet, Text, View, TextInput, Pressable, KeyboardAvoidingView, Pla
 import SpatialBackground from '../components/SpatialBackground';
 import GlassPanel from '../components/GlassPanel';
 import NexusRoomBridge from '../networking/NexusRoomBridge';
+import UnifiedGameLobby from '../components/UnifiedGameLobby';
 import { Colors } from '../theme/Colors';
 import * as Haptics from 'expo-haptics';
 import Svg, { Path } from 'react-native-svg';
-
-const WORDS = ["Airplane", "Banana", "Cat", "Dog", "Elephant", "Fish", "Guitar", "House", "Igloo", "Jellyfish", "Kite", "Lion", "Monkey", "Ninja", "Octopus", "Penguin", "Queen", "Robot", "Snake", "Tree", "Unicorn", "Volcano", "Watermelon", "X-ray", "Yoyo", "Zebra"];
-
 export default function Pictionary({ navigation }) {
   const bridgeRef = useRef(null);
 
-  // Lobby State
-  const [playerName, setPlayerName] = useState('');
-  const [joinRoomId, setJoinRoomId] = useState('');
-  const [status, setStatus] = useState('Disconnected');
   const [roomId, setRoomId] = useState('');
   const [isHost, setIsHost] = useState(false);
-  const [networkPlayers, setNetworkPlayers] = useState([]);
+  const [playerName, setPlayerName] = useState('');
+  const [players, setPlayers] = useState([]);
+  const [customGame, setCustomGame] = useState(null);
+  const [roomStatus, setRoomStatus] = useState('idle');
+
+  const [status, setStatus] = useState('Disconnected');
 
   // Game State
   const [isActive, setIsActive] = useState(false);
@@ -44,16 +43,9 @@ export default function Pictionary({ navigation }) {
     else if (action === 'data') {
       const payload = data.payload;
       
-      if (payload.type === 'player-list-update' || payload.type === 'welcome') {
-          if (payload.players) setNetworkPlayers(payload.players);
-      }
-
       if (payload.type === 'game-action' && payload.actionData && payload.actionData.gameType === 'pictionary') {
         const state = payload.actionData;
-        if (state.isActive !== undefined) setIsActive(state.isActive);
-        if (state.word !== undefined) setWord(state.word);
-        if (state.drawer !== undefined) setDrawer(state.drawer);
-        if (state.paths !== undefined) setPaths(state.paths);
+        applyState(state);
         
         // Handle new path relay
         if (state.newPath) {
@@ -67,14 +59,18 @@ export default function Pictionary({ navigation }) {
     }
   };
 
+  const applyState = (state) => {
+    if (state.isActive !== undefined) setIsActive(state.isActive);
+    if (state.word !== undefined) setWord(state.word);
+    if (state.drawer !== undefined) setDrawer(state.drawer);
+    if (state.paths !== undefined) setPaths(state.paths);
+  };
+
   const syncState = (patch, broadcastDelta = null) => {
     const currentState = { gameType: 'pictionary', isActive, word, drawer, paths };
     const nextState = { ...currentState, ...patch };
     
-    if (patch.isActive !== undefined) setIsActive(patch.isActive);
-    if (patch.word !== undefined) setWord(patch.word);
-    if (patch.drawer !== undefined) setDrawer(patch.drawer);
-    if (patch.paths !== undefined) setPaths(patch.paths);
+    applyState(patch);
 
     if (bridgeRef.current) {
       if (isHost) {
@@ -93,11 +89,17 @@ export default function Pictionary({ navigation }) {
     }
   };
 
-  const startGame = () => {
+  useEffect(() => {
+    if (customGame?.gameType === 'pictionary') {
+        applyState(customGame);
+    }
+  }, [customGame]);
+
+  const handleStartMission = (unifiedPlayers) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    const allNetNames = isHost ? [playerName, ...networkPlayers.map(p => p.name)] : [];
+    const playerNames = unifiedPlayers.map(p => p.name);
     
-    const nextDrawer = allNetNames[Math.floor(Math.random() * allNetNames.length)] || playerName;
+    const nextDrawer = playerNames[Math.floor(Math.random() * playerNames.length)] || playerName;
     const newWord = WORDS[Math.floor(Math.random() * WORDS.length)];
 
     syncState({ isActive: true, word: newWord, drawer: nextDrawer, paths: [] });
@@ -113,11 +115,9 @@ export default function Pictionary({ navigation }) {
   // SVG PanResponder
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true, // Check logic inside handlers
+      onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (e, gestureState) => {
-        // We use a ref for isMyTurn logic inside to avoid closure issues
-        // But for now, we'll check if it's the drawer's turn
         const x = e.nativeEvent.locationX;
         const y = e.nativeEvent.locationY;
         setCurrentPath({ color: currentColorRef.current, points: [{ x, y }] });
@@ -166,96 +166,80 @@ export default function Pictionary({ navigation }) {
           <View style={styles.headerSpacer} />
         </View>
 
-        {!roomId ? (
-          <GlassPanel style={styles.panel} intensity={50}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>YOUR IDENTITY</Text>
-              <TextInput style={styles.input} placeholder="NICKNAME" placeholderTextColor={Colors.slateGray} value={playerName} onChangeText={setPlayerName} autoCapitalize="characters" autoCorrect={false} />
-            </View>
-            <Pressable onPress={() => { if(playerName){ setIsHost(true); setStatus('Creating...'); bridgeRef.current?.createRoom(playerName); } }} style={[styles.primaryButton, !playerName && styles.disabled]}>
-              <Text style={styles.primaryButtonText}>HOST GAME</Text>
-            </Pressable>
-            <View style={styles.joinRow}>
-              <TextInput style={[styles.input, styles.flexInput]} placeholder="ROOM ID" placeholderTextColor={Colors.slateGray} value={joinRoomId} onChangeText={setJoinRoomId} autoCapitalize="characters" autoCorrect={false} />
-              <Pressable onPress={() => { if(playerName && joinRoomId){ setIsHost(false); setRoomId(joinRoomId); setStatus('Connecting...'); bridgeRef.current?.joinRoom(joinRoomId, playerName); } }} style={[styles.joinButton, (!playerName || !joinRoomId) && styles.disabled]}>
-                <Text style={styles.primaryButtonText}>JOIN</Text>
-              </Pressable>
-            </View>
-            <Text style={styles.statusText}>STATUS: {status.toUpperCase()}</Text>
-          </GlassPanel>
+        {!roomId || (!isActive && roomStatus === 'idle') ? (
+          <UnifiedGameLobby
+            gameTitle="Nexus Pictionary"
+            onStart={handleStartMission}
+            isHost={isHost}
+            setIsHost={setIsHost}
+            playerName={playerName}
+            setPlayerName={setPlayerName}
+            players={players}
+            roomStatus={roomStatus}
+            roomId={roomId}
+            setRoomId={setRoomId}
+            status={status}
+            bridgeRef={bridgeRef}
+          />
         ) : (
           <View style={styles.gameContainer}>
-            <Text style={styles.roomCodeTitle}>ROOM: {roomId}</Text>
-            
-            {!isActive ? (
-                <View style={styles.lobbyView}>
-                  {isHost ? (
-                    <Pressable onPress={startGame} style={styles.primaryButton}>
-                      <Text style={styles.primaryButtonText}>START ROUND</Text>
-                    </Pressable>
-                  ) : (
-                    <Text style={styles.waitingText}>Waiting for host to start...</Text>
-                  )}
-                </View>
-            ) : (
-                <View style={styles.playingView}>
-                    <Text style={styles.turnLabel}>DRAWER: {drawer}</Text>
-                    {isMyTurn ? (
-                        <Text style={styles.myWordText}>{word}</Text>
-                    ) : (
-                        <Text style={styles.guessText}>GUESS THE DRAWING</Text>
-                    )}
+            <View style={styles.playingView}>
+                <Text style={styles.turnLabel}>DRAWER: {drawer}</Text>
+                {isMyTurn ? (
+                    <Text style={styles.myWordText}>{word}</Text>
+                ) : (
+                    <Text style={styles.guessText}>GUESS THE DRAWING</Text>
+                )}
 
-                    {isMyTurn && (
-                        <View style={styles.colorRow}>
-                            {['#000000', '#00FFFF', '#8B5CF6', '#FFFFFF', '#FF0055', '#FFFF00', '#00FF00'].map(c => (
-                                <Pressable 
-                                    key={c} 
-                                    onPress={() => setCurrentColor(c)}
-                                    style={[styles.colorBubble, {backgroundColor: c}, currentColor === c && styles.colorBubbleActive, c === '#000000' && {borderWidth: 1, borderColor: currentColor === c ? Colors.white : 'rgba(255,255,255,0.2)'}]}
-                                />
-                            ))}
-                            <Pressable onPress={clearCanvas} style={styles.clearButton}>
-                                <Text style={styles.clearButtonText}>CLEAR</Text>
-                            </Pressable>
-                        </View>
-                    )}
-
-                    <View style={styles.canvasContainer} {...(isMyTurn ? panResponder.panHandlers : {})}>
-                        <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
-                            {/* Render synced paths */}
-                            {paths.map((p, idx) => (
-                                <Path 
-                                    key={`path-${idx}`} 
-                                    d={generateSvgPath(p.points)} 
-                                    stroke={p.color} 
-                                    strokeWidth={4} 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    fill="none" 
-                                />
-                            ))}
-                            {/* Render active current drawing path */}
-                            {currentPath && (
-                                <Path 
-                                    d={generateSvgPath(currentPath.points)} 
-                                    stroke={currentPath.color} 
-                                    strokeWidth={4} 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    fill="none" 
-                                />
-                            )}
-                        </Svg>
-                    </View>
-
-                    {isHost && (
-                        <Pressable onPress={startGame} style={[styles.primaryButton, {marginTop: 24, backgroundColor: 'transparent', borderColor: Colors.slateGray}]}>
-                            <Text style={[styles.primaryButtonText, {color: Colors.slateGray}]}>NEXT ROUND</Text>
+                {isMyTurn && (
+                    <View style={styles.colorRow}>
+                        {['#000000', '#00FFFF', '#8B5CF6', '#FFFFFF', '#FF0055', '#FFFF00', '#00FF00'].map(c => (
+                            <Pressable 
+                                key={c} 
+                                onPress={() => setCurrentColor(c)}
+                                style={[styles.colorBubble, {backgroundColor: c}, currentColor === c && styles.colorBubbleActive, c === '#000000' && {borderWidth: 1, borderColor: currentColor === c ? Colors.white : 'rgba(255,255,255,0.2)'}]}
+                            />
+                        ))}
+                        <Pressable onPress={clearCanvas} style={styles.clearButton}>
+                            <Text style={styles.clearButtonText}>CLEAR</Text>
                         </Pressable>
-                    )}
+                    </View>
+                )}
+
+                <View style={styles.canvasContainer} {...(isMyTurn ? panResponder.panHandlers : {})}>
+                    <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
+                        {/* Render synced paths */}
+                        {paths.map((p, idx) => (
+                            <Path 
+                                key={`path-${idx}`} 
+                                d={generateSvgPath(p.points)} 
+                                stroke={p.color} 
+                                strokeWidth={4} 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                fill="none" 
+                            />
+                        ))}
+                        {/* Render active current drawing path */}
+                        {currentPath && (
+                            <Path 
+                                d={generateSvgPath(currentPath.points)} 
+                                stroke={currentPath.color} 
+                                strokeWidth={4} 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                fill="none" 
+                            />
+                        )}
+                    </Svg>
                 </View>
-            )}
+
+                {isHost && (
+                    <Pressable onPress={handleStartMission} style={[styles.primaryButton, {marginTop: 24, backgroundColor: 'transparent', borderColor: Colors.slateGray}]}>
+                        <Text style={[styles.primaryButtonText, {color: Colors.slateGray}]}>NEXT ROUND</Text>
+                    </Pressable>
+                )}
+            </View>
           </View>
         )}
       </ScrollView>

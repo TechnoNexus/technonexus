@@ -3,9 +3,9 @@ import { StyleSheet, Text, View, TextInput, Pressable, KeyboardAvoidingView, Pla
 import SpatialBackground from '../components/SpatialBackground';
 import GlassPanel from '../components/GlassPanel';
 import NexusRoomBridge from '../networking/NexusRoomBridge';
+import UnifiedGameLobby from '../components/UnifiedGameLobby';
 import { Colors } from '../theme/Colors';
 import * as Haptics from 'expo-haptics';
-import QRCodeSVG from 'react-native-qrcode-svg';
 import { getApiUrl } from '../lib/api';
 
 const DATABASE = {
@@ -27,12 +27,15 @@ const DATABASE = {
 export default function DumbCharades({ navigation }) {
   const bridgeRef = useRef(null);
   
-  // Lobby State
-  const [playerName, setPlayerName] = useState('');
-  const [joinRoomId, setJoinRoomId] = useState('');
-  const [status, setStatus] = useState('Disconnected');
+  // Replaced useGameStore with local state for Mobile
   const [roomId, setRoomId] = useState('');
   const [isHost, setIsHost] = useState(false);
+  const [playerName, setPlayerName] = useState('');
+  const [players, setPlayers] = useState([]);
+  const [customGame, setCustomGame] = useState(null);
+  const [roomStatus, setRoomStatus] = useState('idle');
+
+  const [status, setStatus] = useState('Disconnected');
 
   // Game State
   const [category, setCategory] = useState('Movies');
@@ -59,23 +62,27 @@ export default function DumbCharades({ navigation }) {
       const payload = data.payload;
       if (payload.type === 'game-action' && payload.actionData && payload.actionData.gameType === 'charades') {
         const state = payload.actionData;
-        if (state.category) setCategory(state.category);
-        if (state.currentWord !== undefined) setCurrentWord(state.currentWord);
-        if (state.isActive !== undefined) setIsActive(state.isActive);
-        if (state.showWord !== undefined) setShowWord(state.showWord);
-        if (state.score) {
-          setScoreA(state.score.teamA || 0);
-          setScoreB(state.score.teamB || 0);
-        }
-        if (state.turn) setTurn(state.turn);
-        if (state.timerEndsAt) setTimerEndsAt(state.timerEndsAt);
-        if (state.timer !== undefined && !state.isActive) setTimer(state.timer);
-        if (state.customList) setCustomList(state.customList);
+        applyState(state);
       }
     }
   };
 
-  const syncState = (patch) => {
+  const applyState = (patch) => {
+    if (patch.category) setCategory(patch.category);
+    if (patch.currentWord !== undefined) setCurrentWord(patch.currentWord);
+    if (patch.isActive !== undefined) setIsActive(patch.isActive);
+    if (patch.showWord !== undefined) setShowWord(patch.showWord);
+    if (patch.score) {
+      setScoreA(patch.score.teamA || 0);
+      setScoreB(patch.score.teamB || 0);
+    }
+    if (patch.turn) setTurn(patch.turn);
+    if (patch.timerEndsAt !== undefined) setTimerEndsAt(patch.timerEndsAt);
+    if (patch.timer !== undefined && !patch.isActive) setTimer(patch.timer);
+    if (patch.customList !== undefined) setCustomList(patch.customList);
+  };
+
+  const syncState = (patch, nextStatus) => {
     const currentState = {
       gameType: 'charades',
       category, currentWord, isActive, showWord, 
@@ -84,22 +91,18 @@ export default function DumbCharades({ navigation }) {
     };
     const nextState = { ...currentState, ...patch };
     
-    // Apply locally
-    if (patch.category) setCategory(patch.category);
-    if (patch.currentWord !== undefined) setCurrentWord(patch.currentWord);
-    if (patch.isActive !== undefined) setIsActive(patch.isActive);
-    if (patch.showWord !== undefined) setShowWord(patch.showWord);
-    if (patch.score) { setScoreA(patch.score.teamA); setScoreB(patch.score.teamB); }
-    if (patch.turn) setTurn(patch.turn);
-    if (patch.timerEndsAt !== undefined) setTimerEndsAt(patch.timerEndsAt);
-    if (patch.timer !== undefined) setTimer(patch.timer);
-    if (patch.customList) setCustomList(patch.customList);
+    applyState(patch);
 
-    // Broadcast if host
     if (isHost && bridgeRef.current) {
-      bridgeRef.current.broadcastAction(nextState, 'playing');
+      bridgeRef.current.broadcastAction(nextState, nextStatus || 'playing');
     }
   };
+
+  useEffect(() => {
+    if (customGame?.gameType === 'charades') {
+        applyState(customGame);
+    }
+  }, [customGame]);
 
   useEffect(() => {
     let interval = null;
@@ -177,6 +180,10 @@ export default function DumbCharades({ navigation }) {
     syncState({ isActive: true, timerEndsAt: Date.now() + (timer * 1000) });
   };
 
+  const handleStartMission = (unifiedPlayers) => {
+    generateWord();
+  };
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <SpatialBackground />
@@ -191,23 +198,52 @@ export default function DumbCharades({ navigation }) {
           <View style={styles.headerSpacer} />
         </View>
 
-        {!roomId ? (
-          <GlassPanel style={styles.panel} intensity={50}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>YOUR IDENTITY</Text>
-              <TextInput style={styles.input} placeholder="NICKNAME" placeholderTextColor={Colors.slateGray} value={playerName} onChangeText={setPlayerName} autoCapitalize="characters" autoCorrect={false} />
-            </View>
-            <Pressable onPress={() => { if(playerName){ setIsHost(true); setStatus('Creating...'); bridgeRef.current?.createRoom(playerName); } }} style={[styles.primaryButton, !playerName && styles.disabled]}>
-              <Text style={styles.primaryButtonText}>HOST GAME</Text>
-            </Pressable>
-            <View style={styles.joinRow}>
-              <TextInput style={[styles.input, styles.flexInput]} placeholder="ROOM ID" placeholderTextColor={Colors.slateGray} value={joinRoomId} onChangeText={setJoinRoomId} autoCapitalize="characters" autoCorrect={false} />
-              <Pressable onPress={() => { if(playerName && joinRoomId){ setIsHost(false); setRoomId(joinRoomId); setStatus('Connecting...'); bridgeRef.current?.joinRoom(joinRoomId, playerName); } }} style={[styles.joinButton, (!playerName || !joinRoomId) && styles.disabled]}>
-                <Text style={styles.primaryButtonText}>JOIN</Text>
-              </Pressable>
-            </View>
-            <Text style={styles.statusText}>STATUS: {status.toUpperCase()}</Text>
-          </GlassPanel>
+        {(!roomId || (roomStatus === 'idle' && !currentWord)) ? (
+           <UnifiedGameLobby
+             gameTitle="Dumb Charades"
+             onStart={handleStartMission}
+             isHost={isHost}
+             setIsHost={setIsHost}
+             playerName={playerName}
+             setPlayerName={setPlayerName}
+             players={players}
+             roomStatus={roomStatus}
+             roomId={roomId}
+             setRoomId={setRoomId}
+             status={status}
+             bridgeRef={bridgeRef}
+             customSettingsUI={
+               <View>
+                 <View style={styles.aiSection}>
+                    <Text style={styles.label}>FORGE CUSTOM TOPIC</Text>
+                    <View style={styles.joinRow}>
+                      <TextInput 
+                        style={[styles.input, styles.flexInput]} 
+                        placeholder="e.g. Bollywood, Baby items" 
+                        placeholderTextColor={Colors.slateGray} 
+                        value={aiPrompt} 
+                        onChangeText={setAiPrompt} 
+                      />
+                      <Pressable 
+                        onPress={generateAIWords} 
+                        disabled={isGenerating || !aiPrompt}
+                        style={[styles.joinButton, {backgroundColor: Colors.electricViolet + '33', borderColor: Colors.electricViolet}]}>
+                        <Text style={[styles.primaryButtonText, {color: Colors.electricViolet}]}>{isGenerating ? '...' : 'FORGE'}</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+
+                  <Text style={[styles.label, {textAlign: 'center', marginBottom: 12}]}>OR CHOOSE CATEGORY</Text>
+                  <View style={styles.categoryRow}>
+                    {Object.keys(DATABASE).map(cat => (
+                      <Pressable key={cat} onPress={() => { setCategory(cat); setCustomList(null); syncState({category: cat, customList: null}, 'idle'); }} style={[styles.catChip, category === cat && !customList && styles.catChipActive]}>
+                        <Text style={[styles.catChipText, category === cat && !customList && styles.catChipTextActive]}>{cat.replace('_', ' ')}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+               </View>
+             }
+           />
         ) : (
           <GlassPanel style={styles.panel} intensity={50}>
             <View style={styles.scoreBoard}>
@@ -223,99 +259,45 @@ export default function DumbCharades({ navigation }) {
             
             <Text style={styles.timerText}>{timer}s</Text>
 
-            {isHost ? (
-              <View>
-                {!currentWord ? (
-                  <View>
-                    <View style={{ alignItems: 'center', marginBottom: 24 }}>
-                      <View style={{ padding: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(0,255,255,0.2)' }}>
-                        <QRCodeSVG
-                          value={getApiUrl(`/games/dumb-charades?join=${roomId}`).replace('/api', '')}
-                          size={140}
-                          color={Colors.neonCyan}
-                          backgroundColor="transparent"
-                        />
-                      </View>
-                      <Text style={{ color: Colors.neonCyan, fontSize: 8, fontWeight: '900', letterSpacing: 2, marginTop: 8 }}>SCAN TO JOIN ROOM</Text>
-                    </View>
-
-                    <View style={styles.aiSection}>
-                      <Text style={styles.label}>FORGE CUSTOM TOPIC</Text>
-                      <View style={styles.joinRow}>
-                        <TextInput 
-                          style={[styles.input, styles.flexInput]} 
-                          placeholder="e.g. Bollywood, Baby items" 
-                          placeholderTextColor={Colors.slateGray} 
-                          value={aiPrompt} 
-                          onChangeText={setAiPrompt} 
-                        />
-                        <Pressable 
-                          onPress={generateAIWords} 
-                          disabled={isGenerating || !aiPrompt}
-                          style={[styles.joinButton, {backgroundColor: Colors.electricViolet + '33', borderColor: Colors.electricViolet}]}>
-                          <Text style={[styles.primaryButtonText, {color: Colors.electricViolet}]}>{isGenerating ? '...' : 'FORGE'}</Text>
+            <View>
+                <Text style={styles.turnText}>TURN: {turn === 'teamA' ? 'TEAM A' : 'TEAM B'}</Text>
+                {isHost ? (
+                    <View>
+                        {showWord ? (
+                        <Text style={styles.wordText}>{currentWord}</Text>
+                        ) : (
+                        <Pressable onPress={() => syncState({ showWord: true })} style={styles.revealButton}>
+                            <Text style={styles.primaryButtonText}>REVEAL WORD</Text>
                         </Pressable>
-                      </View>
+                        )}
+                        {isActive ? (
+                        <View style={styles.actionRow}>
+                            <Pressable onPress={handlePoint} style={[styles.actionButton, {backgroundColor: Colors.neonCyan}]}>
+                            <Text style={styles.actionButtonTextBlack}>GUESSED!</Text>
+                            </Pressable>
+                            <Pressable onPress={handlePass} style={[styles.actionButton, {backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.slateGray}]}>
+                            <Text style={styles.actionButtonText}>PASS</Text>
+                            </Pressable>
+                        </View>
+                        ) : (
+                        <View style={styles.actionRow}>
+                            <Pressable onPress={startTimer} style={styles.primaryButton}>
+                            <Text style={styles.primaryButtonText}>START TIMER</Text>
+                            </Pressable>
+                            <Pressable onPress={() => syncState({currentWord: ''}, 'idle')} style={[styles.primaryButton, {backgroundColor: 'transparent', flex: 0.4}]}>
+                            <Text style={styles.primaryButtonText}>NEW TOPIC</Text>
+                            </Pressable>
+                        </View>
+                        )}
                     </View>
-
-                    <Text style={[styles.label, {textAlign: 'center', marginBottom: 12}]}>OR CHOOSE CATEGORY</Text>
-                    <View style={styles.categoryRow}>
-                      {Object.keys(DATABASE).map(cat => (
-                        <Pressable key={cat} onPress={() => { setCategory(cat); setCustomList(null); syncState({category: cat, customList: null}); }} style={[styles.catChip, category === cat && !customList && styles.catChipActive]}>
-                          <Text style={[styles.catChipText, category === cat && !customList && styles.catChipTextActive]}>{cat.replace('_', ' ')}</Text>
-                        </Pressable>
-                      ))}
-                    </View>
-
-                    <Pressable onPress={generateWord} style={styles.primaryButton}>
-                      <Text style={styles.primaryButtonText}>GENERATE WORD</Text>
-                    </Pressable>
-                  </View>
                 ) : (
-                  <View>
-                    <Text style={styles.turnText}>TURN: {turn === 'teamA' ? 'TEAM A' : 'TEAM B'}</Text>
-                    {showWord ? (
-                      <Text style={styles.wordText}>{currentWord}</Text>
-                    ) : (
-                      <Pressable onPress={() => syncState({ showWord: true })} style={styles.revealButton}>
-                        <Text style={styles.primaryButtonText}>REVEAL WORD</Text>
-                      </Pressable>
-                    )}
-                    {isActive ? (
-                      <View style={styles.actionRow}>
-                        <Pressable onPress={handlePoint} style={[styles.actionButton, {backgroundColor: Colors.neonCyan}]}>
-                          <Text style={styles.actionButtonTextBlack}>GUESSED!</Text>
-                        </Pressable>
-                        <Pressable onPress={handlePass} style={[styles.actionButton, {backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.slateGray}]}>
-                          <Text style={styles.actionButtonText}>PASS</Text>
-                        </Pressable>
-                      </View>
-                    ) : (
-                      <View style={styles.actionRow}>
-                        <Pressable onPress={startTimer} style={styles.primaryButton}>
-                          <Text style={styles.primaryButtonText}>START TIMER</Text>
-                        </Pressable>
-                        <Pressable onPress={() => syncState({currentWord: ''})} style={[styles.primaryButton, {backgroundColor: 'transparent', flex: 0.4}]}>
-                          <Text style={styles.primaryButtonText}>NEW TOPIC</Text>
-                        </Pressable>
-                      </View>
-                    )}
-                  </View>
+                    <View style={styles.guestView}>
+                        <Text style={styles.guestTitle}>GUEST DISPLAY</Text>
+                        <Text style={styles.hiddenWord}>SECRET WORD HIDDEN</Text>
+                        <Text style={styles.waitingText}>Watch the host's screen!</Text>
+                    </View>
                 )}
-              </View>
-            ) : (
-              <View style={styles.guestView}>
-                <Text style={styles.guestTitle}>GUEST DISPLAY</Text>
-                {currentWord ? (
-                  <View>
-                    <Text style={styles.hiddenWord}>SECRET WORD HIDDEN</Text>
-                    <Text style={styles.turnText}>TURN: {turn === 'teamA' ? 'TEAM A' : 'TEAM B'}</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.waitingText}>Waiting for host...</Text>
-                )}
-              </View>
-            )}
+            </View>
           </GlassPanel>
         )}
       </ScrollView>
@@ -325,7 +307,7 @@ export default function DumbCharades({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.darkBg },
-  scrollContent: { padding: 24, paddingTop: 60 },
+  scrollContent: { padding: 24, paddingTop: 60, paddingBottom: 120 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 },
   backButton: { padding: 8 },
   headerIcon: { color: Colors.neonCyan, fontSize: 24, fontWeight: 'bold' },
@@ -360,9 +342,8 @@ const styles = StyleSheet.create({
   waitingText: { color: Colors.slateGray, fontSize: 14, fontStyle: 'italic' },
   aiSection: { marginBottom: 24, padding: 16, backgroundColor: 'rgba(139, 92, 246, 0.05)', borderRadius: 20, borderLeftWidth: 4, borderLeftColor: Colors.electricViolet },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24, justifyContent: 'center' },
-  catChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWith: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)' },
+  catChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)' },
   catChipActive: { borderColor: Colors.neonCyan, backgroundColor: Colors.neonCyan + '22' },
   catChipText: { color: Colors.slateGray, fontSize: 10, fontWeight: 'bold' },
   catChipTextActive: { color: Colors.neonCyan },
 });
-

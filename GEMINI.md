@@ -34,7 +34,11 @@ If the user asks you to perform a specific task, you MUST read the corresponding
 - **AI API Usage:** 
     - Use `/api/generate-game` for generating game content lists (Charades, Pictionary items). It returns a simple array of strings in `gameContent`.
     - Use `/api/generate-trivia` ONLY for quiz/trivia games. It returns complex objects that will CRASH the UI if rendered as simple text.
-- **Tool Usage Safety:** ALWAYS prefer the `replace` tool for surgical edits to prevent component loss. Use `write_file` ONLY for creating brand-new files.
+- **Unified Game Protocol:** 
+    - All new games MUST use the `<UnifiedGameLobby>` component. Do NOT implement custom hosting, joining, or player-count logic.
+    - Games should receive an `activePlayers` array. Use the `isLocal` flag to manage pass-and-play transitions.
+- **Tool Usage Safety:** 
+    - ALWAYS prefer the `replace` tool for surgical edits to prevent component loss. Use `write_file` ONLY for creating brand-new files.
 
 ### Workflow & Documentation (CRITICAL)
 - **CRITICAL DOCUMENTATION RULE:** Before you finish ANY response, you must automatically update `docs/roadmap.md` and check off any tasks you just completed. If you write code, you must update the roadmap. Do not skip this step under any circumstances.

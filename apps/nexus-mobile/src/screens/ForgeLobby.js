@@ -203,8 +203,16 @@ export default function ForgeLobby({ navigation, route }) {
               style={styles.pingButton}
               onPress={async () => {
                 await tap(Haptics.ImpactFeedbackStyle.Light);
-                // Placeholder for actual Push Notification backend call
-                Alert.alert('Ping Sent', 'Your friends have been notified to join the room!');
+                const res = await sendRoomInvite(
+                  playerName || normalizedName || 'NEXUS HOST', 
+                  roomId, 
+                  'AI Forge'
+                );
+                if (res.success) {
+                  Alert.alert('Ping Sent', 'Your friends have been notified to join the room!');
+                } else {
+                  Alert.alert('Ping Failed', 'Could not reach the Nexus notification server.');
+                }
               }}
             >
               <Text style={styles.pingButtonText}>PING FRIENDS</Text>

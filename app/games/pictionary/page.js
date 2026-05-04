@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Haptics, ImpactStyle } from '../../../lib/haptics';
-import NexusRoomManager from '../../../components/NexusRoomManager';
+import UnifiedGameLobby from '../../../components/UnifiedGameLobby';
 import { useGameStore } from '../../../store/gameStore';
 
 const WORDS = [
@@ -94,12 +94,12 @@ export default function Pictionary() {
     });
   };
 
-  const startGame = () => {
+  const handleStartMission = (unifiedPlayers) => {
     Haptics.impact({ style: ImpactStyle.Heavy });
-    const allPlayers = isHost ? [playerName, ...players.map(p => p.name)] : [];
+    const playerNames = unifiedPlayers.map(p => p.name);
     
     // Pick a random drawer
-    const nextDrawer = allPlayers[Math.floor(Math.random() * allPlayers.length)] || playerName;
+    const nextDrawer = playerNames[Math.floor(Math.random() * playerNames.length)] || playerName;
     const word = WORDS[Math.floor(Math.random() * WORDS.length)];
 
     syncState({
@@ -122,7 +122,7 @@ export default function Pictionary() {
 
   // Drawing Handlers
   const startDrawing = (e) => {
-    if (playerName !== gameState.drawer && isHost !== (gameState.drawer === '')) return;
+    if (playerName !== gameState.drawer) return;
     isDrawing.current = true;
     const rect = canvasRef.current.getBoundingClientRect();
     const x = (e.clientX || e.touches?.[0].clientX) - rect.left;
@@ -140,7 +140,6 @@ export default function Pictionary() {
     const lastPoint = currentPath.current[currentPath.current.length - 1];
     currentPath.current.push({x, y});
 
-    // Draw locally immediately
     const ctx = canvasRef.current.getContext('2d');
     ctx.strokeStyle = currentColor;
     ctx.lineCap = 'round';
@@ -157,112 +156,84 @@ export default function Pictionary() {
   const stopDrawing = () => {
     if (!isDrawing.current) return;
     isDrawing.current = false;
-    
-    const newPath = { color: currentColor, points: currentPath.current };
-    const newPaths = [...gameState.paths, newPath];
-    syncState({ paths: newPaths, newPath }, 'playing');
+    const nextPaths = [...(gameState.paths || []), { color: currentColor, points: currentPath.current }];
+    syncState({ paths: nextPaths });
+    currentPath.current = [];
   };
-
-  const isMyTurn = playerName === gameState.drawer || (!gameState.drawer && isHost);
 
   return (
     <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col pb-32 md:pb-8">
-      <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
+      <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col">
         <header className="flex justify-between items-center mb-8">
           <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm p-2 min-w-[44px] min-h-[44px] flex items-center">← EXIT</Link>
           <button 
             onClick={resetGame}
-            disabled={!gameState.isActive}
-            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest border transition-all min-h-[44px] ${
-              !gameState.isActive
-                ? 'opacity-50 cursor-not-allowed border-slate-700 text-slate-600' 
-                : 'border-red-500/40 text-red-500 hover:bg-red-500/20 bg-red-500/10'
-            }`}
+            className="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest border border-red-500/40 text-red-500 hover:bg-red-500/20 transition-all min-h-[44px]"
           >
-            × QUIT
+            × RESET
           </button>
         </header>
 
-        <NexusRoomManager />
-
-        <div className="glass-panel rounded-[2rem] p-8 border-white/10 text-center flex-1 flex flex-col items-center">
-          <h1 className="text-4xl font-black tracking-tighter uppercase mb-2 gradient-text-cyan">Pictionary</h1>
-
-          {!gameState.isActive ? (
-            <div className="flex-1 flex flex-col items-center justify-center w-full">
-              {isHost ? (
-                <button 
-                  onClick={startGame}
-                  className="w-full max-w-md py-6 rounded-2xl font-black bg-neon-cyan text-black shadow-neon-glow text-xl"
-                >
-                  START ROUND
-                </button>
-              ) : (
-                <p className="text-slate-400 italic">Waiting for host to start...</p>
-              )}
-            </div>
-          ) : (
-            <div className="w-full flex-1 flex flex-col items-center">
-              <div className="mb-6">
-                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">
-                  DRAWER: <span className="text-white">{gameState.drawer}</span>
-                </p>
-                {isMyTurn ? (
-                  <p className="text-2xl font-black text-neon-cyan mt-2">{gameState.word}</p>
-                ) : (
-                  <p className="text-2xl font-black text-white mt-2">GUESS THE DRAWING</p>
-                )}
-              </div>
-
-              {isMyTurn && (
-                <div className="flex gap-2 mb-4 flex-wrap justify-center">
-                  {['#000000', '#00FFFF', '#8B5CF6', '#FFFFFF', '#FF0055', '#FFFF00', '#00FF00'].map(color => (
-                    <button
-                      key={color}
-                      onClick={() => setCurrentColor(color)}
-                      className={`w-8 h-8 rounded-full border-2 transition-transform ${currentColor === color ? 'scale-125 border-white' : 'border-transparent'}`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                  <button 
-                    onClick={clearCanvas}
-                    className="ml-4 px-4 py-1 rounded bg-red-500/20 text-red-500 font-bold text-xs uppercase"
-                  >
-                    CLEAR
-                  </button>
+        {gameState.isActive ? (
+          <div className="flex-1 flex flex-col space-y-6">
+            <div className="glass-panel p-6 rounded-[2rem] border-white/10 text-center">
+              <h2 className="text-xs font-black tracking-widest text-slate-500 uppercase mb-4">
+                {playerName === gameState.drawer ? 'YOU ARE DRAWING' : `${gameState.drawer.toUpperCase()} IS DRAWING`}
+              </h2>
+              {playerName === gameState.drawer && (
+                <div className="bg-neon-cyan/10 border border-neon-cyan/20 p-6 rounded-2xl mb-4">
+                   <p className="text-[10px] font-bold text-neon-cyan uppercase tracking-widest mb-1">Secret Word</p>
+                   <h1 className="text-4xl font-black tracking-tighter text-white uppercase">{gameState.word}</h1>
                 </div>
               )}
-
-              <div className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-neon-glow relative touch-none">
-                <canvas
-                  ref={canvasRef}
-                  width={800}
-                  height={600}
-                  className="w-full h-full aspect-video cursor-crosshair"
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseOut={stopDrawing}
-                  onTouchStart={startDrawing}
-                  onTouchMove={draw}
-                  onTouchEnd={stopDrawing}
-                />
-                {!isMyTurn && (
-                  <div className="absolute inset-0 z-10" /> 
-                )}
-              </div>
-
-              {isHost && (
-                <button 
-                  onClick={startGame}
-                  className="mt-8 px-8 py-4 rounded-xl font-black bg-white/5 text-slate-400 border border-white/10 hover:text-white transition-colors"
-                >
-                  NEXT ROUND (RANDOM DRAWER)
-                </button>
+              {playerName !== gameState.drawer && (
+                 <p className="text-xl font-bold text-white tracking-tight italic">Guess what they are drawing!</p>
               )}
             </div>
-          )}
-        </div>
+
+            <div className="relative flex-1 bg-white rounded-[2.5rem] overflow-hidden shadow-2xl">
+              <canvas
+                ref={canvasRef}
+                width={800}
+                height={600}
+                className="w-full h-full touch-none"
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+              />
+              
+              {playerName === gameState.drawer && (
+                <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center bg-black/80 backdrop-blur-xl p-4 rounded-2xl border border-white/10">
+                   <div className="flex gap-3">
+                      {['#00FFFF', '#8B5CF6', '#FACC15', '#F43F5E', '#FFFFFF'].map(color => (
+                        <button 
+                          key={color}
+                          onClick={() => setCurrentColor(color)}
+                          className={`w-10 h-10 rounded-full border-2 transition-all ${currentColor === color ? 'border-white scale-110' : 'border-transparent'}`}
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                   </div>
+                   <button 
+                    onClick={clearCanvas}
+                    className="px-6 py-3 bg-red-500 text-white font-black text-[10px] rounded-xl uppercase tracking-widest hover:bg-red-600 transition-colors"
+                   >
+                     Clear
+                   </button>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <UnifiedGameLobby
+            gameTitle="Nexus Pictionary"
+            onStart={handleStartMission}
+          />
+        )}
       </div>
     </div>
   );

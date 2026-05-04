@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import NexusRoomManager from '@/components/NexusRoomManager';
+import UnifiedGameLobby from '@/components/UnifiedGameLobby';
 import { Haptics } from '@/lib/haptics';
 
 // Simple SVG Icons
@@ -46,7 +46,8 @@ export default function NPATMPage() {
     setCustomGame, 
     setRoomStatus, 
     playerName,
-    roomScores
+    roomScores,
+    sessionLeaderboard
   } = useGameStore();
 
   const [inputs, setInputs] = useState({
@@ -81,8 +82,7 @@ export default function NPATMPage() {
     setIsSubmitting(true);
     Haptics.notification('success');
 
-    const me = players.find(p => p.isMe);
-    const myName = playerName || me?.name || 'Anonymous';
+    const myName = playerName || 'Anonymous';
     
     // Dispatch STOP action to room if first
     if (!customGame?.stopPressedBy) {
@@ -103,21 +103,22 @@ export default function NPATMPage() {
       });
       setRoomStatus('finished');
     }
-  }, [isSubmitting, inputs, playerName, players, isHost, customGame, setCustomGame, setRoomStatus]);
+  }, [isSubmitting, inputs, playerName, isHost, customGame, setCustomGame, setRoomStatus]);
 
   // Sync state from customGame
   useEffect(() => {
     if (customGame?.stopPressedBy) {
       setStopPressedBy(customGame.stopPressedBy);
-      // Auto-submit if game is active and we haven't submitted
-      if (roomStatus === 'playing' && !isSubmitting) {
+      // Auto-submit if we haven't submitted yet and someone pressed STOP
+      if (!isSubmitting) {
+        console.log('🛑 Auto-submitting NPATM for guest because STOP was pressed by:', customGame.stopPressedBy);
         handleSubmit();
       }
     }
     if (customGame?.currentLetter) setCurrentLetter(customGame.currentLetter);
-  }, [customGame, roomStatus, isSubmitting, handleSubmit]);
+  }, [customGame?.stopPressedBy, customGame?.currentLetter, isSubmitting, handleSubmit]);
 
-  // Reset every client for a fresh host-started round.
+  // Reset round logic
   useEffect(() => {
     const roundKey = customGame?.roundId || customGame?.currentLetter;
     if (roomStatus !== 'playing' || !roundKey || lastRoundKey.current === roundKey) return;
@@ -129,14 +130,6 @@ export default function NPATMPage() {
     setIsSubmitting(false);
     setCurrentLetter(customGame.currentLetter || '');
   }, [customGame?.roundId, customGame?.currentLetter, roomStatus]);
-
-  // Clear results on new round
-  useEffect(() => {
-    if (roomStatus === 'playing') {
-      setIsSubmitting(false);
-      setEvaluationResults(null);
-    }
-  }, [roomStatus]);
 
   // Sync scores
   useEffect(() => {
@@ -150,262 +143,151 @@ export default function NPATMPage() {
     setInputs(prev => ({ ...prev, [id]: value }));
   };
 
-  const handleStartRound = () => {
-    const letters = 'ABCDEFGHIJKLMNOPRSTW';
+  const handleStartMission = () => {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const randomLetter = letters[Math.floor(Math.random() * letters.length)];
-    Haptics.impact('medium');
-    
-    // Clear states for new round
-    setInputs({ name: '', place: '', animal: '', thing: '', movie: '' });
-    setEvaluationResults(null);
-    setStopPressedBy(null);
-    setIsSubmitting(false);
-    
-    // Crucial: Clear host results so "Start Analysis" button reappears
-    if (isHost) {
-      useGameStore.getState().setRoomScores([]);
-      // We also need to signal the Room Manager to clear its local submissions array
-      window.dispatchEvent(new CustomEvent('nexus-clear-submissions'));
-    }
+    Haptics.impact('heavy');
 
     setCustomGame({
       gameType: 'npatm',
-      roundId: Date.now(),
       currentLetter: randomLetter,
-      stopPressedBy: null,
-      instructions: `Name, Place, Animal, Thing, Movie starting with ${randomLetter}`,
-      letter: randomLetter
+      roundId: Date.now(),
+      stopPressedBy: null
     });
     setRoomStatus('playing');
   };
 
-  // FIX: Move all hooks above conditional returns
-  const sessionLeaderboard = useGameStore((state) => state.sessionLeaderboard);
+  const resetGame = () => {
+    Haptics.impact('medium');
+    setRoomStatus('idle');
+    setCustomGame(null);
+  };
 
   if (!hasMounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white p-6 pb-32">
-      {/* Side Leaderboard (Desktop) */}
-      <div className="hidden xl:block fixed left-8 top-1/2 -translate-y-1/2 w-64 glass-panel p-6 rounded-[2rem] border-white/5">
-        <h3 className="text-xs font-black tracking-widest text-cyan-400 uppercase mb-6 flex items-center gap-2">
-          <Icons.Trophy /> SESSION RANKING
-        </h3>
-        <div className="space-y-4">
-          {sessionLeaderboard.length > 0 ? sessionLeaderboard.map((p, i) => (
-            <div key={i} className="flex items-center justify-between group">
-               <div className="flex items-center gap-3">
-                  <span className="text-[10px] font-bold text-white/20">#{i+1}</span>
-                  <span className="text-sm font-bold uppercase tracking-tight group-hover:text-cyan-400 transition-colors">{p.name}</span>
-               </div>
-               <span className="text-cyan-400 font-black font-mono text-sm">{p.score}</span>
+    <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col pb-32 md:pb-8">
+      <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col">
+        <header className="flex justify-between items-center mb-12">
+          <button onClick={() => window.location.href='/games'} className="text-neon-cyan hover:underline font-mono text-sm p-2 flex items-center gap-2 transition-all hover:-translate-x-1">
+             <span className="text-lg">←</span> EXIT
+          </button>
+          <div className="flex gap-4">
+             <button onClick={resetGame} className="px-6 py-2 rounded-xl border border-red-500/30 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-500/10 transition-all">
+                × RESET ROOM
+             </button>
+          </div>
+        </header>
+
+        {roomStatus === 'playing' ? (
+          <div className="flex-1 flex flex-col">
+            <div className="text-center mb-12 relative">
+               <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="inline-block relative">
+                 <div className="absolute inset-0 bg-neon-cyan/20 blur-3xl rounded-full" />
+                 <h1 className="text-9xl font-black tracking-tighter relative z-10">{currentLetter}</h1>
+               </motion.div>
+               <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-4">Active Domain</p>
             </div>
-          )) : (
-            <p className="text-[10px] text-white/20 italic uppercase tracking-widest">No scores yet...</p>
-          )}
-        </div>
-      </div>
 
-      <div className="max-w-2xl mx-auto space-y-8 mt-12">
-        
-        <div className="text-center space-y-3">
-          <h1 className="text-4xl font-black tracking-tight uppercase italic leading-tight animate-in fade-in slide-in-from-top duration-700">
-            <span className="gradient-text-cyan inline-block pr-1">NEXUS</span> <span className="inline-block">NPATM</span>
-          </h1>
-          <p className="text-gray-400 text-sm font-medium tracking-widest uppercase leading-relaxed">Name • Place • Animal • Thing • Movie</p>
-        </div>
-
-        <div className="relative">
-          {(roomStatus === 'idle' || roomStatus === 'LOBBY') && (
-            <div className="glass-panel p-8 rounded-[2.5rem] text-center space-y-6 animate-in zoom-in duration-500">
-              <div className="w-20 h-20 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto border border-cyan-500/20">
-                <Icons.Play />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold">Ready for the Nexus Alpha?</h2>
-                <p className="text-gray-400 px-4">Wait for the host to generate the first letter. Be the first to shout STOP!</p>
-              </div>
-              {isHost && (
-                <div className="space-y-3">
-                  <button 
-                    onClick={handleStartRound}
-                    className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-black rounded-2xl transition-all uppercase tracking-wider"
-                  >
-                    Start Round with Friends
-                  </button>
-                  <button 
-                    onClick={handleStartRound}
-                    className="w-full py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl border border-white/10 transition-all uppercase tracking-widest text-xs"
-                  >
-                    Play Solo Mode
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {roomStatus === 'playing' && (
-            <div className="space-y-6 animate-in fade-in zoom-in duration-500">
-              <div className="flex justify-between items-center bg-white/5 border border-white/10 p-6 rounded-[2rem] backdrop-blur-xl">
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-gray-500 font-bold mb-1">Active Letter</p>
-                  <div className="text-6xl font-black text-cyan-400 drop-shadow-[0_0_15px_rgba(0,255,255,0.3)]">
-                    {currentLetter}
-                  </div>
-                </div>
-                <div className="text-right">
-                  {stopPressedBy ? (
-                    <div className="flex flex-col items-end text-red-400 animate-pulse">
-                      <Icons.Timer />
-                      <span className="text-xs font-bold uppercase tracking-tighter">STOPPED BY</span>
-                      <span className="text-lg font-black">{stopPressedBy}</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-end text-cyan-400/50">
-                      <div className="animate-spin-slow"><Icons.Timer /></div>
-                      <span className="text-xs font-bold uppercase tracking-tighter">Round Active</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {categories.map((cat) => (
-                  <div key={cat.id} className="relative group">
-                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-cyan-400/50 group-focus-within:text-cyan-400 transition-colors">
+            <div className="max-w-lg mx-auto w-full grid grid-cols-1 gap-4">
+               {categories.map((cat) => (
+                 <div key={cat.id} className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400/50 group-focus-within:text-cyan-400 transition-colors">
                       {cat.icon}
                     </div>
                     <input
                       type="text"
-                      placeholder={cat.label}
+                      placeholder={cat.label.toUpperCase()}
                       value={inputs[cat.id]}
-                      disabled={!!stopPressedBy || isSubmitting}
                       onChange={(e) => handleInputChange(cat.id, e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 focus:border-cyan-500/50 py-5 pl-14 pr-6 rounded-2xl outline-none transition-all placeholder:text-white/20 font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!!stopPressedBy || isSubmitting}
+                      className="w-full bg-black/40 border border-white/5 rounded-2xl py-6 pl-14 pr-6 text-xl font-bold text-white outline-none focus:border-neon-cyan focus:bg-black/60 transition-all placeholder:text-slate-700"
                     />
-                    <div className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-widest text-white/20">
-                      {cat.id}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {!stopPressedBy && (
-                <button
-                  onClick={handleSubmit}
-                  disabled={Object.values(inputs).some(v => !v)}
-                  className="w-full py-5 bg-violet-600 hover:bg-violet-500 disabled:bg-white/5 disabled:text-white/20 text-white font-black rounded-[2rem] transition-all uppercase tracking-widest shadow-lg shadow-violet-900/20 flex items-center justify-center gap-3 group"
-                >
-                  <Icons.CheckCircle />
-                  STOP & FINISH
-                </button>
-              )}
+                 </div>
+               ))}
+               
+               <button
+                 onClick={handleSubmit}
+                 disabled={isSubmitting || !!stopPressedBy}
+                 className="mt-8 py-8 rounded-3xl bg-white text-black font-black text-2xl uppercase tracking-tighter hover:bg-neon-cyan transition-all shadow-2xl active:scale-[0.98] disabled:opacity-50 disabled:grayscale"
+               >
+                 STOP!
+               </button>
             </div>
-          )}
+          </div>
+        ) : roomStatus === 'finished' ? (
+           <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center items-center py-12">
+              <div className="glass-panel p-12 rounded-[4rem] border-white/10 text-center w-full max-w-2xl relative overflow-hidden">
+                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-cyan to-transparent opacity-50" />
+                 
+                 <h2 className="text-6xl font-black tracking-tighter uppercase mb-2">Round Over</h2>
+                 <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.3em] mb-12">
+                   Terminated by: <span className="text-neon-cyan">{stopPressedBy || 'System'}</span>
+                 </p>
 
-          {roomStatus === 'finished' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom duration-500">
-              <div className="glass-panel p-8 rounded-[2.5rem] border-cyan-500/30">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="p-3 bg-cyan-500/20 rounded-2xl text-cyan-400">
-                    <Icons.Trophy />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">Round Summary</h2>
-                    <p className="text-gray-400 text-sm italic">"The Judge has spoken."</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  {(evaluationResults || []).map((player, idx) => (
-                    <div key={idx} className="bg-white/5 rounded-3xl border border-white/10 overflow-hidden">
-                      <div className="flex items-center justify-between p-5 bg-white/5">
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-black text-white/30 bg-white/5 px-2 py-1 rounded-lg">RANK {idx + 1}</span>
-                          <span className="font-black uppercase tracking-tight text-lg">{player.name}</span>
-                        </div>
-                        <div className="text-cyan-400 font-black text-2xl drop-shadow-cyan-glow">+{player.score || 0}</div>
-                      </div>
-                      
-                      {player.details && (
-                        <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-white/5">
-                          {Object.entries(player.details).map(([cat, rawValue]) => {
-                            // Extract "Word" and "[Status]" from "Word [Status]"
-                            const parts = rawValue.split('[');
-                            const word = parts[0].trim();
-                            const status = parts[1] ? parts[1].replace(']', '').trim() : rawValue;
-
-                            return (
-                              <div key={cat} className="flex flex-col bg-black/40 p-3 rounded-xl border border-white/5 space-y-1">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{cat}</span>
-                                  <span className={`text-[9px] font-black px-2 py-0.5 rounded-md ${
-                                    status.toLowerCase().includes('valid') ? 'bg-green-500/10 text-green-500' : 
-                                    status.toLowerCase().includes('duplicate') ? 'bg-yellow-500/10 text-yellow-500' : 
-                                    'bg-red-500/10 text-red-500'
-                                  }`}>
-                                    {status.toUpperCase()}
-                                  </span>
-                                </div>
-                                <div className="text-sm font-bold text-white tracking-tight truncate">
-                                  {word || '---'}
-                                </div>
+                 {evaluationResults ? (
+                   <div className="space-y-4 text-left max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar">
+                      {evaluationResults.map((res, i) => (
+                        <div key={i} className="p-6 rounded-3xl bg-white/5 border border-white/10 group hover:border-neon-cyan/30 transition-all">
+                           <div className="flex justify-between items-center mb-4">
+                              <div className="flex items-center gap-3">
+                                 <span className="text-[10px] font-bold text-white/20">#{i+1}</span>
+                                 <span className="text-sm font-bold uppercase tracking-tight group-hover:text-cyan-400 transition-colors">{res.name}</span>
                               </div>
-                            );
-                          })}
+                              <div className="flex items-center gap-2">
+                                 <span className="text-2xl font-black text-neon-cyan tabular-nums">{res.score}</span>
+                                 <span className="text-[8px] font-bold text-slate-500 uppercase">Points</span>
+                              </div>
+                           </div>
+                           <p className="text-xs text-slate-400 italic leading-relaxed">"{res.verdict}"</p>
                         </div>
-                      )}
-                      
-                      {player.judgeComment && (
-                        <div className="px-5 pb-5 pt-2">
-                           <p className="text-xs text-slate-400 italic border-l-2 border-cyan-500/30 pl-3">"{player.judgeComment}"</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  {(!evaluationResults || evaluationResults.length === 0) && (
-                    <div className="text-center py-12">
-                       <p className="text-slate-500 animate-pulse">Waiting for AI evaluation results...</p>
-                    </div>
-                  )}
-                </div>
+                      ))}
+                   </div>
+                 ) : (
+                   <div className="py-20 flex flex-col items-center space-y-6">
+                      <div className="w-16 h-16 rounded-full border-t-2 border-l-2 border-neon-cyan animate-spin" />
+                      <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest animate-pulse">Host Analysis in Progress...</p>
+                   </div>
+                 )}
 
-                {isHost && (
-                  <button 
-                    onClick={handleStartRound}
-                    className="w-full mt-8 py-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl transition-all uppercase tracking-widest text-sm"
-                  >
-                    Next Round
-                  </button>
-                )}
+                 {isHost && (
+                    <button onClick={handleStartMission} className="mt-12 w-full py-6 rounded-2xl bg-white text-black font-black uppercase tracking-[0.2em] text-sm hover:bg-neon-cyan transition-all shadow-2xl">
+                      Next Round
+                    </button>
+                 )}
               </div>
-            </div>
-          )}
-        </div>
+           </div>
+        ) : (
+          <UnifiedGameLobby 
+            gameTitle="Nexus NPATM"
+            onStart={handleStartMission}
+          />
+        )}
 
-        {roomStatus !== 'idle' && (
-          <div className="mt-8 flex justify-center pointer-events-none">
-             <div className="bg-black/80 backdrop-blur-md border border-white/10 px-6 py-3 rounded-full flex gap-6 items-center pointer-events-auto shadow-2xl animate-in slide-in-from-bottom duration-700">
-                <div className="flex -space-x-2">
-                  {players.slice(0, 3).map((p, i) => (
-                    <div key={p.id || p.peerId} className="w-8 h-8 rounded-full bg-violet-500 border-2 border-black flex items-center justify-center text-[10px] font-bold">
-                      {p.name.charAt(0)}
-                    </div>
-                  ))}
-                </div>
-                <div className="h-4 w-[1px] bg-white/10" />
+        {/* Global Hub HUD */}
+        {sessionLeaderboard?.length > 0 && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+             <div className="glass-panel px-6 py-3 rounded-2xl border-white/10 flex items-center gap-6 shadow-2xl">
                 <div className="flex items-center gap-2">
-                  <div className="text-yellow-500 scale-75"><Icons.Trophy /></div>
-                  <span className="text-xs font-black tracking-tighter uppercase">
+                   <div className="w-2 h-2 rounded-full bg-neon-cyan animate-pulse" />
+                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nexus.MVP</span>
+                </div>
+                <div className="h-4 w-px bg-white/10" />
+                <div className="flex items-center gap-3">
+                  <Icons.Trophy />
+                  <span className="text-xs font-black text-white uppercase tracking-tight">
                     {sessionLeaderboard[0]?.name || '---'} : {sessionLeaderboard[0]?.score || 0}
                   </span>
                 </div>
              </div>
           </div>
         )}
-
-        <NexusRoomManager showForge={false} />
       </div>
     </div>
   );
 }
+
+// Framer Motion stub for server side
+const motion = {
+  div: ({ children, ...props }) => <div {...props}>{children}</div>
+};

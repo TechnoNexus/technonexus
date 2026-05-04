@@ -39,6 +39,7 @@ SCORING RULES:
 1. Valid Entry: +10 points. Must be correctly spelled, start with letter "${letter}", and fit the category.
 2. Duplicate Check: I have provided a list of all player submissions. IF TWO OR MORE PLAYERS HAVE WRITTEN THE EXACT SAME WORD FOR A CATEGORY, BOTH PLAYERS GET 0 POINTS FOR THAT CATEGORY.
 3. Bollywood: Bollywood movies are allowed even if the game is in English.
+4. CRITICAL: YOU MUST RETURN EXACTLY ONE RESULT OBJECT FOR EVERY SINGLE PLAYER SUBMITTED. Do not skip any player, even if their fields are empty.
 
 Player Submissions:
 ${JSON.stringify(submissions, null, 2)}
@@ -67,6 +68,7 @@ Player Submissions:
 ${JSON.stringify(submissions, null, 2)}
 
 For each player, provide a score (0-100) and a witty comment in ${language}.
+CRITICAL: YOU MUST RETURN EXACTLY ONE RESULT OBJECT FOR EVERY SINGLE PLAYER SUBMITTED. Do not skip any player, even if their submission is blank.
 
 RESPOND ONLY WITH VALID JSON (no extra text):
 {

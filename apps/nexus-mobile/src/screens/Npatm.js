@@ -11,13 +11,12 @@ import {
   View
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import QRCodeSVG from 'react-native-qrcode-svg';
 import SpatialBackground from '../components/SpatialBackground';
 import GlassPanel from '../components/GlassPanel';
 import NexusRoomBridge from '../networking/NexusRoomBridge';
+import UnifiedGameLobby from '../components/UnifiedGameLobby';
 import { Colors } from '../theme/Colors';
-import { useNpatmLogic, getPlayerDisplayName } from '../hooks/useNpatmLogic';
-import { getApiUrl } from '../lib/api';
+import { useNpatmLogic } from '../hooks/useNpatmLogic';
 
 const CATEGORIES = [
   { id: 'name', label: 'Name' },
@@ -43,10 +42,9 @@ export default function Npatm({ navigation }) {
 
   const {
     playerName, setPlayerName,
-    joinRoomId, setJoinRoomId,
     roomId, setRoomId,
     isHost, setIsHost,
-    status, setStatus,
+    status,
     players
   } = lobby;
 
@@ -71,6 +69,10 @@ export default function Npatm({ navigation }) {
     evaluateBatch
   } = actions;
 
+  const handleStartMission = (unifiedPlayers) => {
+      handleStartRound();
+  };
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <SpatialBackground />
@@ -93,76 +95,24 @@ export default function Npatm({ navigation }) {
           </View>
         </View>
 
-        {!roomId ? (
-          <GlassPanel style={styles.panel} intensity={50}>
-            <Text style={styles.label}>YOUR IDENTITY</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="NICKNAME"
-              placeholderTextColor={Colors.slateGray}
-              value={playerName}
-              onChangeText={setPlayerName}
-              autoCapitalize="characters"
-            />
-            <Pressable
-              onPress={() => {
-                if (playerName) {
-                  setIsHost(true);
-                  setStatus('Creating...');
-                  bridgeRef.current?.createRoom(getPlayerDisplayName(playerName));
-                }
-              }}
-              style={[styles.primaryButton, !playerName && styles.disabled, { marginTop: 16 }]}
-            >
-              <Text style={styles.primaryButtonText}>HOST GAME</Text>
-            </Pressable>
-            <View style={styles.joinRow}>
-              <TextInput
-                style={[styles.input, { flex: 1 }]}
-                placeholder="ROOM ID"
-                placeholderTextColor={Colors.slateGray}
-                value={joinRoomId}
-                onChangeText={setJoinRoomId}
-                autoCapitalize="characters"
-              />
-              <Pressable
-                onPress={() => {
-                  if (playerName && joinRoomId) {
-                    setIsHost(false);
-                    setRoomId(joinRoomId);
-                    setStatus('Connecting...');
-                    bridgeRef.current?.joinRoom(joinRoomId, getPlayerDisplayName(playerName));
-                  }
-                }}
-                style={[styles.joinButton, (!playerName || !joinRoomId) && styles.disabled]}
-              >
-                <Text style={styles.primaryButtonText}>JOIN</Text>
-              </Pressable>
-            </View>
-          </GlassPanel>
+        {roomStatus === 'idle' || roomStatus === 'waiting' || !roomId ? (
+           <UnifiedGameLobby
+              gameTitle="Nexus NPATM"
+              onStart={handleStartMission}
+              isHost={isHost}
+              setIsHost={setIsHost}
+              playerName={playerName}
+              setPlayerName={setPlayerName}
+              players={players}
+              roomStatus={roomStatus}
+              roomId={roomId}
+              setRoomId={setRoomId}
+              status={status}
+              bridgeRef={bridgeRef}
+           />
         ) : (
           <View>
-            {roomStatus === 'idle' ? (
-              <GlassPanel style={styles.panel} intensity={50}>
-                <View style={{ alignItems: 'center', marginBottom: 24 }}>
-                  <Text style={styles.label}>ROOM ID: {roomId}</Text>
-                  {isHost && (
-                    <View style={{ marginVertical: 16, alignItems: 'center' }}>
-                      <QRCodeSVG value={getApiUrl(`/games/npatm?join=${roomId}`).replace('/api', '')} size={140} color={Colors.neonCyan} backgroundColor="transparent" />
-                      <Text style={styles.scanLabel}>SCAN TO JOIN</Text>
-                    </View>
-                  )}
-                  <Text style={styles.participantText}>PLAYERS IN ROOM: {expectedSubmissions}</Text>
-                </View>
-                {isHost ? (
-                  <Pressable onPress={handleStartRound} style={styles.primaryButton}>
-                    <Text style={styles.primaryButtonText}>START MISSION</Text>
-                  </Pressable>
-                ) : (
-                  <Text style={styles.waitingText}>Waiting for host to start...</Text>
-                )}
-              </GlassPanel>
-            ) : roomStatus === 'playing' ? (
+             {roomStatus === 'playing' ? (
               <View style={{ gap: 20 }}>
                 <GlassPanel style={styles.letterPanel} intensity={60}>
                   <Text style={styles.label}>ACTIVE LETTER</Text>

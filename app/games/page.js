@@ -52,6 +52,13 @@ export default function GamesPage() {
       status: 'AVAILABLE',
     },
     {
+      id: 'mafia',
+      name: 'Digital Insurgency',
+      description: 'A social deduction game of logic and deceit. Identify the rogue AI agents before they compromise the system.',
+      tag: 'STRATEGY',
+      status: 'AVAILABLE',
+    },
+    {
       id: 'neon-runner',
       name: 'Neon Runner',
       description: 'An experimental high-speed arcade experience. Test your reflexes in the digital void.',

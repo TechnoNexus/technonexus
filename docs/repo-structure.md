@@ -18,8 +18,9 @@ project-root/
 │           ├── networking/ # PeerJS WebRTC WebView bridge (NexusRoomBridge.js)
 │           ├── screens/    # Native screens (Dashboard, Auth, Profile, Game Hubs)
 │           └── theme/      # Native theme constants (Colors.js)
-├── components/        # Shared web UI atoms/molecules
+├── components/        # Shared web UI atoms/molecules (e.g., NexusRoomPanel.js, NexusRoomManager.js)
 ├── docs/              # Documentation, architecture, and roadmaps
+├── hooks/             # Extracted web logic hooks (e.g., useNexusAI.js, useNexusEvents.js, useNexusTransport.js)
 ├── lib/               # Shared web utilities, Supabase clients
 ├── public/            # Web public assets (SVGs, images)
 ├── store/             # Zustand state management (web)

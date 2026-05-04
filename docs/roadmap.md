@@ -204,3 +204,25 @@
 - [~] **GitHub Forge Sync**: Integration of live commit history/activity for Forge projects. (Canceled - Forge removed from mobile)
 - [ ] **Integration Protocol**: Standardize `useGameStore` hooks to allow drag-and-drop game integration.
 - [ ] **New Modular Game**: Build the next brand-new game mode using the "Clean Room" development pattern.
+
+## Phase 12 — Multiplayer Architecture Hardening (Planned)
+- [x] **NexusRoomManager Refactor — Phase 1 (UI Extraction)**: Split the render-heavy room panel out of `components/NexusRoomManager.js` into a dedicated `NexusRoomPanel` component while keeping the room engine always mounted and behavior-identical.
+- [x] **NexusRoomManager Refactor — Phase 2 (Event + AI Extraction)**: Move browser event bridge logic (`nexus-submit-to-host`, `npatm-submit-to-host`, `nexus-clear-submissions`, `nexus-game-action`) and AI request flows (`generateGame`, `evaluateRound`, `evaluateBatch`) into focused hooks without changing payload contracts.
+- [x] **NexusRoomManager Refactor — Phase 3 (PeerJS Transport Extraction)**: Move PeerJS host/guest lifecycle, join handling, cleanup, and message dispatch into a dedicated transport hook/service while preserving the critical rules: register connections only after `join`, keep `start-game` atomic, and broadcast only to open connections.
+- [x] **Room Protocol Consolidation**: Centralize multiplayer message types and payload helpers so `join`, `welcome`, `start-game`, `submit-raw-submission`, `batch-results`, `game-action`, and other room events are defined once and reused consistently.
+- [x] **Multiplayer Characterization Coverage**: Add tests around host room creation, guest joining, `?join=` deep-link flow, game start synchronization, submission dedupe, and batch-results broadcast to catch regressions as the room engine is modularized.
+- [x] **Push Invite Completion Pass**: Finish the room invite flow end-to-end by wiring the mobile "Ping Friends" action to a real backend send path, notification response routing, and room/deep-link handling instead of placeholder alerts only.
+- [x] **Leaderboard Contract Cleanup**: Align app code, SQL schema, and docs around one global leaderboard RPC contract, clean the checked-in Supabase schema, and verify global win/participation writes work without silent fallback confusion.
+
+## Phase 13 — Unified Game Protocol & Universal Lobby (✅ Completed)
+- [x] **Shared `UnifiedGameLobby` Component**: Build a centralized lobby that handles player identity, "Total Player" calculation (Hybrid Solo/Pass-and-Play/Network), and QR sharing in one place.
+- [x] **Universal Player Normalization**: Create a protocol that passes a standardized `activePlayers` array (flagging `isLocal`) to all games, removing network logic from game components.
+- [x] **Proof of Concept: Mr. White Migration**: Refactor the Undercover game to use the Unified Lobby, reducing its codebase by ~50% and enabling solo/hybrid modes.
+- [x] **Ecosystem Rollout**: Progressively migrate Blitz, Charades, and Pictionary to the Unified Protocol.
+- [x] **Standardized Game Hooks**: Finalize `useGameStore` patterns so new modular games can be added with zero custom networking code.
+
+## Phase 14 — Modular Game Forge (✅ Completed)
+- [x] **Clean Room Development**: Built a brand-new social deduction game mode **"Digital Insurgency"** (Mafia style) from scratch using the Unified Protocol.
+- [x] **Cross-Platform Polishing**: Final pass on Mobile UI responsiveness for all games and standardized state transitions.
+
+## Phase 15 — Production Scale & Analytics (Planned)
