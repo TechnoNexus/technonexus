@@ -37,7 +37,6 @@ export default function UnifiedGameLobby({
       setTotalPlayers(customGame.totalPlayers);
     }
   }, [customGame?.totalPlayers, isHost]);
-
   // Sync totalPlayers from customGame if available (for guests)
   // Actually, for guests, they just see what the host tells them.
 
