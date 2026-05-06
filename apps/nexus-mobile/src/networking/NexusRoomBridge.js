@@ -266,6 +266,25 @@ const createBridgeHtml = () => `
       function broadcastData(dataString) {
         const data = safeParse(dataString);
         if (!data) return;
+
+        if (data.type === 'start-game') {
+           updateHostSnapshot(JSON.stringify({
+             roomStatus: data.status,
+             customGame: data.customGame,
+             gameMode: data.gameMode
+           }));
+        } else if (data.type === 'game-action') {
+           const currentCustomGame = hostSnapshot.customGame || {};
+           updateHostSnapshot(JSON.stringify({
+             roomStatus: data.roomStatus || hostSnapshot.roomStatus,
+             customGame: Object.assign({}, currentCustomGame, data.actionData)
+           }));
+        } else if (data.type === 'room-status-update') {
+           updateHostSnapshot(JSON.stringify({
+             roomStatus: data.status
+           }));
+        }
+
         broadcastToGuests(data);
       }
 

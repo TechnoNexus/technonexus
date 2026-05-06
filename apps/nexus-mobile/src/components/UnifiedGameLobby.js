@@ -177,7 +177,20 @@ export default function UnifiedGameLobby({
                    {[1, 2, 3, 4, 5, 6, 8, 10, 12].map(num => (
                      <Pressable 
                       key={num} 
-                      onPress={() => { tap(Haptics.ImpactFeedbackStyle.Light); setTotalPlayers(num); }}
+                      onPress={() => { 
+                        tap(Haptics.ImpactFeedbackStyle.Light); 
+                        setTotalPlayers(num);
+                        if (isHost && bridgeRef.current) {
+                           bridgeRef.current.updateHostSnapshot({
+                              customGame: { totalPlayers: num }
+                           });
+                           bridgeRef.current.broadcastMessage({
+                              type: 'game-action',
+                              actionData: { totalPlayers: num },
+                              timestamp: Date.now()
+                           });
+                        }
+                      }}
                       style={[styles.numChip, totalPlayers === num && styles.numChipActive]}
                      >
                        <Text style={[styles.numText, totalPlayers === num && styles.numTextActive]}>{num}</Text>

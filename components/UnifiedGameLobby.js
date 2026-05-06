@@ -19,7 +19,9 @@ export default function UnifiedGameLobby({
     players,
     roomStatus,
     setRoomStatus,
-    setPlayerName
+    setPlayerName,
+    customGame,
+    setCustomGame
   } = useGameStore();
 
   const [totalPlayers, setTotalPlayers] = useState(4);
@@ -29,6 +31,12 @@ export default function UnifiedGameLobby({
   const hapticFeedback = async (style = ImpactStyle.Medium) => {
     try { await Haptics.impact({ style }); } catch (e) {}
   };
+
+  useEffect(() => {
+    if (!isHost && customGame?.totalPlayers) {
+      setTotalPlayers(customGame.totalPlayers);
+    }
+  }, [customGame?.totalPlayers, isHost]);
 
   // Sync totalPlayers from customGame if available (for guests)
   // Actually, for guests, they just see what the host tells them.
@@ -116,7 +124,15 @@ export default function UnifiedGameLobby({
                     value={totalPlayers}
                     onChange={(e) => {
                       hapticFeedback(ImpactStyle.Light);
-                      setTotalPlayers(parseInt(e.target.value));
+                      const newTotal = parseInt(e.target.value);
+                      setTotalPlayers(newTotal);
+                      if (isHost) {
+                         const patch = { totalPlayers: newTotal };
+                         setCustomGame({ ...(customGame || {}), ...patch });
+                         window.dispatchEvent(new CustomEvent('nexus-game-action', {
+                            detail: { actionData: patch, roomStatus: roomStatus }
+                         }));
+                      }
                     }}
                     className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-neon-cyan"
                   />
