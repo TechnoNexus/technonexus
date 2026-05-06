@@ -14,7 +14,7 @@ export async function OPTIONS() {
 
 export async function POST(req) {
   try {
-    const { hostName, roomId, gameType } = await req.json();
+    const { hostName, roomId, gameType, targetUserIds } = await req.json();
 
     if (!hostName || !roomId) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
@@ -23,13 +23,19 @@ export async function POST(req) {
       });
     }
 
-    // 1. Fetch all user profiles with a push token
-    // Limit to 100 to avoid Edge memory limits and spamming
+    if (!targetUserIds || !Array.isArray(targetUserIds) || targetUserIds.length === 0) {
+      return new Response(JSON.stringify({ error: 'targetUserIds is required and must be a non-empty array' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...CORS }
+      });
+    }
+
+    // 1. Fetch push tokens for specific target users
     const { data: profiles, error: fetchError } = await supabase
       .from('user_profiles')
       .select('push_token')
-      .not('push_token', 'is', null)
-      .limit(100);
+      .in('id', targetUserIds)
+      .not('push_token', 'is', null);
 
     if (fetchError) throw fetchError;
 

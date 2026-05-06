@@ -203,17 +203,45 @@ export default function Mafia({ navigation }) {
                      <View style={{ gap: 12 }}>
                         {myPlayer.role === 'ROGUE AI' && !gameState.nightActions.target && (
                            <>
-                             <Text style={styles.label}>TARGET UNIT</Text>
-                             {gameState.players.filter(p => p.isAlive && p.role !== 'ROGUE AI').map(p => (
-                               <Pressable key={p.name} onPress={() => performNightAction('target', p.name)} style={styles.actionButton}>
-                                  <Text style={styles.actionButtonText}>{p.name}</Text>
-                               </Pressable>
-                             ))}
+                             <Text style={[styles.label, {color: Colors.neonRed}]}>ROGUE AI: COMPROMISE UNIT</Text>
+                             <View style={styles.actionGrid}>
+                               {gameState.players.filter(p => p.isAlive && p.role !== 'ROGUE AI').map(p => (
+                                 <Pressable key={p.name} onPress={() => performNightAction('target', p.name)} style={[styles.actionButton, {borderColor: Colors.neonRed + '40'}]}>
+                                    <Text style={[styles.actionButtonText, {color: Colors.neonRed}]}>{p.name}</Text>
+                                 </Pressable>
+                               ))}
+                             </View>
                            </>
                         )}
-                        {/* Add other roles if needed, similar to web */}
-                        {(myPlayer.role === 'USER' || (myPlayer.role === 'ROGUE AI' && gameState.nightActions.target)) && (
-                           <Text style={styles.waitingText}>Waiting for system sync...</Text>
+                        {myPlayer.role === 'DEBUGGER' && !gameState.nightActions.save && (
+                           <>
+                             <Text style={[styles.label, {color: '#4ADE80'}]}>DEBUGGER: SHIELD UNIT</Text>
+                             <View style={styles.actionGrid}>
+                               {gameState.players.filter(p => p.isAlive).map(p => (
+                                 <Pressable key={p.name} onPress={() => performNightAction('save', p.name)} style={[styles.actionButton, {borderColor: '#4ADE8040'}]}>
+                                    <Text style={[styles.actionButtonText, {color: '#4ADE80'}]}>{p.name}</Text>
+                                 </Pressable>
+                               ))}
+                             </View>
+                           </>
+                        )}
+                        {myPlayer.role === 'LOG AUDITOR' && !gameState.nightActions.check && (
+                           <>
+                             <Text style={[styles.label, {color: '#FACC15'}]}>LOG AUDITOR: SCAN UNIT</Text>
+                             <View style={styles.actionGrid}>
+                               {gameState.players.filter(p => p.isAlive && p.name !== playerName).map(p => (
+                                 <Pressable key={p.name} onPress={() => performNightAction('check', p.name)} style={[styles.actionButton, {borderColor: '#FACC1540'}]}>
+                                    <Text style={[styles.actionButtonText, {color: '#FACC15'}]}>{p.name}</Text>
+                                 </Pressable>
+                               ))}
+                             </View>
+                           </>
+                        )}
+                        {(myPlayer.role === 'USER' || 
+                          (myPlayer.role === 'ROGUE AI' && gameState.nightActions.target) ||
+                          (myPlayer.role === 'DEBUGGER' && gameState.nightActions.save) ||
+                          (myPlayer.role === 'LOG AUDITOR' && gameState.nightActions.check)) && (
+                           <Text style={styles.waitingText}>Input logged. Waiting for system sync...</Text>
                         )}
                      </View>
                    )}
@@ -272,7 +300,8 @@ const styles = StyleSheet.create({
   primaryButton: { backgroundColor: Colors.white, paddingVertical: 18, borderRadius: 16, alignItems: 'center', width: '100%' },
   primaryButtonText: { color: Colors.black, fontWeight: '900', letterSpacing: 2 },
   flavorText: { color: Colors.slateGray, fontStyle: 'italic', textAlign: 'center', fontSize: 12 },
-  actionButton: { backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', padding: 16, borderRadius: 14 },
+  actionButton: { backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', padding: 16, borderRadius: 14, flex: 1, minWidth: '45%' },
+  actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   actionButtonText: { color: Colors.white, fontWeight: 'bold', textAlign: 'center' },
   waitingText: { color: Colors.slateGray, textAlign: 'center', fontStyle: 'italic' },
   statusText: { color: Colors.white, fontSize: 24, fontWeight: '900', textAlign: 'center' },

@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import UnifiedGameLobby from '@/components/UnifiedGameLobby';
-import { Haptics } from '@/lib/haptics';
+import { Haptics, ImpactStyle } from '@/lib/haptics';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Simple SVG Icons
 const Icons = {
@@ -80,7 +81,7 @@ export default function NPATMPage() {
   const handleSubmit = useCallback(async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
-    Haptics.notification('success');
+    Haptics.notification({ type: 'success' });
 
     const myName = playerName || 'Anonymous';
     
@@ -286,8 +287,3 @@ export default function NPATMPage() {
     </div>
   );
 }
-
-// Framer Motion stub for server side
-const motion = {
-  div: ({ children, ...props }) => <div {...props}>{children}</div>
-};

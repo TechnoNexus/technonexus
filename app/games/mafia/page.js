@@ -28,11 +28,14 @@ export default function MafiaGame() {
     customGame,
     setCustomGame,
     setRoomStatus,
-    playerName
+    playerName,
+    submissions,
+    setSubmissions
   } = useGameStore();
 
   const [gameState, setGameState] = useState(INITIAL_STATE);
-  
+  const [localNightAction, setLocalNightAction] = useState(null); // { type, target }
+
   const applyState = (state) => {
     setGameState(state);
   };
@@ -44,9 +47,19 @@ export default function MafiaGame() {
 
     applyState(next);
 
+    // MASK secret info before broadcasting
+    const maskedNext = { ...next };
+    if (next.phase === 'night') {
+      maskedNext.nightActions = {
+        target: next.nightActions.target ? 'LOGGED' : null,
+        save: next.nightActions.save ? 'LOGGED' : null,
+        check: next.nightActions.check ? 'LOGGED' : null
+      };
+    }
+
     if (roomId) {
       window.dispatchEvent(new CustomEvent('nexus-game-action', {
-        detail: { actionData: next, roomStatus: nextStatus }
+        detail: { actionData: maskedNext, roomStatus: nextStatus }
       }));
     } else {
       setCustomGame(next);
@@ -62,9 +75,17 @@ export default function MafiaGame() {
 
   useEffect(() => {
     if (customGame?.gameType === 'mafia') {
-      applyState(customGame);
+      // Merge local secret info back into the incoming masked state
+      const merged = { ...customGame };
+      if (customGame.phase === 'night' && localNightAction) {
+        merged.nightActions = {
+          ...merged.nightActions,
+          [localNightAction.type]: localNightAction.target
+        };
+      }
+      applyState(merged);
     }
-  }, [customGame]);
+  }, [customGame, localNightAction]);
 
   const handleStartMission = (unifiedPlayers) => {
     if (unifiedPlayers.length < 4) {
@@ -99,6 +120,8 @@ export default function MafiaGame() {
   const myPlayer = gameState.players.find(p => p.name === playerName);
 
   const startNight = () => {
+    setLocalNightAction(null);
+    setSubmissions([]); // Clear previous round submissions
     syncState({ 
       phase: 'night', 
       nightActions: { target: null, save: null, check: null } 
@@ -106,7 +129,21 @@ export default function MafiaGame() {
   };
 
   const startDay = () => {
-    const { target, save } = gameState.nightActions;
+    // Host resolves the night using submissions
+    let target = null;
+    let save = null;
+    
+    submissions.forEach(sub => {
+       if (sub.submission?.type === 'target') target = sub.submission.target;
+       if (sub.submission?.type === 'save') save = sub.submission.target;
+    });
+
+    // Also check host's own local move if they have a role
+    if (localNightAction) {
+       if (localNightAction.type === 'target') target = localNightAction.target;
+       if (localNightAction.type === 'save') save = localNightAction.target;
+    }
+
     let lastDeath = null;
     const nextPlayers = gameState.players.map(p => {
       if (p.name === target && target !== save) {
@@ -147,9 +184,19 @@ export default function MafiaGame() {
   };
 
   const performNightAction = (type, target) => {
-    syncState({
-      nightActions: { ...gameState.nightActions, [type]: target }
-    });
+    setLocalNightAction({ type, target });
+    
+    // Notify host privately via submissions bridge
+    window.dispatchEvent(new CustomEvent('nexus-submit-to-host', {
+      detail: { submission: { type, target } }
+    }));
+
+    // For Host, also update local state immediately so booleans trigger in syncState
+    if (isHost) {
+      syncState({
+        nightActions: { ...gameState.nightActions, [type]: target }
+      });
+    }
   };
 
   return (

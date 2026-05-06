@@ -12,7 +12,8 @@ export default function NexusRoomManager({ showForge = false }) {
   const {
     roomId, isHost, players,
     resetRoom, roomStatus, customGame, playerName, setPlayerName,
-    gameMode, setGameMode, hostName, roomScores, setCustomGame
+    gameMode, setGameMode, hostName, roomScores, setCustomGame,
+    submissions, setSubmissions
   } = useGameStore();
 
   const [targetId, setTargetId] = useState(
@@ -20,7 +21,6 @@ export default function NexusRoomManager({ showForge = false }) {
   );
   const [aiPrompt, setAiPrompt] = useState('');
   const [language, setLanguage] = useState('English');
-  const [submissions, setSubmissions] = useState([]); 
   const connections = useRef([]);
   const hostConnection = useRef(null);
 

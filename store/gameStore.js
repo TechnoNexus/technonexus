@@ -25,12 +25,16 @@ export const useGameStore = create(
       gameMode: 'individual', // 'individual' or 'team'
       leaderboard: [], // Global leaderboard tracking wins across sessions
       sessionLeaderboard: [], // Cumulative scores for the current room session
+      submissions: [], // Host's collection of active submissions for the round
 
       setRoomId: (id) => set({ roomId: id }),
       setHost: (isHost) => set({ isHost }),
       setPlayerName: (name) => set({ playerName: name }),
       setHostName: (name) => set({ hostName: name }),
       setGameMode: (mode) => set({ gameMode: mode }),
+      setSubmissions: (fn) => set((state) => ({
+        submissions: typeof fn === 'function' ? fn(state.submissions) : fn
+      })),
       setPlayers: (fn) => set((state) => ({ 
         players: typeof fn === 'function' ? fn(state.players) : fn 
       })),

@@ -98,7 +98,7 @@ export default function NexusBlitz({ navigation }) {
           language,
           questionCount,
           roundId: Date.now()
-        }, 'playing');
+        }, 'individual');
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {
