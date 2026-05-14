@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { supabase } from '../../../lib/supabase';
 import { motion } from 'framer-motion';
 
+export const runtime = 'edge';
+
 export default function PostPage(props) {
   const params = use(props.params);
   const slug = params.slug;
