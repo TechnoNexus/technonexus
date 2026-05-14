@@ -60,7 +60,7 @@ export default function TeamPicker() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col pb-20">
+    <div className="min-h-screen bg-grid-white text-white py-8 px-4 flex flex-col pb-20">
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         <header className="flex justify-between items-center mb-8">
           <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm uppercase tracking-widest font-black">← Exit Arcade</Link>

@@ -200,7 +200,7 @@ export default function MrWhite() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col pb-32 md:pb-8">
+    <div className="min-h-screen bg-grid-white text-white py-8 px-4 flex flex-col pb-32 md:pb-8">
       <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col">
         <header className="flex justify-between items-center mb-8">
           <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm p-2 min-w-[44px] min-h-[44px] flex items-center">← EXIT</Link>

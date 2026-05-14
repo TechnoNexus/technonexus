@@ -228,3 +228,10 @@
 - [x] **Cross-Platform Polishing**: Final pass on Mobile UI responsiveness for all games and standardized state transitions.
 
 ## Phase 15 — Production Scale & Analytics (Planned)
+
+## Phase 16 — Blog & Content (✅ Completed)
+- [x] Pivot development completely to the Blog section.
+- [x] Integrate Supabase `blog_posts` and `blog_comments` schema with RLS.
+- [x] Implement TipTap Rich Text Editor for a Medium-style writing experience.
+- [x] Create dynamic category filtering and UI revamp for the Blog hub.
+- [x] Add real-time flat comment threads to individual posts.

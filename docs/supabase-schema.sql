@@ -167,5 +167,75 @@ CREATE POLICY "leaderboard_anon_update"
 CREATE INDEX IF NOT EXISTS idx_user_games_user_id    ON public.user_games (user_id);
 CREATE INDEX IF NOT EXISTS idx_game_sessions_host_id ON public.game_sessions (host_id);
 CREATE INDEX IF NOT EXISTS idx_leaderboard_wins       ON public.leaderboard (wins DESC);
-st_id);
-CREATE INDEX IF NOT EXISTS idx_leaderboard_wins       ON public.leaderboard (wins DESC);
+
+-- ────────────────────────────────────────────────────────────
+-- 5. BLOG POSTS
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.blog_posts (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  author_id    UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,
+  title        TEXT NOT NULL,
+  slug         TEXT NOT NULL UNIQUE,
+  content_json JSONB NOT NULL DEFAULT '{}',
+  category     TEXT DEFAULT 'General',
+  created_at   TIMESTAMPTZ DEFAULT now() NOT NULL,
+  updated_at   TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
+-- ────────────────────────────────────────────────────────────
+-- 6. BLOG COMMENTS
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.blog_comments (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id      UUID NOT NULL REFERENCES public.blog_posts(id) ON DELETE CASCADE,
+  author_id    UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,
+  content      TEXT NOT NULL,
+  created_at   TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
+-- ============================================================
+-- BLOG ROW LEVEL SECURITY
+-- ============================================================
+
+-- Blog Posts RLS
+ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "blog_posts_public_read"
+  ON public.blog_posts FOR SELECT USING (true);
+
+CREATE POLICY "blog_posts_author_insert"
+  ON public.blog_posts FOR INSERT
+  WITH CHECK (auth.uid() = author_id);
+
+CREATE POLICY "blog_posts_author_update"
+  ON public.blog_posts FOR UPDATE
+  USING (auth.uid() = author_id)
+  WITH CHECK (auth.uid() = author_id);
+
+CREATE POLICY "blog_posts_author_delete"
+  ON public.blog_posts FOR DELETE
+  USING (auth.uid() = author_id);
+
+-- Blog Comments RLS
+ALTER TABLE public.blog_comments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "blog_comments_public_read"
+  ON public.blog_comments FOR SELECT USING (true);
+
+CREATE POLICY "blog_comments_author_insert"
+  ON public.blog_comments FOR INSERT
+  WITH CHECK (auth.uid() = author_id);
+
+CREATE POLICY "blog_comments_author_update"
+  ON public.blog_comments FOR UPDATE
+  USING (auth.uid() = author_id)
+  WITH CHECK (auth.uid() = author_id);
+
+CREATE POLICY "blog_comments_author_delete"
+  ON public.blog_comments FOR DELETE
+  USING (auth.uid() = author_id);
+
+-- Blog Indexes
+CREATE INDEX IF NOT EXISTS idx_blog_posts_author_id ON public.blog_posts (author_id);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON public.blog_posts (slug);
+CREATE INDEX IF NOT EXISTS idx_blog_comments_post_id ON public.blog_comments (post_id);

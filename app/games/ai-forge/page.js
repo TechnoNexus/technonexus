@@ -217,7 +217,7 @@ export default function AIForgeGame() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] bg-grid-white text-white py-8 px-4 flex flex-col pb-32 md:pb-20">
+    <div className="min-h-screen bg-grid-white text-white py-8 px-4 flex flex-col pb-32 md:pb-20">
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         <header className="flex justify-between items-center mb-8">
           <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm uppercase tracking-widest font-black p-2 min-w-[44px] min-h-[44px] flex items-center">← Exit Arcade</Link>

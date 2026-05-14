@@ -32,7 +32,7 @@ export default function LeaderboardPage() {
   const sorted = [...(globalLeaderboard || leaderboard || [])].sort((a, b) => b.wins - a.wins);
 
   return (
-    <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-12 px-4">
+    <div className="min-h-screen bg-grid-white text-white py-12 px-4">
       <div className="max-w-lg mx-auto">
         <header className="flex justify-between items-center mb-12">
           <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm uppercase tracking-widest font-black">← Arcade</Link>

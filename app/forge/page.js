@@ -58,7 +58,7 @@ export default function ForgePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-dark-bg bg-grid-white">
+    <div className="min-h-screen bg-grid-white">
       <div className="container mx-auto px-6 py-20">
         <header className="mb-20 text-center">
           <h1 className="text-6xl md:text-8xl font-black mb-6 tracking-tighter uppercase">

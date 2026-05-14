@@ -200,7 +200,7 @@ export default function MafiaGame() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg bg-grid-white text-white py-8 px-4 flex flex-col pb-32 md:pb-8">
+    <div className="min-h-screen bg-grid-white text-white py-8 px-4 flex flex-col pb-32 md:pb-8">
       <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col">
         <header className="flex justify-between items-center mb-12">
           <Link href="/games" className="text-neon-cyan hover:underline font-mono text-xs p-2">← BACKDOOR EXIT</Link>

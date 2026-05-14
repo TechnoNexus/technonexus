@@ -205,7 +205,7 @@ export default function NexusBlitz() {
 
   if (phase === 'setup' || phase === 'loading') {
     return (
-      <div className="min-h-screen bg-dark-bg bg-grid-white py-8 px-4 flex flex-col pb-32">
+      <div className="min-h-screen bg-grid-white py-8 px-4 flex flex-col pb-32">
         <header className="max-w-4xl mx-auto w-full flex justify-between items-center mb-8">
            <Link href="/games" className="text-neon-cyan hover:underline font-mono text-sm p-2 min-w-[44px] min-h-[44px] flex items-center">← EXIT</Link>
         </header>
@@ -272,7 +272,7 @@ export default function NexusBlitz() {
   if (phase === 'playing' && quiz) {
     const q = quiz.questions[currentIndex];
     return (
-      <div className="min-h-screen bg-dark-bg bg-grid-white text-white p-4 flex flex-col items-center justify-center pb-32">
+      <div className="min-h-screen bg-grid-white text-white p-4 flex flex-col items-center justify-center pb-32">
         <div className="max-w-2xl w-full">
           <div className="flex justify-between items-center mb-8">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">
@@ -352,7 +352,7 @@ export default function NexusBlitz() {
     const blitzResults = customGame?.blitzResults || [];
 
     return (
-      <div className="min-h-screen bg-dark-bg bg-grid-white text-white p-4 flex flex-col items-center justify-center pb-32">
+      <div className="min-h-screen bg-grid-white text-white p-4 flex flex-col items-center justify-center pb-32">
         <div className="max-w-2xl w-full">
           <div className="glass-panel p-12 rounded-[3.5rem] border-white/5 text-center mb-8">
             <h2 className="text-6xl font-black mb-2 tracking-tighter uppercase">Mission End</h2>
